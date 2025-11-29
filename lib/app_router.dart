@@ -10,6 +10,8 @@ import 'features/attendance/screens/attendance_detail_screen.dart';
 import 'features/attendance/screens/attendance_add_screen.dart';
 import 'features/attendance/screens/attendance_edit_screen.dart';
 import 'features/schedule/screens/schedule_screen.dart';
+import 'features/schedule/screens/match_detail_screen.dart';
+import 'features/schedule/screens/player_detail_screen.dart';
 import 'features/favorites/screens/favorites_screen.dart';
 import 'features/profile/screens/profile_screen.dart';
 import 'features/profile/screens/profile_edit_screen.dart';
@@ -21,12 +23,15 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: '/home',
     redirect: (context, state) {
       final isLoggedIn = authState.value != null;
-      final isLoggingIn = state.matchedLocation == '/login';
+      final location = state.matchedLocation;
+      final isLoggingIn = location == '/login';
 
+      // 로그인하지 않은 경우 로그인 페이지로 리다이렉트
       if (!isLoggedIn && !isLoggingIn) {
         return '/login';
       }
 
+      // 이미 로그인한 경우 로그인 페이지 접근 시 홈으로 리다이렉트
       if (isLoggedIn && isLoggingIn) {
         return '/home';
       }
@@ -38,6 +43,24 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/login',
         builder: (context, state) => const LoginScreen(),
+      ),
+
+      // Match Detail (outside shell - full screen)
+      GoRoute(
+        path: '/match/:eventId',
+        builder: (context, state) {
+          final eventId = state.pathParameters['eventId']!;
+          return MatchDetailScreen(eventId: eventId);
+        },
+      ),
+
+      // Player Detail (outside shell - full screen)
+      GoRoute(
+        path: '/player/:playerId',
+        builder: (context, state) {
+          final playerId = state.pathParameters['playerId']!;
+          return PlayerDetailScreen(playerId: playerId);
+        },
       ),
 
       // Main Shell with Bottom Navigation

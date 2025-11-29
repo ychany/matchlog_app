@@ -192,7 +192,8 @@ class _ScheduleMatchCard extends ConsumerWidget {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: InkWell(
-        onTap: () => _showMatchOptions(context, ref),
+        onTap: () => context.push('/match/${match.id}'),
+        onLongPress: () => _showMatchOptions(context, ref),
         borderRadius: BorderRadius.circular(AppRadius.lg),
         child: Padding(
           padding: const EdgeInsets.all(16),

@@ -82,6 +82,55 @@ class SportsDbService {
         .toList();
   }
 
+  /// 선수 ID로 조회
+  Future<SportsDbPlayer?> getPlayerById(String playerId) async {
+    final data = await _get('lookupplayer.php?id=$playerId');
+    if (data == null || data['players'] == null || (data['players'] as List).isEmpty) {
+      return null;
+    }
+    return SportsDbPlayer.fromJson((data['players'] as List).first);
+  }
+
+  /// 선수 계약 정보 조회 (Premium)
+  Future<List<SportsDbContract>> getPlayerContracts(String playerId) async {
+    final data = await _get('lookupcontracts.php?id=$playerId');
+    if (data == null || data['contracts'] == null) return [];
+
+    return (data['contracts'] as List)
+        .map((json) => SportsDbContract.fromJson(json))
+        .toList();
+  }
+
+  /// 선수 수상 경력 조회 (Premium)
+  Future<List<SportsDbHonour>> getPlayerHonours(String playerId) async {
+    final data = await _get('lookuphonours.php?id=$playerId');
+    if (data == null || data['honours'] == null) return [];
+
+    return (data['honours'] as List)
+        .map((json) => SportsDbHonour.fromJson(json))
+        .toList();
+  }
+
+  /// 선수 마일스톤 조회 (Premium)
+  Future<List<SportsDbMilestone>> getPlayerMilestones(String playerId) async {
+    final data = await _get('lookupmilestones.php?id=$playerId');
+    if (data == null || data['milestones'] == null) return [];
+
+    return (data['milestones'] as List)
+        .map((json) => SportsDbMilestone.fromJson(json))
+        .toList();
+  }
+
+  /// 선수 전 소속팀 조회 (Premium)
+  Future<List<SportsDbFormerTeam>> getPlayerFormerTeams(String playerId) async {
+    final data = await _get('lookupformerteams.php?id=$playerId');
+    if (data == null || data['formerteams'] == null) return [];
+
+    return (data['formerteams'] as List)
+        .map((json) => SportsDbFormerTeam.fromJson(json))
+        .toList();
+  }
+
   // ============ 리그 ============
 
   /// 모든 리그 목록
@@ -107,24 +156,70 @@ class SportsDbService {
 
   // ============ 경기 일정 ============
 
-  /// 특정 날짜의 경기
+  /// 특정 날짜의 경기 (로컬 시간 기준)
+  /// 한국 시간 기준 하루는 UTC 전날 15:00 ~ 당일 15:00 이므로
+  /// 두 날짜의 경기를 가져와서 로컬 시간 기준으로 필터링
   Future<List<SportsDbEvent>> getEventsByDate(DateTime date, {String? sport, String? league}) async {
-    final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-    String endpoint = 'eventsday.php?d=$dateStr';
+    // 로컬 날짜의 시작과 끝 (UTC로 변환)
+    final localStart = DateTime(date.year, date.month, date.day);
+    final localEnd = localStart.add(const Duration(days: 1));
 
-    if (sport != null) {
-      endpoint += '&s=${Uri.encodeComponent(sport)}';
+    // UTC로 변환
+    final utcStart = localStart.toUtc();
+    final utcEnd = localEnd.toUtc();
+
+    // UTC 기준으로 필요한 날짜들 (한국은 UTC+9이므로 전날과 당일 필요)
+    final utcDates = <DateTime>{};
+    utcDates.add(DateTime.utc(utcStart.year, utcStart.month, utcStart.day));
+    utcDates.add(DateTime.utc(utcEnd.year, utcEnd.month, utcEnd.day));
+    // 전날도 추가 (UTC 기준 전날 15:00~24:00 경기가 한국 당일이 될 수 있음)
+    utcDates.add(DateTime.utc(utcStart.year, utcStart.month, utcStart.day).subtract(const Duration(days: 1)));
+
+    final allEvents = <SportsDbEvent>[];
+
+    // 각 UTC 날짜에 대해 API 호출
+    for (final utcDate in utcDates) {
+      final dateStr = '${utcDate.year}-${utcDate.month.toString().padLeft(2, '0')}-${utcDate.day.toString().padLeft(2, '0')}';
+      String endpoint = 'eventsday.php?d=$dateStr';
+
+      if (sport != null) {
+        endpoint += '&s=${Uri.encodeComponent(sport)}';
+      }
+      if (league != null) {
+        endpoint += '&l=${Uri.encodeComponent(league)}';
+      }
+
+      final data = await _get(endpoint);
+      if (data != null && data['events'] != null) {
+        final events = (data['events'] as List)
+            .map((json) => SportsDbEvent.fromJson(json))
+            .toList();
+        allEvents.addAll(events);
+      }
     }
-    if (league != null) {
-      endpoint += '&l=${Uri.encodeComponent(league)}';
-    }
 
-    final data = await _get(endpoint);
-    if (data == null || data['events'] == null) return [];
+    // 로컬 시간 기준으로 해당 날짜에 해당하는 경기만 필터링
+    final filteredEvents = allEvents.where((event) {
+      final eventDateTime = event.dateTime;
+      if (eventDateTime == null) return false;
 
-    return (data['events'] as List)
-        .map((json) => SportsDbEvent.fromJson(json))
-        .toList();
+      return eventDateTime.year == date.year &&
+          eventDateTime.month == date.month &&
+          eventDateTime.day == date.day;
+    }).toList();
+
+    // 중복 제거 (같은 경기가 여러 번 나올 수 있음)
+    final seen = <String>{};
+    final uniqueEvents = filteredEvents.where((event) => seen.add(event.id)).toList();
+
+    // 시간순 정렬
+    uniqueEvents.sort((a, b) {
+      final aTime = a.dateTime ?? DateTime.now();
+      final bTime = b.dateTime ?? DateTime.now();
+      return aTime.compareTo(bTime);
+    });
+
+    return uniqueEvents;
   }
 
   /// 리그의 다음 경기들
@@ -200,6 +295,48 @@ class SportsDbService {
 
     return (data['venues'] as List)
         .map((json) => SportsDbVenue.fromJson(json))
+        .toList();
+  }
+
+  // ============ 경기 상세 정보 ============
+
+  /// 경기 라인업 조회
+  Future<SportsDbLineup?> getEventLineup(String eventId) async {
+    final data = await _get('lookuplineup.php?id=$eventId');
+    if (data == null || data['lineup'] == null) return null;
+
+    return SportsDbLineup.fromJson(data['lineup'] as List);
+  }
+
+  /// 경기 통계 조회
+  Future<SportsDbEventStats?> getEventStats(String eventId) async {
+    final data = await _get('lookupeventstats.php?id=$eventId');
+    if (data == null || data['eventstats'] == null) return null;
+
+    return SportsDbEventStats.fromJson(
+      (data['eventstats'] as List).isNotEmpty
+        ? (data['eventstats'] as List).first
+        : {}
+    );
+  }
+
+  /// 경기 타임라인 (골, 카드 등 이벤트)
+  Future<List<SportsDbTimeline>> getEventTimeline(String eventId) async {
+    final data = await _get('lookupeventtimeline.php?id=$eventId');
+    if (data == null || data['timeline'] == null) return [];
+
+    return (data['timeline'] as List)
+        .map((json) => SportsDbTimeline.fromJson(json))
+        .toList();
+  }
+
+  /// 경기 TV 중계 정보
+  Future<List<SportsDbTv>> getEventTv(String eventId) async {
+    final data = await _get('lookuptv.php?id=$eventId');
+    if (data == null || data['tvevent'] == null) return [];
+
+    return (data['tvevent'] as List)
+        .map((json) => SportsDbTv.fromJson(json))
         .toList();
   }
 }
@@ -484,5 +621,398 @@ class SportsDbVenue {
       thumb: json['strThumb'],
       map: json['strMap'],
     );
+  }
+}
+
+/// 라인업 선수 모델
+class SportsDbLineupPlayer {
+  final String id;
+  final String name;
+  final String? position;
+  final String? number;
+  final String? team;
+  final String? teamId;
+  final bool isSubstitute;
+  final String? formation;  // 포지션 넘버 (4-3-3의 포지션 위치)
+
+  SportsDbLineupPlayer({
+    required this.id,
+    required this.name,
+    this.position,
+    this.number,
+    this.team,
+    this.teamId,
+    this.isSubstitute = false,
+    this.formation,
+  });
+
+  factory SportsDbLineupPlayer.fromJson(Map<String, dynamic> json) {
+    return SportsDbLineupPlayer(
+      id: json['idPlayer']?.toString() ?? '',
+      name: json['strPlayer'] ?? '',
+      position: json['strPosition'],
+      number: json['intSquadNumber']?.toString(),
+      team: json['strTeam'],
+      teamId: json['idTeam']?.toString(),
+      isSubstitute: json['strSubstitute'] == 'Yes',
+      formation: json['strPositionShort'],
+    );
+  }
+}
+
+/// 라인업 모델
+class SportsDbLineup {
+  final List<SportsDbLineupPlayer> homePlayers;
+  final List<SportsDbLineupPlayer> awayPlayers;
+  final List<SportsDbLineupPlayer> homeSubstitutes;
+  final List<SportsDbLineupPlayer> awaySubstitutes;
+  final String? homeFormation;
+  final String? awayFormation;
+
+  SportsDbLineup({
+    required this.homePlayers,
+    required this.awayPlayers,
+    required this.homeSubstitutes,
+    required this.awaySubstitutes,
+    this.homeFormation,
+    this.awayFormation,
+  });
+
+  factory SportsDbLineup.fromJson(List<dynamic> lineupList) {
+    final homePlayers = <SportsDbLineupPlayer>[];
+    final awayPlayers = <SportsDbLineupPlayer>[];
+    final homeSubstitutes = <SportsDbLineupPlayer>[];
+    final awaySubstitutes = <SportsDbLineupPlayer>[];
+    String? homeFormation;
+    String? awayFormation;
+
+    for (final item in lineupList) {
+      final player = SportsDbLineupPlayer.fromJson(item);
+
+      // API에서 홈/원정 구분
+      // strHome 필드: "Yes" = 홈팀, "No" = 원정팀
+      final strHome = item['strHome']?.toString();
+      final isHome = strHome?.toLowerCase() == 'yes';
+
+      final isSub = player.isSubstitute;
+
+      // 포메이션 추출 (첫 번째 선수에서)
+      if (item['strFormation'] != null) {
+        if (isHome && homeFormation == null) {
+          homeFormation = item['strFormation'];
+        } else if (!isHome && awayFormation == null) {
+          awayFormation = item['strFormation'];
+        }
+      }
+
+      if (isHome) {
+        if (isSub) {
+          homeSubstitutes.add(player);
+        } else {
+          homePlayers.add(player);
+        }
+      } else {
+        if (isSub) {
+          awaySubstitutes.add(player);
+        } else {
+          awayPlayers.add(player);
+        }
+      }
+    }
+
+    return SportsDbLineup(
+      homePlayers: homePlayers,
+      awayPlayers: awayPlayers,
+      homeSubstitutes: homeSubstitutes,
+      awaySubstitutes: awaySubstitutes,
+      homeFormation: homeFormation,
+      awayFormation: awayFormation,
+    );
+  }
+
+  bool get isEmpty =>
+      homePlayers.isEmpty &&
+      awayPlayers.isEmpty &&
+      homeSubstitutes.isEmpty &&
+      awaySubstitutes.isEmpty;
+}
+
+/// 경기 통계 모델
+class SportsDbEventStats {
+  final int? homePossession;
+  final int? awayPossession;
+  final int? homeShots;
+  final int? awayShots;
+  final int? homeShotsOnTarget;
+  final int? awayShotsOnTarget;
+  final int? homeCorners;
+  final int? awayCorners;
+  final int? homeFouls;
+  final int? awayFouls;
+  final int? homeYellowCards;
+  final int? awayYellowCards;
+  final int? homeRedCards;
+  final int? awayRedCards;
+  final int? homeOffsides;
+  final int? awayOffsides;
+
+  SportsDbEventStats({
+    this.homePossession,
+    this.awayPossession,
+    this.homeShots,
+    this.awayShots,
+    this.homeShotsOnTarget,
+    this.awayShotsOnTarget,
+    this.homeCorners,
+    this.awayCorners,
+    this.homeFouls,
+    this.awayFouls,
+    this.homeYellowCards,
+    this.awayYellowCards,
+    this.homeRedCards,
+    this.awayRedCards,
+    this.homeOffsides,
+    this.awayOffsides,
+  });
+
+  factory SportsDbEventStats.fromJson(Map<String, dynamic> json) {
+    return SportsDbEventStats(
+      homePossession: int.tryParse(json['intHomePossession']?.toString() ?? ''),
+      awayPossession: int.tryParse(json['intAwayPossession']?.toString() ?? ''),
+      homeShots: int.tryParse(json['intHomeShots']?.toString() ?? ''),
+      awayShots: int.tryParse(json['intAwayShots']?.toString() ?? ''),
+      homeShotsOnTarget: int.tryParse(json['intHomeShotsOnTarget']?.toString() ?? ''),
+      awayShotsOnTarget: int.tryParse(json['intAwayShotsOnTarget']?.toString() ?? ''),
+      homeCorners: int.tryParse(json['intHomeCorners']?.toString() ?? ''),
+      awayCorners: int.tryParse(json['intAwayCorners']?.toString() ?? ''),
+      homeFouls: int.tryParse(json['intHomeFouls']?.toString() ?? ''),
+      awayFouls: int.tryParse(json['intAwayFouls']?.toString() ?? ''),
+      homeYellowCards: int.tryParse(json['intHomeYellowCards']?.toString() ?? ''),
+      awayYellowCards: int.tryParse(json['intAwayYellowCards']?.toString() ?? ''),
+      homeRedCards: int.tryParse(json['intHomeRedCards']?.toString() ?? ''),
+      awayRedCards: int.tryParse(json['intAwayRedCards']?.toString() ?? ''),
+      homeOffsides: int.tryParse(json['intHomeOffsides']?.toString() ?? ''),
+      awayOffsides: int.tryParse(json['intAwayOffsides']?.toString() ?? ''),
+    );
+  }
+
+  bool get isEmpty =>
+      homePossession == null &&
+      awayPossession == null &&
+      homeShots == null &&
+      awayShots == null;
+}
+
+/// 경기 타임라인 (골, 카드 등) 모델
+class SportsDbTimeline {
+  final String id;
+  final String? type; // Goal, Yellow Card, Red Card, Substitution
+  final String? time;
+  final String? player;
+  final String? team;
+  final String? teamId;
+  final String? detail;
+  final bool isHome;
+
+  SportsDbTimeline({
+    required this.id,
+    this.type,
+    this.time,
+    this.player,
+    this.team,
+    this.teamId,
+    this.detail,
+    this.isHome = true,
+  });
+
+  factory SportsDbTimeline.fromJson(Map<String, dynamic> json) {
+    return SportsDbTimeline(
+      id: json['idTimeline']?.toString() ?? '',
+      type: json['strTimeline'],
+      time: json['strTimelineTime'],
+      player: json['strPlayer'],
+      team: json['strTeam'],
+      teamId: json['idTeam'],
+      detail: json['strTimelineDetail'],
+      isHome: json['strHomeOrAway'] == 'Home',
+    );
+  }
+}
+
+/// TV 중계 정보 모델
+class SportsDbTv {
+  final String id;
+  final String? channel;
+  final String? country;
+  final String? logo;
+  final String? time;
+
+  SportsDbTv({
+    required this.id,
+    this.channel,
+    this.country,
+    this.logo,
+    this.time,
+  });
+
+  factory SportsDbTv.fromJson(Map<String, dynamic> json) {
+    return SportsDbTv(
+      id: json['idTvEvent']?.toString() ?? '',
+      channel: json['strChannel'],
+      country: json['strCountry'],
+      logo: json['strLogo'],
+      time: json['strTimeLocal'],
+    );
+  }
+}
+
+/// 선수 계약 정보 모델
+class SportsDbContract {
+  final String id;
+  final String? playerId;
+  final String? playerName;
+  final String? teamId;
+  final String? teamName;
+  final String? teamBadge;
+  final String? yearStart;
+  final String? yearEnd;
+  final String? wage;
+
+  SportsDbContract({
+    required this.id,
+    this.playerId,
+    this.playerName,
+    this.teamId,
+    this.teamName,
+    this.teamBadge,
+    this.yearStart,
+    this.yearEnd,
+    this.wage,
+  });
+
+  factory SportsDbContract.fromJson(Map<String, dynamic> json) {
+    return SportsDbContract(
+      id: json['id']?.toString() ?? '',
+      playerId: json['idPlayer']?.toString(),
+      playerName: json['strPlayer'],
+      teamId: json['idTeam']?.toString(),
+      teamName: json['strTeam'],
+      teamBadge: json['strTeamBadge'],
+      yearStart: json['strYearStart'],
+      yearEnd: json['strYearEnd'],
+      wage: json['strWage'],
+    );
+  }
+
+  /// 현재 계약 여부
+  bool get isCurrent {
+    if (yearEnd == null) return true;
+    final endYear = int.tryParse(yearEnd!);
+    if (endYear == null) return false;
+    return endYear >= DateTime.now().year;
+  }
+
+  /// 계약 기간 표시
+  String get period {
+    if (yearStart == null && yearEnd == null) return '-';
+    if (yearEnd == null) return '$yearStart - 현재';
+    return '$yearStart - $yearEnd';
+  }
+}
+
+/// 선수 수상 경력 모델
+class SportsDbHonour {
+  final String id;
+  final String? playerId;
+  final String? teamId;
+  final String? honour;
+  final String? season;
+  final String? teamName;
+
+  SportsDbHonour({
+    required this.id,
+    this.playerId,
+    this.teamId,
+    this.honour,
+    this.season,
+    this.teamName,
+  });
+
+  factory SportsDbHonour.fromJson(Map<String, dynamic> json) {
+    return SportsDbHonour(
+      id: json['id']?.toString() ?? '',
+      playerId: json['idPlayer']?.toString(),
+      teamId: json['idTeam']?.toString(),
+      honour: json['strHonour'],
+      season: json['strSeason'],
+      teamName: json['strTeam'],
+    );
+  }
+}
+
+/// 선수 마일스톤 모델
+class SportsDbMilestone {
+  final String id;
+  final String? playerId;
+  final String? milestone;
+  final String? description;
+
+  SportsDbMilestone({
+    required this.id,
+    this.playerId,
+    this.milestone,
+    this.description,
+  });
+
+  factory SportsDbMilestone.fromJson(Map<String, dynamic> json) {
+    return SportsDbMilestone(
+      id: json['id']?.toString() ?? '',
+      playerId: json['idPlayer']?.toString(),
+      milestone: json['strMilestone'],
+      description: json['strMilestoneDescription'],
+    );
+  }
+}
+
+/// 선수 전 소속팀 모델
+class SportsDbFormerTeam {
+  final String id;
+  final String? playerId;
+  final String? teamId;
+  final String? teamName;
+  final String? teamBadge;
+  final String? sport;
+  final String? joined;
+  final String? departed;
+
+  SportsDbFormerTeam({
+    required this.id,
+    this.playerId,
+    this.teamId,
+    this.teamName,
+    this.teamBadge,
+    this.sport,
+    this.joined,
+    this.departed,
+  });
+
+  factory SportsDbFormerTeam.fromJson(Map<String, dynamic> json) {
+    return SportsDbFormerTeam(
+      id: json['id']?.toString() ?? '',
+      playerId: json['idPlayer']?.toString(),
+      teamId: json['idFormerTeam']?.toString(),
+      teamName: json['strFormerTeam'],
+      teamBadge: json['strTeamBadge'],
+      sport: json['strSport'],
+      joined: json['strJoined'],
+      departed: json['strDeparted'],
+    );
+  }
+
+  /// 소속 기간 표시
+  String get period {
+    if (joined == null && departed == null) return '-';
+    if (departed == null) return '$joined - ?';
+    return '$joined - $departed';
   }
 }
