@@ -7,6 +7,9 @@ final selectedStandingsLeagueProvider = StateProvider<String>((ref) {
   return AppConstants.supportedLeagues.first;
 });
 
+/// 선택된 시즌 상태 (null이면 현재 시즌)
+final selectedSeasonProvider = StateProvider<String?>((ref) => null);
+
 /// 리그 ID 매핑 (리그 이름 -> 리그 ID)
 /// TheSportsDB에서 확인된 정확한 ID
 final leagueIdMapping = <String, String>{
@@ -58,26 +61,80 @@ bool isCupCompetition(String leagueName) {
          leagueName == 'UEFA Europa League';
 }
 
-/// 리그 순위 Provider
-final leagueStandingsProvider = FutureProvider.family<List<SportsDbStanding>, String>((ref, leagueName) async {
+/// 리그별 선택 가능한 시즌 목록 생성
+List<String> getAvailableSeasons(String leagueName) {
+  final now = DateTime.now();
+  final year = now.year;
+  final month = now.month;
+  final seasons = <String>[];
+
+  if (leagueName == 'Korean K League 1') {
+    // K리그: 단일 연도 시즌, 최근 5년
+    final currentSeason = month < 3 ? year - 1 : year;
+    for (int i = 0; i < 5; i++) {
+      seasons.add('${currentSeason - i}');
+    }
+  } else {
+    // 유럽 리그: YYYY-YYYY 형식, 최근 5시즌
+    final currentSeasonStart = month >= 8 ? year : year - 1;
+    for (int i = 0; i < 5; i++) {
+      final startYear = currentSeasonStart - i;
+      seasons.add('$startYear-${startYear + 1}');
+    }
+  }
+
+  return seasons;
+}
+
+/// 시즌 표시명 (예: 2024-2025 -> 24/25)
+String getSeasonDisplayName(String season) {
+  if (season.contains('-')) {
+    final parts = season.split('-');
+    return "${parts[0].substring(2)}/${parts[1].substring(2)}";
+  }
+  return season;
+}
+
+/// 리그+시즌 조합 키
+class StandingsKey {
+  final String leagueName;
+  final String season;
+
+  StandingsKey(this.leagueName, this.season);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is StandingsKey &&
+          leagueName == other.leagueName &&
+          season == other.season;
+
+  @override
+  int get hashCode => leagueName.hashCode ^ season.hashCode;
+}
+
+/// 리그 순위 Provider (리그+시즌 조합)
+final leagueStandingsProvider = FutureProvider.family<List<SportsDbStanding>, StandingsKey>((ref, key) async {
   final service = SportsDbService();
 
   // 리그 ID 가져오기
-  String? leagueId = leagueIdMapping[leagueName];
+  String? leagueId = leagueIdMapping[key.leagueName];
 
   // 매핑에 없으면 API로 조회
-  leagueId ??= await service.getLeagueId(leagueName);
+  leagueId ??= await service.getLeagueId(key.leagueName);
 
   if (leagueId == null) {
     return [];
   }
 
-  final season = getSeasonForLeague(leagueName);
-  return service.getLeagueStandings(leagueId, season: season);
+  return service.getLeagueStandings(leagueId, season: key.season);
 });
 
-/// 선택된 리그의 순위
+/// 선택된 리그+시즌의 순위
 final selectedLeagueStandingsProvider = FutureProvider<List<SportsDbStanding>>((ref) async {
   final selectedLeague = ref.watch(selectedStandingsLeagueProvider);
-  return ref.watch(leagueStandingsProvider(selectedLeague).future);
+  final selectedSeason = ref.watch(selectedSeasonProvider);
+  final season = selectedSeason ?? getSeasonForLeague(selectedLeague);
+  final key = StandingsKey(selectedLeague, season);
+  return ref.watch(leagueStandingsProvider(key).future);
 });

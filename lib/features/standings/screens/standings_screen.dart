@@ -16,8 +16,12 @@ class StandingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedLeague = ref.watch(selectedStandingsLeagueProvider);
-    final standingsAsync = ref.watch(leagueStandingsProvider(selectedLeague));
+    final selectedSeason = ref.watch(selectedSeasonProvider);
+    final currentSeason = selectedSeason ?? getSeasonForLeague(selectedLeague);
+    final standingsKey = StandingsKey(selectedLeague, currentSeason);
+    final standingsAsync = ref.watch(leagueStandingsProvider(standingsKey));
     final isCup = isCupCompetition(selectedLeague);
+    final availableSeasons = getAvailableSeasons(selectedLeague);
 
     return Scaffold(
       appBar: AppBar(
@@ -46,6 +50,8 @@ class StandingsScreen extends ConsumerWidget {
                     selected: isSelected,
                     onSelected: (_) {
                       ref.read(selectedStandingsLeagueProvider.notifier).state = league;
+                      // 리그 변경시 시즌도 리셋
+                      ref.read(selectedSeasonProvider.notifier).state = null;
                     },
                     selectedColor: AppColors.primary,
                     checkmarkColor: Colors.white,
@@ -56,6 +62,41 @@ class StandingsScreen extends ConsumerWidget {
                   ),
                 );
               }).toList(),
+            ),
+          ),
+
+          // Season Selector
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: availableSeasons.map((season) {
+                  final isSelected = season == currentSeason;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: ChoiceChip(
+                      label: Text(
+                        getSeasonDisplayName(season),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isSelected ? Colors.white : Colors.black87,
+                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                        ),
+                      ),
+                      selected: isSelected,
+                      onSelected: (_) {
+                        ref.read(selectedSeasonProvider.notifier).state = season;
+                      },
+                      selectedColor: AppColors.primary,
+                      backgroundColor: Colors.grey.shade100,
+                      side: BorderSide.none,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  );
+                }).toList(),
+              ),
             ),
           ),
 
@@ -143,7 +184,7 @@ class StandingsScreen extends ConsumerWidget {
 
                 return RefreshIndicator(
                   onRefresh: () async {
-                    ref.invalidate(leagueStandingsProvider(selectedLeague));
+                    ref.invalidate(leagueStandingsProvider(standingsKey));
                   },
                   child: _StandingsTable(standings: standings),
                 );
@@ -151,7 +192,7 @@ class StandingsScreen extends ConsumerWidget {
               loading: () => const LoadingIndicator(),
               error: (e, _) => ErrorState(
                 message: e.toString(),
-                onRetry: () => ref.invalidate(leagueStandingsProvider(selectedLeague)),
+                onRetry: () => ref.invalidate(leagueStandingsProvider(standingsKey)),
               ),
             ),
           ),
