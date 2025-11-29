@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "899130811176",
+    "project_id": "matchlog-app",
+    "storage_bucket": "matchlog-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:899130811176:android:b94bccb215e4e597c1e61d",
+        "android_client_info": {
+          "package_name": "com.matchlog.matchlog_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDHyoLi4CFV4TM-8vQp-pifawILnAMw79o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

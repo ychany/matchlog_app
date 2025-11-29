@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(firebase login:*)",
+      "Bash(dart pub global activate:*)",
+      "Bash($HOME/.pub-cache/bin/flutterfire configure --project=matchlog-app-12345)",
+      "Bash(firebase projects:list:*)",
+      "Bash($HOME/.pub-cache/bin/flutterfire configure:*)",
+      "Bash(firebase apps:list:*)",
+      "Bash(firebase apps:sdkconfig:*)",
+      "Bash(flutter clean:*)",
+      "Bash(flutter pub get:*)",
+      "Bash(pod install)",
+      "Bash(export LANG=en_US.UTF-8)",
+      "Bash(export LC_ALL=en_US.UTF-8:*)",
+      "Bash(flutter analyze:*)",
+      "Bash(dart analyze:*)",
+      "Bash(flutter build:*)",
+      "Bash(cat:*)",
+      "Bash(dart format:*)",
+      "Bash(find:*)",
+      "Bash(iconv:*)",
+      "Bash(for f in \"/Users/joyeongchan/matchlog_app/lib/features/diary/models/diary_entry.dart\" \"/Users/joyeongchan/matchlog_app/lib/features/diary/services/diary_service.dart\" \"/Users/joyeongchan/matchlog_app/lib/shared/models/team_model.dart\" \"/Users/joyeongchan/matchlog_app/lib/shared/models/match_model.dart\" \"/Users/joyeongchan/matchlog_app/lib/shared/widgets/stadium_info_tile.dart\" \"/Users/joyeongchan/matchlog_app/lib/shared/widgets/match_stat_chip.dart\" \"/Users/joyeongchan/matchlog_app/lib/shared/widgets/photo_carousel.dart\" \"/Users/joyeongchan/matchlog_app/lib/shared/widgets/favorite_toggle_button.dart\")",
+      "Bash(do cat \"$f\")",
+      "Bash(flutter run:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

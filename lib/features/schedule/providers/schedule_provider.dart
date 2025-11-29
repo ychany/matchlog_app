@@ -1,0 +1,224 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../shared/models/match_model.dart';
+import '../models/notification_setting.dart';
+import '../services/schedule_service.dart';
+import '../../auth/providers/auth_provider.dart';
+import '../../favorites/providers/favorites_provider.dart';
+
+// Schedule Service Provider
+final scheduleServiceProvider = Provider<ScheduleService>((ref) {
+  return ScheduleService();
+});
+
+// Selected Date Provider
+final selectedDateProvider = StateProvider<DateTime>((ref) {
+  return DateTime.now();
+});
+
+// Schedules by Date Provider
+final schedulesByDateProvider = FutureProvider<List<Match>>((ref) async {
+  final service = ref.watch(scheduleServiceProvider);
+  final selectedDate = ref.watch(selectedDateProvider);
+  final favoriteTeamIds = ref.watch(favoriteTeamIdsProvider).value ?? [];
+
+  return service.getSchedulesByDate(
+    selectedDate,
+    favoriteTeamIds: favoriteTeamIds,
+  );
+});
+
+// Schedules Stream Provider (for date range)
+class ScheduleDateRange {
+  final DateTime startDate;
+  final DateTime endDate;
+  final String? league;
+
+  ScheduleDateRange({
+    required this.startDate,
+    required this.endDate,
+    this.league,
+  });
+}
+
+final schedulesStreamProvider =
+    StreamProvider.family<List<Match>, ScheduleDateRange>((ref, range) {
+  final service = ref.watch(scheduleServiceProvider);
+  final favoriteTeamIds = ref.watch(favoriteTeamIdsProvider).value ?? [];
+
+  return service.getSchedules(
+    startDate: range.startDate,
+    endDate: range.endDate,
+    league: range.league,
+    favoriteTeamIds: favoriteTeamIds,
+  );
+});
+
+// Upcoming Matches for Favorite Teams Provider
+final upcomingFavoriteMatchesProvider =
+    FutureProvider<List<Match>>((ref) async {
+  final service = ref.watch(scheduleServiceProvider);
+  final favoriteTeamIds = ref.watch(favoriteTeamIdsProvider).value ?? [];
+
+  if (favoriteTeamIds.isEmpty) return [];
+  return service.getUpcomingMatchesForTeams(favoriteTeamIds, limit: 10);
+});
+
+// Match by ID Provider
+final matchByIdProvider =
+    FutureProvider.family<Match?, String>((ref, matchId) async {
+  final service = ref.watch(scheduleServiceProvider);
+  return service.getMatch(matchId);
+});
+
+// Matches by League Provider
+final matchesByLeagueProvider =
+    FutureProvider.family<List<Match>, String>((ref, league) async {
+  final service = ref.watch(scheduleServiceProvider);
+  final now = DateTime.now();
+  return service.getMatchesByLeague(
+    league,
+    startDate: now.subtract(const Duration(days: 7)),
+    endDate: now.add(const Duration(days: 14)),
+  );
+});
+
+// === Notification Providers ===
+
+// Notification Setting for Match Provider
+final matchNotificationProvider =
+    FutureProvider.family<NotificationSetting?, String>((ref, matchId) async {
+  final service = ref.watch(scheduleServiceProvider);
+  final userId = ref.watch(currentUserIdProvider);
+
+  if (userId == null) return null;
+  return service.getNotificationSetting(userId, matchId);
+});
+
+// Has Notification Provider
+final hasNotificationProvider =
+    FutureProvider.family<bool, String>((ref, matchId) async {
+  final service = ref.watch(scheduleServiceProvider);
+  final userId = ref.watch(currentUserIdProvider);
+
+  if (userId == null) return false;
+  return service.hasNotification(userId, matchId);
+});
+
+// User Notification Settings Provider
+final userNotificationSettingsProvider =
+    FutureProvider<List<NotificationSetting>>((ref) async {
+  final service = ref.watch(scheduleServiceProvider);
+  final userId = ref.watch(currentUserIdProvider);
+
+  if (userId == null) return [];
+  return service.getUserNotificationSettings(userId);
+});
+
+// Schedule Notifier for actions
+class ScheduleNotifier extends StateNotifier<AsyncValue<void>> {
+  final ScheduleService _service;
+  final Ref _ref;
+
+  ScheduleNotifier(this._service, this._ref)
+      : super(const AsyncValue.data(null));
+
+  Future<void> setNotification({
+    required String matchId,
+    bool notifyKickoff = true,
+    bool notifyLineup = false,
+    bool notifyResult = true,
+  }) async {
+    final userId = _ref.read(currentUserIdProvider);
+    if (userId == null) return;
+
+    state = const AsyncValue.loading();
+    try {
+      await _service.setNotification(
+        userId: userId,
+        matchId: matchId,
+        notifyKickoff: notifyKickoff,
+        notifyLineup: notifyLineup,
+        notifyResult: notifyResult,
+      );
+      state = const AsyncValue.data(null);
+      // Invalidate related providers
+      _ref.invalidate(matchNotificationProvider(matchId));
+      _ref.invalidate(hasNotificationProvider(matchId));
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  Future<void> toggleNotification({
+    required String matchId,
+    required String type,
+    required bool value,
+  }) async {
+    final userId = _ref.read(currentUserIdProvider);
+    if (userId == null) return;
+
+    state = const AsyncValue.loading();
+    try {
+      await _service.toggleNotification(
+        userId: userId,
+        matchId: matchId,
+        type: type,
+        value: value,
+      );
+      state = const AsyncValue.data(null);
+      _ref.invalidate(matchNotificationProvider(matchId));
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  Future<void> removeNotification(String matchId) async {
+    final userId = _ref.read(currentUserIdProvider);
+    if (userId == null) return;
+
+    state = const AsyncValue.loading();
+    try {
+      await _service.removeNotification(userId, matchId);
+      state = const AsyncValue.data(null);
+      _ref.invalidate(matchNotificationProvider(matchId));
+      _ref.invalidate(hasNotificationProvider(matchId));
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+}
+
+final scheduleNotifierProvider =
+    StateNotifierProvider<ScheduleNotifier, AsyncValue<void>>((ref) {
+  final service = ref.watch(scheduleServiceProvider);
+  return ScheduleNotifier(service, ref);
+});
+
+// League Filter Provider
+final selectedLeagueProvider = StateProvider<String?>((ref) => null);
+
+// Filtered Schedules Provider
+final filteredSchedulesProvider = FutureProvider<List<Match>>((ref) async {
+  final service = ref.watch(scheduleServiceProvider);
+  final selectedDate = ref.watch(selectedDateProvider);
+  final selectedLeague = ref.watch(selectedLeagueProvider);
+  final favoriteTeamIds = ref.watch(favoriteTeamIdsProvider).value ?? [];
+
+  var matches = await service.getSchedulesByDate(
+    selectedDate,
+    favoriteTeamIds: favoriteTeamIds,
+  );
+
+  if (selectedLeague != null) {
+    // API 리그 이름과 필터 리그 이름 비교 (부분 일치 또는 정확히 일치)
+    matches = matches.where((m) {
+      final matchLeague = m.league.toLowerCase();
+      final filterLeague = selectedLeague.toLowerCase();
+      return matchLeague == filterLeague ||
+             matchLeague.contains(filterLeague) ||
+             filterLeague.contains(matchLeague);
+    }).toList();
+  }
+
+  return matches;
+});
