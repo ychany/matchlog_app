@@ -194,8 +194,8 @@ final scheduleNotifierProvider =
   return ScheduleNotifier(service, ref);
 });
 
-// League Filter Provider
-final selectedLeagueProvider = StateProvider<String?>((ref) => null);
+// League Filter Provider (기본값: EPL)
+final selectedLeagueProvider = StateProvider<String?>((ref) => 'English Premier League');
 
 // Filtered Schedules Provider
 final filteredSchedulesProvider = FutureProvider<List<Match>>((ref) async {
