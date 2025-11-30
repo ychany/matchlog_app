@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/services/sports_db_service.dart';
+import '../../../shared/services/storage_service.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../models/attendance_record.dart';
 import '../providers/attendance_provider.dart';
@@ -60,6 +61,11 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
   SportsDbPlayer? _selectedMvp;
   List<String> _tags = [];
 
+  // 응원한 팀 (승/무/패 계산용)
+  String? _supportedTeamId;
+  String _homeTeamId = '';
+  String _awayTeamId = '';
+
   final List<String> _weatherOptions = ['맑음 ☀️', '흐림 ☁️', '비 🌧️', '눈 ❄️', '바람 💨'];
 
   @override
@@ -77,6 +83,9 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
           _selectedDate = record.date;
           _homeTeamName = record.homeTeamName;
           _awayTeamName = record.awayTeamName;
+          _homeTeamId = record.homeTeamId;
+          _awayTeamId = record.awayTeamId;
+          _supportedTeamId = record.supportedTeamId;
           _league = record.league;
           _stadiumController.text = record.stadium;
           _seatController.text = record.seatInfo ?? '';
@@ -209,6 +218,8 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
             _buildMatchCard(),
             const SizedBox(height: 24),
             _buildScoreInput(),
+            const SizedBox(height: 16),
+            _buildSupportedTeamSelector(),
             const SizedBox(height: 16),
             _buildTextField(
               controller: _stadiumController,
@@ -349,6 +360,37 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
                 keyboardType: TextInputType.number,
                 textAlign: TextAlign.center,
                 decoration: InputDecoration(hintText: _awayTeamName),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSupportedTeamSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('내가 응원한 팀', style: AppTextStyles.subtitle1),
+        const SizedBox(height: 4),
+        Text('승/무/패 통계에 반영됩니다', style: AppTextStyles.caption.copyWith(color: Colors.grey)),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: _TeamSelectButton(
+                teamName: _homeTeamName,
+                isSelected: _supportedTeamId == _homeTeamId,
+                onTap: () => setState(() => _supportedTeamId = _homeTeamId),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _TeamSelectButton(
+                teamName: _awayTeamName,
+                isSelected: _supportedTeamId == _awayTeamId,
+                onTap: () => setState(() => _supportedTeamId = _awayTeamId),
               ),
             ),
           ],
@@ -717,12 +759,24 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
       final awayScore = int.tryParse(_awayScoreController.text);
       final ticketPrice = int.tryParse(_ticketPriceController.text);
 
+      // 새 사진 업로드
+      List<String> allPhotoUrls = List.from(_existingPhotos);
+      if (_newPhotos.isNotEmpty) {
+        final storageService = StorageService();
+        final newUrls = await storageService.uploadAttendancePhotos(
+          userId: userId,
+          recordId: _originalRecord!.id,
+          files: _newPhotos,
+        );
+        allPhotoUrls.addAll(newUrls);
+      }
+
       final updatedRecord = _originalRecord!.copyWith(
         stadium: _stadiumController.text.isNotEmpty ? _stadiumController.text : _originalRecord!.stadium,
         seatInfo: _seatController.text.isEmpty ? null : _seatController.text,
         homeScore: homeScore,
         awayScore: awayScore,
-        photos: _existingPhotos,
+        photos: allPhotoUrls,
         updatedAt: DateTime.now(),
         diaryTitle: _titleController.text.isEmpty ? null : _titleController.text,
         diaryContent: _contentController.text.isEmpty ? null : _contentController.text,
@@ -735,6 +789,7 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
         companion: _companionController.text.isEmpty ? null : _companionController.text,
         ticketPrice: ticketPrice,
         foodReview: _foodReviewController.text.isEmpty ? null : _foodReviewController.text,
+        supportedTeamId: _supportedTeamId,
       );
 
       await ref.read(attendanceNotifierProvider.notifier).updateAttendance(updatedRecord);
@@ -795,6 +850,58 @@ class _PhotoAddButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade300), borderRadius: BorderRadius.circular(AppRadius.md)),
           child: Column(children: [Icon(icon, color: Colors.grey.shade600), const SizedBox(height: 4), Text(label, style: TextStyle(color: Colors.grey.shade600))]),
+        ),
+      ),
+    );
+  }
+}
+
+class _TeamSelectButton extends StatelessWidget {
+  final String teamName;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _TeamSelectButton({
+    required this.teamName,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : Colors.grey.shade300,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (isSelected)
+              const Padding(
+                padding: EdgeInsets.only(right: 8),
+                child: Icon(Icons.check_circle, color: Colors.white, size: 20),
+              ),
+            Flexible(
+              child: Text(
+                teamName,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : Colors.grey.shade700,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                ),
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
         ),
       ),
     );

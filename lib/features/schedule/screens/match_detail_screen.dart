@@ -196,32 +196,37 @@ class _MatchHeader extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Expanded(
-                    child: Column(
-                      children: [
-                        if (match.homeTeamBadge != null)
-                          CachedNetworkImage(
-                            imageUrl: match.homeTeamBadge!,
-                            width: 48,
-                            height: 48,
-                            fit: BoxFit.contain,
-                            placeholder: (_, __) => const Icon(Icons.shield, size: 48, color: Colors.white54),
-                            errorWidget: (_, __, ___) => const Icon(Icons.shield, size: 48, color: Colors.white54),
-                          )
-                        else
-                          const Icon(Icons.shield, size: 48, color: Colors.white54),
-                        const SizedBox(height: 8),
-                        Text(
-                          match.homeTeam ?? '',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
+                    child: GestureDetector(
+                      onTap: match.homeTeamId != null
+                          ? () => context.push('/team/${match.homeTeamId}')
+                          : null,
+                      child: Column(
+                        children: [
+                          if (match.homeTeamBadge != null)
+                            CachedNetworkImage(
+                              imageUrl: match.homeTeamBadge!,
+                              width: 48,
+                              height: 48,
+                              fit: BoxFit.contain,
+                              placeholder: (_, __) => const Icon(Icons.shield, size: 48, color: Colors.white54),
+                              errorWidget: (_, __, ___) => const Icon(Icons.shield, size: 48, color: Colors.white54),
+                            )
+                          else
+                            const Icon(Icons.shield, size: 48, color: Colors.white54),
+                          const SizedBox(height: 8),
+                          Text(
+                            match.homeTeam ?? '',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                   Padding(
@@ -255,32 +260,37 @@ class _MatchHeader extends StatelessWidget {
                           ),
                   ),
                   Expanded(
-                    child: Column(
-                      children: [
-                        if (match.awayTeamBadge != null)
-                          CachedNetworkImage(
-                            imageUrl: match.awayTeamBadge!,
-                            width: 48,
-                            height: 48,
-                            fit: BoxFit.contain,
-                            placeholder: (_, __) => const Icon(Icons.shield, size: 48, color: Colors.white54),
-                            errorWidget: (_, __, ___) => const Icon(Icons.shield, size: 48, color: Colors.white54),
-                          )
-                        else
-                          const Icon(Icons.shield, size: 48, color: Colors.white54),
-                        const SizedBox(height: 8),
-                        Text(
-                          match.awayTeam ?? '',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
+                    child: GestureDetector(
+                      onTap: match.awayTeamId != null
+                          ? () => context.push('/team/${match.awayTeamId}')
+                          : null,
+                      child: Column(
+                        children: [
+                          if (match.awayTeamBadge != null)
+                            CachedNetworkImage(
+                              imageUrl: match.awayTeamBadge!,
+                              width: 48,
+                              height: 48,
+                              fit: BoxFit.contain,
+                              placeholder: (_, __) => const Icon(Icons.shield, size: 48, color: Colors.white54),
+                              errorWidget: (_, __, ___) => const Icon(Icons.shield, size: 48, color: Colors.white54),
+                            )
+                          else
+                            const Icon(Icons.shield, size: 48, color: Colors.white54),
+                          const SizedBox(height: 8),
+                          Text(
+                            match.awayTeam ?? '',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ],

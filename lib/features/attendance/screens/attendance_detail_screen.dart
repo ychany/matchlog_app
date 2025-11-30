@@ -155,23 +155,28 @@ class _DetailContentState extends ConsumerState<_DetailContent>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Column(
-                      children: [
-                        TeamLogo(
-                          logoUrl: record.homeTeamLogo,
-                          teamName: record.homeTeamName,
-                          size: 56,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          record.homeTeamName,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
+                    GestureDetector(
+                      onTap: record.homeTeamId.isNotEmpty
+                          ? () => context.push('/team/${record.homeTeamId}')
+                          : null,
+                      child: Column(
+                        children: [
+                          TeamLogo(
+                            logoUrl: record.homeTeamLogo,
+                            teamName: record.homeTeamName,
+                            size: 56,
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 8),
+                          Text(
+                            record.homeTeamName,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -184,23 +189,28 @@ class _DetailContentState extends ConsumerState<_DetailContent>
                         ),
                       ),
                     ),
-                    Column(
-                      children: [
-                        TeamLogo(
-                          logoUrl: record.awayTeamLogo,
-                          teamName: record.awayTeamName,
-                          size: 56,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          record.awayTeamName,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
+                    GestureDetector(
+                      onTap: record.awayTeamId.isNotEmpty
+                          ? () => context.push('/team/${record.awayTeamId}')
+                          : null,
+                      child: Column(
+                        children: [
+                          TeamLogo(
+                            logoUrl: record.awayTeamLogo,
+                            teamName: record.awayTeamName,
+                            size: 56,
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 8),
+                          Text(
+                            record.awayTeamName,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),

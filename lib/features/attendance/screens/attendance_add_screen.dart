@@ -7,6 +7,8 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/services/sports_db_service.dart';
+import '../../../core/constants/app_constants.dart';
+import '../../../shared/services/storage_service.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../models/attendance_record.dart';
 import '../providers/attendance_provider.dart';
@@ -56,9 +58,13 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
   SportsDbPlayer? _selectedMvp;
   final List<String> _tags = [];
 
+  // 응원한 팀 (승/무/패 계산용)
+  String? _supportedTeamId;
+
   // 검색 상태
   bool _isSearching = false;
   List<SportsDbEvent> _searchResults = [];
+  String? _searchLeague; // 리그 필터
 
   // 저장 상태
   bool _isSaving = false;
@@ -228,6 +234,8 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
             const SizedBox(height: 24),
             _buildScoreInput(),
             const SizedBox(height: 16),
+            _buildSupportedTeamSelector(),
+            const SizedBox(height: 16),
             _buildTextField(
               controller: _stadiumController,
               label: '경기장',
@@ -329,10 +337,14 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
       children: [
         _buildDateSelector(),
         const SizedBox(height: 12),
+        // 리그 선택
+        _buildLeagueSelector(),
+        const SizedBox(height: 12),
+        // 팀 이름 검색 (선택사항)
         TextField(
           controller: _searchController,
           decoration: InputDecoration(
-            hintText: '팀 이름으로 검색',
+            hintText: '팀 이름으로 검색 (선택사항)',
             prefixIcon: const Icon(Icons.search),
             suffixIcon: _isSearching
                 ? const Padding(
@@ -342,6 +354,49 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
                 : IconButton(icon: const Icon(Icons.search), onPressed: _searchEvents),
           ),
           onSubmitted: (_) => _searchEvents(),
+        ),
+        const SizedBox(height: 12),
+        // 날짜/리그로 조회 버튼
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: _isSearching ? null : _searchEventsByDateAndLeague,
+            icon: const Icon(Icons.calendar_today),
+            label: Text(_searchLeague != null
+                ? '${DateFormat('MM/dd').format(_selectedDate)} ${AppConstants.getLeagueDisplayName(_searchLeague!)} 경기 조회'
+                : '${DateFormat('MM/dd').format(_selectedDate)} 전체 경기 조회'),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLeagueSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('리그 선택', style: AppTextStyles.caption.copyWith(color: Colors.grey)),
+        const SizedBox(height: 8),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              _LeagueFilterChip(
+                label: '전체',
+                isSelected: _searchLeague == null,
+                onTap: () => setState(() => _searchLeague = null),
+              ),
+              const SizedBox(width: 8),
+              ...AppConstants.supportedLeagues.map((league) => Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: _LeagueFilterChip(
+                  label: AppConstants.getLeagueDisplayName(league),
+                  isSelected: _searchLeague == league,
+                  onTap: () => setState(() => _searchLeague = league),
+                ),
+              )),
+            ],
+          ),
         ),
       ],
     );
@@ -529,6 +584,42 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
                 keyboardType: TextInputType.number,
                 textAlign: TextAlign.center,
                 decoration: InputDecoration(hintText: _selectedEvent?.awayTeam ?? _selectedAwayTeam?.name ?? '원정'),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSupportedTeamSelector() {
+    final homeTeamId = _selectedEvent?.homeTeamId ?? _selectedHomeTeam?.id ?? '';
+    final homeTeamName = _selectedEvent?.homeTeam ?? _selectedHomeTeam?.name ?? '홈팀';
+    final awayTeamId = _selectedEvent?.awayTeamId ?? _selectedAwayTeam?.id ?? '';
+    final awayTeamName = _selectedEvent?.awayTeam ?? _selectedAwayTeam?.name ?? '원정팀';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('내가 응원한 팀', style: AppTextStyles.subtitle1),
+        const SizedBox(height: 4),
+        Text('승/무/패 통계에 반영됩니다', style: AppTextStyles.caption.copyWith(color: Colors.grey)),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: _TeamSelectButton(
+                teamName: homeTeamName,
+                isSelected: _supportedTeamId == homeTeamId,
+                onTap: () => setState(() => _supportedTeamId = homeTeamId),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _TeamSelectButton(
+                teamName: awayTeamName,
+                isSelected: _supportedTeamId == awayTeamId,
+                onTap: () => setState(() => _supportedTeamId = awayTeamId),
               ),
             ),
           ],
@@ -798,11 +889,19 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
 
   Future<void> _searchEvents() async {
     final query = _searchController.text.trim();
-    if (query.isEmpty) return;
+    if (query.isEmpty) {
+      // 팀 이름 없이 날짜/리그로 검색
+      _searchEventsByDateAndLeague();
+      return;
+    }
 
     setState(() => _isSearching = true);
     try {
-      final events = await _sportsDbService.getEventsByDate(_selectedDate, sport: 'Soccer');
+      final events = await _sportsDbService.getEventsByDate(
+        _selectedDate,
+        sport: 'Soccer',
+        league: _searchLeague,
+      );
       final filtered = events.where((event) {
         final searchLower = query.toLowerCase();
         return (event.homeTeam?.toLowerCase().contains(searchLower) ?? false) ||
@@ -815,6 +914,20 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
       } else {
         setState(() => _searchResults = filtered);
       }
+    } finally {
+      setState(() => _isSearching = false);
+    }
+  }
+
+  Future<void> _searchEventsByDateAndLeague() async {
+    setState(() => _isSearching = true);
+    try {
+      final events = await _sportsDbService.getEventsByDate(
+        _selectedDate,
+        sport: 'Soccer',
+        league: _searchLeague,
+      );
+      setState(() => _searchResults = events);
     } finally {
       setState(() => _isSearching = false);
     }
@@ -921,6 +1034,20 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
       final ticketPrice = int.tryParse(_ticketPriceController.text);
       final now = DateTime.now();
 
+      // 임시 recordId 생성 (사진 업로드용)
+      final tempRecordId = DateTime.now().millisecondsSinceEpoch.toString();
+
+      // 사진 업로드
+      List<String> photoUrls = [];
+      if (_photos.isNotEmpty) {
+        final storageService = StorageService();
+        photoUrls = await storageService.uploadAttendancePhotos(
+          userId: userId,
+          recordId: tempRecordId,
+          files: _photos,
+        );
+      }
+
       final record = AttendanceRecord(
         id: '',
         userId: userId,
@@ -937,7 +1064,7 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
         homeScore: homeScore,
         awayScore: awayScore,
         matchId: _selectedEvent?.id,
-        photos: [],
+        photos: photoUrls,
         createdAt: now,
         updatedAt: now,
         diaryTitle: _titleController.text.isEmpty ? null : _titleController.text,
@@ -951,6 +1078,7 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
         companion: _companionController.text.isEmpty ? null : _companionController.text,
         ticketPrice: ticketPrice,
         foodReview: _foodReviewController.text.isEmpty ? null : _foodReviewController.text,
+        supportedTeamId: _supportedTeamId,
       );
 
       await ref.read(attendanceNotifierProvider.notifier).addAttendance(record);
@@ -1088,6 +1216,92 @@ class _PhotoAddButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade300), borderRadius: BorderRadius.circular(AppRadius.md)),
           child: Column(children: [Icon(icon, color: Colors.grey.shade600), const SizedBox(height: 4), Text(label, style: TextStyle(color: Colors.grey.shade600))]),
+        ),
+      ),
+    );
+  }
+}
+
+class _LeagueFilterChip extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _LeagueFilterChip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : Colors.grey.shade200,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.grey.shade700,
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TeamSelectButton extends StatelessWidget {
+  final String teamName;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _TeamSelectButton({
+    required this.teamName,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : Colors.grey.shade300,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (isSelected)
+              const Padding(
+                padding: EdgeInsets.only(right: 8),
+                child: Icon(Icons.check_circle, color: Colors.white, size: 20),
+              ),
+            Flexible(
+              child: Text(
+                teamName,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : Colors.grey.shade700,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                ),
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
         ),
       ),
     );

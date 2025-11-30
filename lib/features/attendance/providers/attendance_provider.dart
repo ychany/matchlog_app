@@ -54,6 +54,8 @@ class AttendanceNotifier extends StateNotifier<AsyncValue<void>> {
     try {
       final id = await _service.addAttendance(record);
       state = const AsyncValue.data(null);
+      // 통계 갱신
+      _ref.invalidate(attendanceStatsProvider);
       return id;
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -66,6 +68,8 @@ class AttendanceNotifier extends StateNotifier<AsyncValue<void>> {
     try {
       await _service.updateAttendance(record);
       state = const AsyncValue.data(null);
+      // 통계 갱신
+      _ref.invalidate(attendanceStatsProvider);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
@@ -76,6 +80,8 @@ class AttendanceNotifier extends StateNotifier<AsyncValue<void>> {
     try {
       await _service.deleteAttendance(id);
       state = const AsyncValue.data(null);
+      // 통계 갱신
+      _ref.invalidate(attendanceStatsProvider);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }

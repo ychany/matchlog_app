@@ -76,6 +76,7 @@ class AttendanceRecord extends Equatable {
   final int? ticketPrice;         // 티켓 가격
   final String? foodReview;       // 경기장 음식 후기
   final bool isFavorite;          // 즐겨찾기
+  final String? supportedTeamId;  // 내가 응원한 팀 ID (승/무/패 계산용)
 
   const AttendanceRecord({
     required this.id,
@@ -112,6 +113,7 @@ class AttendanceRecord extends Equatable {
     this.ticketPrice,
     this.foodReview,
     this.isFavorite = false,
+    this.supportedTeamId,
   });
 
   MatchResult getResultForTeam(String teamId) {
@@ -174,6 +176,7 @@ class AttendanceRecord extends Equatable {
       ticketPrice: data['ticketPrice'] as int?,
       foodReview: data['foodReview'] as String?,
       isFavorite: data['isFavorite'] as bool? ?? false,
+      supportedTeamId: data['supportedTeamId'] as String?,
     );
   }
 
@@ -212,6 +215,7 @@ class AttendanceRecord extends Equatable {
       'ticketPrice': ticketPrice,
       'foodReview': foodReview,
       'isFavorite': isFavorite,
+      'supportedTeamId': supportedTeamId,
     };
   }
 
@@ -250,6 +254,7 @@ class AttendanceRecord extends Equatable {
     int? ticketPrice,
     String? foodReview,
     bool? isFavorite,
+    String? supportedTeamId,
   }) {
     return AttendanceRecord(
       id: id ?? this.id,
@@ -286,7 +291,14 @@ class AttendanceRecord extends Equatable {
       ticketPrice: ticketPrice ?? this.ticketPrice,
       foodReview: foodReview ?? this.foodReview,
       isFavorite: isFavorite ?? this.isFavorite,
+      supportedTeamId: supportedTeamId ?? this.supportedTeamId,
     );
+  }
+
+  /// 내가 응원한 팀 기준 경기 결과
+  MatchResult get myResult {
+    if (supportedTeamId == null) return MatchResult.unknown;
+    return getResultForTeam(supportedTeamId!);
   }
 
   @override
@@ -403,9 +415,10 @@ class AttendanceStats {
       // League count
       leagueCount[record.league] = (leagueCount[record.league] ?? 0) + 1;
 
-      // Win/Draw/Loss for favorite team
-      if (favoriteTeamId != null) {
-        final result = record.getResultForTeam(favoriteTeamId);
+      // Win/Draw/Loss - supportedTeamId가 있으면 그것 기준, 없으면 favoriteTeamId 기준
+      final teamIdForResult = record.supportedTeamId ?? favoriteTeamId;
+      if (teamIdForResult != null) {
+        final result = record.getResultForTeam(teamIdForResult);
         switch (result) {
           case MatchResult.win:
             wins++;
