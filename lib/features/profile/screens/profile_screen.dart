@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../attendance/providers/attendance_provider.dart';
+import '../../favorites/providers/favorites_provider.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -291,19 +293,193 @@ class _StatItem extends StatelessWidget {
   }
 }
 
-class _MenuSection extends StatelessWidget {
+class _MenuSection extends ConsumerWidget {
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Card(
+      child: Column(
+        children: [
+          // 즐겨찾기 섹션
+          _FavoritesSection(),
+          const SizedBox(height: 16),
+          // 기타 메뉴
+          Card(
+            child: Column(
+              children: [
+                _MenuItem(icon: Icons.leaderboard, title: '리그 순위', subtitle: '각 리그 순위표 확인', onTap: () => context.go('/standings')),
+                const Divider(height: 1),
+                _MenuItem(icon: Icons.menu_book, title: '직관 일기', subtitle: '나의 직관 기록들', onTap: () => context.go('/attendance')),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FavoritesSection extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final teamsAsync = ref.watch(favoriteTeamsProvider);
+    final playersAsync = ref.watch(favoritePlayersProvider);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _MenuItem(icon: Icons.favorite, title: '즐겨찾기', subtitle: '팔로우한 팀과 선수', onTap: () => context.push('/favorites')),
-            const Divider(height: 1),
-            _MenuItem(icon: Icons.leaderboard, title: '리그 순위', subtitle: '각 리그 순위표 확인', onTap: () => context.go('/standings')),
-            const Divider(height: 1),
-            _MenuItem(icon: Icons.menu_book, title: '직관 일기', subtitle: '나의 직관 기록들', onTap: () => context.go('/attendance')),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.favorite, color: AppColors.primary),
+                    ),
+                    const SizedBox(width: 12),
+                    const Text('즐겨찾기', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  ],
+                ),
+                TextButton(
+                  onPressed: () => context.push('/favorites'),
+                  child: const Text('관리'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // 즐겨찾기 팀
+            Text('팀', style: AppTextStyles.caption.copyWith(color: Colors.grey)),
+            const SizedBox(height: 8),
+            teamsAsync.when(
+              data: (teams) {
+                if (teams.isEmpty) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Text(
+                      '즐겨찾기한 팀이 없습니다',
+                      style: AppTextStyles.body2.copyWith(color: Colors.grey),
+                    ),
+                  );
+                }
+                return SizedBox(
+                  height: 70,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: teams.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 12),
+                    itemBuilder: (context, index) {
+                      final team = teams[index];
+                      return GestureDetector(
+                        onTap: () => context.push('/team/${team.id}'),
+                        child: Column(
+                          children: [
+                            CircleAvatar(
+                              radius: 24,
+                              backgroundColor: Colors.grey.shade200,
+                              backgroundImage: team.logoUrl != null
+                                  ? CachedNetworkImageProvider(team.logoUrl!)
+                                  : null,
+                              child: team.logoUrl == null
+                                  ? const Icon(Icons.shield, color: Colors.grey)
+                                  : null,
+                            ),
+                            const SizedBox(height: 4),
+                            SizedBox(
+                              width: 56,
+                              child: Text(
+                                team.shortName,
+                                style: AppTextStyles.caption,
+                                textAlign: TextAlign.center,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                );
+              },
+              loading: () => const SizedBox(
+                height: 70,
+                child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+              ),
+              error: (_, __) => const Text('불러오기 실패'),
+            ),
+
+            const SizedBox(height: 16),
+
+            // 즐겨찾기 선수
+            Text('선수', style: AppTextStyles.caption.copyWith(color: Colors.grey)),
+            const SizedBox(height: 8),
+            playersAsync.when(
+              data: (players) {
+                if (players.isEmpty) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Text(
+                      '즐겨찾기한 선수가 없습니다',
+                      style: AppTextStyles.body2.copyWith(color: Colors.grey),
+                    ),
+                  );
+                }
+                return SizedBox(
+                  height: 70,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: players.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 12),
+                    itemBuilder: (context, index) {
+                      final player = players[index];
+                      return GestureDetector(
+                        onTap: () => context.push('/player/${player.id}'),
+                        child: Column(
+                          children: [
+                            CircleAvatar(
+                              radius: 24,
+                              backgroundColor: Colors.grey.shade200,
+                              backgroundImage: player.photoUrl != null
+                                  ? CachedNetworkImageProvider(player.photoUrl!)
+                                  : null,
+                              child: player.photoUrl == null
+                                  ? Text(
+                                      player.name.isNotEmpty ? player.name[0] : '?',
+                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                    )
+                                  : null,
+                            ),
+                            const SizedBox(height: 4),
+                            SizedBox(
+                              width: 56,
+                              child: Text(
+                                player.nameKr,
+                                style: AppTextStyles.caption,
+                                textAlign: TextAlign.center,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                );
+              },
+              loading: () => const SizedBox(
+                height: 70,
+                child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+              ),
+              error: (_, __) => const Text('불러오기 실패'),
+            ),
           ],
         ),
       ),

@@ -8,6 +8,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/services/sports_db_service.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../providers/team_provider.dart';
+import '../../favorites/providers/favorites_provider.dart';
 
 class TeamDetailScreen extends ConsumerWidget {
   final String teamId;
@@ -71,6 +72,9 @@ class _TeamDetailContentState extends ConsumerState<_TeamDetailContent>
           SliverAppBar(
             expandedHeight: 200,
             pinned: true,
+            actions: [
+              _FavoriteButton(teamId: team.id),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               title: Text(
                 team.name,
@@ -604,6 +608,51 @@ class _PlayerCard extends StatelessWidget {
                 ),
               )
             : null,
+      ),
+    );
+  }
+}
+
+class _FavoriteButton extends ConsumerWidget {
+  final String teamId;
+
+  const _FavoriteButton({required this.teamId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isFollowedAsync = ref.watch(isTeamFollowedProvider(teamId));
+
+    return isFollowedAsync.when(
+      data: (isFollowed) => IconButton(
+        icon: Icon(
+          isFollowed ? Icons.favorite : Icons.favorite_border,
+          color: isFollowed ? Colors.red : Colors.white,
+        ),
+        onPressed: () async {
+          await ref.read(favoritesNotifierProvider.notifier).toggleTeamFollow(teamId);
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(isFollowed ? '즐겨찾기에서 제거되었습니다' : '즐겨찾기에 추가되었습니다'),
+                duration: const Duration(seconds: 1),
+              ),
+            );
+          }
+        },
+      ),
+      loading: () => const Padding(
+        padding: EdgeInsets.all(12),
+        child: SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+        ),
+      ),
+      error: (_, __) => IconButton(
+        icon: const Icon(Icons.favorite_border, color: Colors.white),
+        onPressed: () async {
+          await ref.read(favoritesNotifierProvider.notifier).toggleTeamFollow(teamId);
+        },
       ),
     );
   }

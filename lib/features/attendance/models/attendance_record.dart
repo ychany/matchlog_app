@@ -136,28 +136,37 @@ class AttendanceRecord extends Equatable {
 
   factory AttendanceRecord.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+
+    // Timestamp 안전하게 파싱하는 헬퍼 함수
+    DateTime parseTimestamp(dynamic value, {DateTime? fallback}) {
+      if (value == null) return fallback ?? DateTime.now();
+      if (value is Timestamp) return value.toDate();
+      if (value is DateTime) return value;
+      return fallback ?? DateTime.now();
+    }
+
     return AttendanceRecord(
       id: doc.id,
-      userId: data['userId'] as String,
-      date: (data['date'] as Timestamp).toDate(),
-      league: data['league'] as String,
-      homeTeamId: data['homeTeamId'] as String,
-      homeTeamName: data['homeTeamName'] as String,
+      userId: data['userId'] as String? ?? '',
+      date: parseTimestamp(data['date']),
+      league: data['league'] as String? ?? '',
+      homeTeamId: data['homeTeamId'] as String? ?? '',
+      homeTeamName: data['homeTeamName'] as String? ?? '',
       homeTeamLogo: data['homeTeamLogo'] as String?,
-      awayTeamId: data['awayTeamId'] as String,
-      awayTeamName: data['awayTeamName'] as String,
+      awayTeamId: data['awayTeamId'] as String? ?? '',
+      awayTeamName: data['awayTeamName'] as String? ?? '',
       awayTeamLogo: data['awayTeamLogo'] as String?,
-      stadium: data['stadium'] as String,
+      stadium: data['stadium'] as String? ?? '',
       seatInfo: data['seatInfo'] as String?,
       homeScore: data['homeScore'] as int?,
       awayScore: data['awayScore'] as int?,
       memo: data['memo'] as String?,
       photos: List<String>.from(data['photos'] ?? []),
-      latitude: data['latitude'] as double?,
-      longitude: data['longitude'] as double?,
+      latitude: (data['latitude'] as num?)?.toDouble(),
+      longitude: (data['longitude'] as num?)?.toDouble(),
       matchId: data['matchId'] as String?,
-      createdAt: (data['createdAt'] as Timestamp).toDate(),
-      updatedAt: (data['updatedAt'] as Timestamp).toDate(),
+      createdAt: parseTimestamp(data['createdAt']),
+      updatedAt: parseTimestamp(data['updatedAt']),
       // 일기 확장 필드
       diaryTitle: data['diaryTitle'] as String?,
       diaryContent: data['diaryContent'] as String?,

@@ -54,31 +54,48 @@ class FavoritesService {
 
   // Follow a team
   Future<void> followTeam(String userId, String teamId) async {
-    await _usersCollection.doc(userId).update({
+    // set with merge를 사용하여 문서가 없어도 생성됨
+    await _usersCollection.doc(userId).set({
       'favoriteTeamIds': FieldValue.arrayUnion([teamId]),
       'updatedAt': Timestamp.now(),
-    });
+    }, SetOptions(merge: true));
 
-    // Update schedules to boost matches with this team
-    await _updateFollowedBoostForTeam(teamId, true);
+    // 팀 정보도 저장 (API에서 가져와서)
+    await _saveTeamToFirestore(teamId);
+  }
+
+  // 팀 정보를 Firestore에 저장
+  Future<void> _saveTeamToFirestore(String teamId) async {
+    try {
+      final existingDoc = await _teamsCollection.doc(teamId).get();
+      if (existingDoc.exists) return; // 이미 있으면 스킵
+
+      final sportsDbTeam = await _sportsDbService.getTeamById(teamId);
+      if (sportsDbTeam == null) return;
+
+      await _teamsCollection.doc(teamId).set({
+        'name': sportsDbTeam.name,
+        'nameKr': sportsDbTeam.nameKr ?? sportsDbTeam.name,
+        'shortName': sportsDbTeam.name.length > 3
+            ? sportsDbTeam.name.substring(0, 3).toUpperCase()
+            : sportsDbTeam.name.toUpperCase(),
+        'league': sportsDbTeam.league ?? '',
+        'country': sportsDbTeam.country,
+        'logoUrl': sportsDbTeam.badge,
+        'stadiumName': sportsDbTeam.stadium,
+        'createdAt': Timestamp.now(),
+      });
+    } catch (e) {
+      // 에러 무시 - 저장 실패해도 즐겨찾기는 동작
+    }
   }
 
   // Unfollow a team
   Future<void> unfollowTeam(String userId, String teamId) async {
-    await _usersCollection.doc(userId).update({
+    await _usersCollection.doc(userId).set({
       'favoriteTeamIds': FieldValue.arrayRemove([teamId]),
       'updatedAt': Timestamp.now(),
-    });
-
-    // Check if any user still follows this team
-    final usersFollowing = await _usersCollection
-        .where('favoriteTeamIds', arrayContains: teamId)
-        .limit(1)
-        .get();
-
-    if (usersFollowing.docs.isEmpty) {
-      await _updateFollowedBoostForTeam(teamId, false);
-    }
+    }, SetOptions(merge: true));
   }
 
   // Check if team is followed
@@ -98,33 +115,6 @@ class FavoritesService {
       await followTeam(userId, teamId);
       return true;
     }
-  }
-
-  // Update followedBoost for schedules
-  Future<void> _updateFollowedBoostForTeam(String teamId, bool boost) async {
-    final batch = _firestore.batch();
-    final schedulesCollection =
-        _firestore.collection(AppConstants.schedulesCollection);
-
-    // Update home team matches
-    final homeMatches = await schedulesCollection
-        .where('homeTeamId', isEqualTo: teamId)
-        .get();
-
-    for (final doc in homeMatches.docs) {
-      batch.update(doc.reference, {'followedBoost': boost});
-    }
-
-    // Update away team matches
-    final awayMatches = await schedulesCollection
-        .where('awayTeamId', isEqualTo: teamId)
-        .get();
-
-    for (final doc in awayMatches.docs) {
-      batch.update(doc.reference, {'followedBoost': boost});
-    }
-
-    await batch.commit();
   }
 
   // === Player Favorites ===
@@ -164,18 +154,47 @@ class FavoritesService {
 
   // Follow a player
   Future<void> followPlayer(String userId, String playerId) async {
-    await _usersCollection.doc(userId).update({
+    await _usersCollection.doc(userId).set({
       'favoritePlayerIds': FieldValue.arrayUnion([playerId]),
       'updatedAt': Timestamp.now(),
-    });
+    }, SetOptions(merge: true));
+
+    // 선수 정보도 저장 (API에서 가져와서)
+    await _savePlayerToFirestore(playerId);
+  }
+
+  // 선수 정보를 Firestore에 저장
+  Future<void> _savePlayerToFirestore(String playerId) async {
+    try {
+      final existingDoc = await _playersCollection.doc(playerId).get();
+      if (existingDoc.exists) return; // 이미 있으면 스킵
+
+      final sportsDbPlayer = await _sportsDbService.getPlayerById(playerId);
+      if (sportsDbPlayer == null) return;
+
+      await _playersCollection.doc(playerId).set({
+        'name': sportsDbPlayer.name,
+        'nameKr': sportsDbPlayer.nameKr ?? sportsDbPlayer.name,
+        'teamId': sportsDbPlayer.teamId ?? '',
+        'teamName': sportsDbPlayer.team ?? '',
+        'position': sportsDbPlayer.position ?? '',
+        'number': int.tryParse(sportsDbPlayer.number ?? ''),
+        'nationality': sportsDbPlayer.nationality,
+        'photoUrl': sportsDbPlayer.photo,
+        'birthDate': sportsDbPlayer.dateBorn,
+        'createdAt': Timestamp.now(),
+      });
+    } catch (e) {
+      // 에러 무시 - 저장 실패해도 즐겨찾기는 동작
+    }
   }
 
   // Unfollow a player
   Future<void> unfollowPlayer(String userId, String playerId) async {
-    await _usersCollection.doc(userId).update({
+    await _usersCollection.doc(userId).set({
       'favoritePlayerIds': FieldValue.arrayRemove([playerId]),
       'updatedAt': Timestamp.now(),
-    });
+    }, SetOptions(merge: true));
   }
 
   // Check if player is followed

@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/services/sports_db_service.dart';
 import '../../attendance/models/attendance_record.dart';
 import '../../attendance/providers/attendance_provider.dart';
-import '../../schedule/providers/schedule_provider.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../favorites/providers/favorites_provider.dart';
 
 /// 축구 라이브스코어 Provider
 final soccerLivescoresProvider = FutureProvider<List<SportsDbLiveEvent>>((ref) async {
@@ -28,7 +29,7 @@ class HomeScreen extends ConsumerWidget {
         child: RefreshIndicator(
           onRefresh: () async {
             ref.invalidate(attendanceListProvider);
-            ref.invalidate(filteredSchedulesProvider);
+            ref.invalidate(favoriteTeamIdsProvider);
           },
           child: CustomScrollView(
             slivers: [
@@ -47,9 +48,9 @@ class HomeScreen extends ConsumerWidget {
                 child: _QuickStatsSection(),
               ),
 
-              // Upcoming Matches
+              // Favorite Team Schedules
               SliverToBoxAdapter(
-                child: _UpcomingMatchesSection(),
+                child: _FavoriteTeamSchedulesSection(),
               ),
 
               // Recent Attendance
@@ -391,10 +392,46 @@ class _LiveMatchCard extends StatelessWidget {
   }
 }
 
-class _UpcomingMatchesSection extends ConsumerWidget {
+/// 즐겨찾기 팀별 다음 경기 Provider
+final favoriteTeamNextEventsProvider = FutureProvider<List<_TeamNextEvent>>((ref) async {
+  final teamIdsAsync = ref.watch(favoriteTeamIdsProvider);
+
+  return teamIdsAsync.when(
+    data: (teamIds) async {
+      if (teamIds.isEmpty) return [];
+
+      final service = SportsDbService();
+      final results = <_TeamNextEvent>[];
+
+      for (final teamId in teamIds) {
+        try {
+          final team = await service.getTeamById(teamId);
+          final events = await service.getNextTeamEvents(teamId);
+          if (team != null && events.isNotEmpty) {
+            results.add(_TeamNextEvent(team: team, events: events.take(2).toList()));
+          }
+        } catch (e) {
+          // 개별 팀 오류는 무시
+        }
+      }
+      return results;
+    },
+    loading: () => [],
+    error: (_, __) => [],
+  );
+});
+
+class _TeamNextEvent {
+  final SportsDbTeam team;
+  final List<SportsDbEvent> events;
+
+  _TeamNextEvent({required this.team, required this.events});
+}
+
+class _FavoriteTeamSchedulesSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final schedulesAsync = ref.watch(filteredSchedulesProvider);
+    final teamEventsAsync = ref.watch(favoriteTeamNextEventsProvider);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -404,105 +441,24 @@ class _UpcomingMatchesSection extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('다가오는 경기', style: AppTextStyles.subtitle1),
+              Text('즐겨찾기 팀 일정', style: AppTextStyles.subtitle1),
               TextButton(
-                onPressed: () => context.go('/schedule'),
-                child: const Text('전체 보기'),
+                onPressed: () => context.push('/favorites'),
+                child: const Text('관리'),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          schedulesAsync.when(
-            data: (matches) {
-              final upcoming = matches
-                  .where((m) => m.kickoff.isAfter(DateTime.now()))
-                  .take(3)
-                  .toList();
-
-              if (upcoming.isEmpty) {
-                return Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(AppRadius.md),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      '예정된 경기가 없습니다',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  ),
-                );
+          teamEventsAsync.when(
+            data: (teamEvents) {
+              if (teamEvents.isEmpty) {
+                return _EmptyFavoriteTeamsCard();
               }
 
               return Column(
-                children: upcoming.map((match) => Card(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: InkWell(
-                    onTap: () => context.go('/schedule'),
-                    borderRadius: BorderRadius.circular(AppRadius.lg),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Column(
-                              children: [
-                                Text(
-                                  DateFormat('MM/dd').format(match.kickoff),
-                                  style: AppTextStyles.caption.copyWith(
-                                    color: AppColors.primary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  DateFormat('HH:mm').format(match.kickoff),
-                                  style: AppTextStyles.caption.copyWith(
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${match.homeTeamName} vs ${match.awayTeamName}',
-                                  style: AppTextStyles.subtitle2,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  match.stadium,
-                                  style: AppTextStyles.caption.copyWith(
-                                    color: Colors.grey,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Icon(
-                            Icons.chevron_right,
-                            color: Colors.grey,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                children: teamEvents.map((te) => _FavoriteTeamScheduleCard(
+                  team: te.team,
+                  events: te.events,
                 )).toList(),
               );
             },
@@ -518,7 +474,7 @@ class _UpcomingMatchesSection extends ConsumerWidget {
               ),
               child: const Center(
                 child: Text(
-                  '경기 일정을 불러올 수 없습니다',
+                  '일정을 불러올 수 없습니다',
                   style: TextStyle(color: Colors.grey),
                 ),
               ),
@@ -527,6 +483,133 @@ class _UpcomingMatchesSection extends ConsumerWidget {
         ],
       ),
     );
+  }
+}
+
+class _EmptyFavoriteTeamsCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: InkWell(
+        onTap: () => context.push('/favorites'),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              Icon(
+                Icons.favorite_border,
+                size: 48,
+                color: AppColors.primary.withValues(alpha: 0.5),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                '즐겨찾기한 팀이 없습니다',
+                style: AppTextStyles.subtitle2.copyWith(
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '팀을 추가하여 경기 일정을 확인하세요',
+                style: AppTextStyles.caption.copyWith(color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FavoriteTeamScheduleCard extends StatelessWidget {
+  final SportsDbTeam team;
+  final List<SportsDbEvent> events;
+
+  const _FavoriteTeamScheduleCard({
+    required this.team,
+    required this.events,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: InkWell(
+        onTap: () => context.push('/team/${team.id}'),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 팀 헤더
+              Row(
+                children: [
+                  if (team.badge != null)
+                    CachedNetworkImage(
+                      imageUrl: team.badge!,
+                      width: 32,
+                      height: 32,
+                      fit: BoxFit.contain,
+                      errorWidget: (_, __, ___) => const Icon(Icons.shield, size: 32),
+                    )
+                  else
+                    const Icon(Icons.shield, size: 32, color: Colors.grey),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      team.name,
+                      style: AppTextStyles.subtitle2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
+                ],
+              ),
+              const SizedBox(height: 12),
+              const Divider(height: 1),
+              const SizedBox(height: 8),
+              // 다음 경기들
+              ...events.map((event) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        _formatDate(event.dateTime),
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        '${event.homeTeam ?? "-"} vs ${event.awayTeam ?? "-"}',
+                        style: AppTextStyles.body2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              )),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _formatDate(DateTime? dt) {
+    if (dt == null) return '-';
+    return DateFormat('MM/dd HH:mm').format(dt);
   }
 }
 

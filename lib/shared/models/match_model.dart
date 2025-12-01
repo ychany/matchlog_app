@@ -56,17 +56,26 @@ class Match extends Equatable {
 
   factory Match.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+
+    // Timestamp 안전하게 파싱하는 헬퍼 함수
+    DateTime parseTimestamp(dynamic value) {
+      if (value == null) return DateTime.now();
+      if (value is Timestamp) return value.toDate();
+      if (value is DateTime) return value;
+      return DateTime.now();
+    }
+
     return Match(
       id: doc.id,
-      league: data['league'] as String,
-      homeTeamId: data['homeTeamId'] as String,
-      homeTeamName: data['homeTeamName'] as String,
+      league: data['league'] as String? ?? '',
+      homeTeamId: data['homeTeamId'] as String? ?? '',
+      homeTeamName: data['homeTeamName'] as String? ?? '',
       homeTeamLogo: data['homeTeamLogo'] as String?,
-      awayTeamId: data['awayTeamId'] as String,
-      awayTeamName: data['awayTeamName'] as String,
+      awayTeamId: data['awayTeamId'] as String? ?? '',
+      awayTeamName: data['awayTeamName'] as String? ?? '',
       awayTeamLogo: data['awayTeamLogo'] as String?,
-      kickoff: (data['kickoff'] as Timestamp).toDate(),
-      stadium: data['stadium'] as String,
+      kickoff: parseTimestamp(data['kickoff']),
+      stadium: data['stadium'] as String? ?? '',
       broadcast: data['broadcast'] as String?,
       homeScore: data['homeScore'] as int?,
       awayScore: data['awayScore'] as int?,

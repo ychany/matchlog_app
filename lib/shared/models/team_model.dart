@@ -26,11 +26,11 @@ class Team extends Equatable {
     final data = doc.data() as Map<String, dynamic>;
     return Team(
       id: doc.id,
-      name: data['name'] as String,
-      nameKr: data['nameKr'] as String? ?? data['name'] as String,
-      shortName: data['shortName'] as String,
+      name: data['name'] as String? ?? '',
+      nameKr: data['nameKr'] as String? ?? data['name'] as String? ?? '',
+      shortName: data['shortName'] as String? ?? '',
       logoUrl: data['logoUrl'] as String?,
-      league: data['league'] as String,
+      league: data['league'] as String? ?? '',
       stadiumName: data['stadiumName'] as String?,
       country: data['country'] as String?,
     );

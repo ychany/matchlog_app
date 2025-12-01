@@ -24,6 +24,15 @@ class UserModel extends Equatable {
 
   factory UserModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+
+    // Timestamp 안전하게 파싱하는 헬퍼 함수
+    DateTime parseTimestamp(dynamic value) {
+      if (value == null) return DateTime.now();
+      if (value is Timestamp) return value.toDate();
+      if (value is DateTime) return value;
+      return DateTime.now();
+    }
+
     return UserModel(
       uid: doc.id,
       email: data['email'] as String?,
@@ -31,8 +40,8 @@ class UserModel extends Equatable {
       photoUrl: data['photoUrl'] as String?,
       favoriteTeamIds: List<String>.from(data['favoriteTeamIds'] ?? []),
       favoritePlayerIds: List<String>.from(data['favoritePlayerIds'] ?? []),
-      createdAt: (data['createdAt'] as Timestamp).toDate(),
-      updatedAt: (data['updatedAt'] as Timestamp).toDate(),
+      createdAt: parseTimestamp(data['createdAt']),
+      updatedAt: parseTimestamp(data['updatedAt']),
     );
   }
 

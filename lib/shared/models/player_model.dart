@@ -28,19 +28,26 @@ class Player extends Equatable {
 
   factory Player.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+
+    // Timestamp 안전하게 파싱하는 헬퍼 함수
+    DateTime? parseTimestamp(dynamic value) {
+      if (value == null) return null;
+      if (value is Timestamp) return value.toDate();
+      if (value is DateTime) return value;
+      return null;
+    }
+
     return Player(
       id: doc.id,
-      name: data['name'] as String,
-      nameKr: data['nameKr'] as String? ?? data['name'] as String,
+      name: data['name'] as String? ?? '',
+      nameKr: data['nameKr'] as String? ?? data['name'] as String? ?? '',
       photoUrl: data['photoUrl'] as String?,
-      teamId: data['teamId'] as String,
-      teamName: data['teamName'] as String,
-      position: data['position'] as String,
+      teamId: data['teamId'] as String? ?? '',
+      teamName: data['teamName'] as String? ?? '',
+      position: data['position'] as String? ?? '',
       number: data['number'] as int?,
       nationality: data['nationality'] as String?,
-      birthDate: data['birthDate'] != null
-          ? (data['birthDate'] as Timestamp).toDate()
-          : null,
+      birthDate: parseTimestamp(data['birthDate']),
     );
   }
 

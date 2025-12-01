@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/services/sports_db_service.dart';
 import '../../../shared/widgets/loading_indicator.dart';
+import '../../favorites/providers/favorites_provider.dart';
 
 // Providers
 final playerDetailProvider = FutureProvider.family<SportsDbPlayer?, String>((ref, playerId) async {
@@ -90,6 +91,9 @@ class _PlayerDetailContent extends ConsumerWidget {
             icon: const Icon(Icons.arrow_back),
             onPressed: () => context.pop(),
           ),
+          actions: [
+            _PlayerFavoriteButton(playerId: player.id),
+          ],
           flexibleSpace: FlexibleSpaceBar(
             background: _PlayerHeader(player: player),
           ),
@@ -767,6 +771,51 @@ class _MilestoneItem extends StatelessWidget {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _PlayerFavoriteButton extends ConsumerWidget {
+  final String playerId;
+
+  const _PlayerFavoriteButton({required this.playerId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isFollowedAsync = ref.watch(isPlayerFollowedProvider(playerId));
+
+    return isFollowedAsync.when(
+      data: (isFollowed) => IconButton(
+        icon: Icon(
+          isFollowed ? Icons.favorite : Icons.favorite_border,
+          color: isFollowed ? Colors.red : Colors.white,
+        ),
+        onPressed: () async {
+          await ref.read(favoritesNotifierProvider.notifier).togglePlayerFollow(playerId);
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(isFollowed ? '즐겨찾기에서 제거되었습니다' : '즐겨찾기에 추가되었습니다'),
+                duration: const Duration(seconds: 1),
+              ),
+            );
+          }
+        },
+      ),
+      loading: () => const Padding(
+        padding: EdgeInsets.all(12),
+        child: SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+        ),
+      ),
+      error: (_, __) => IconButton(
+        icon: const Icon(Icons.favorite_border, color: Colors.white),
+        onPressed: () async {
+          await ref.read(favoritesNotifierProvider.notifier).togglePlayerFollow(playerId);
+        },
       ),
     );
   }
