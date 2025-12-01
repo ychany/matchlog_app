@@ -401,11 +401,18 @@ class _MatchCard extends StatelessWidget {
               Row(
                 children: [
                   Expanded(
-                    child: Text(
-                      event.homeTeam ?? '-',
-                      style: AppTextStyles.body2,
-                      textAlign: TextAlign.center,
-                      overflow: TextOverflow.ellipsis,
+                    child: Column(
+                      children: [
+                        _buildTeamBadge(event.homeTeamBadge, 32),
+                        const SizedBox(height: 4),
+                        Text(
+                          event.homeTeam ?? '-',
+                          style: AppTextStyles.caption,
+                          textAlign: TextAlign.center,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ],
                     ),
                   ),
                   Padding(
@@ -423,11 +430,18 @@ class _MatchCard extends StatelessWidget {
                           ),
                   ),
                   Expanded(
-                    child: Text(
-                      event.awayTeam ?? '-',
-                      style: AppTextStyles.body2,
-                      textAlign: TextAlign.center,
-                      overflow: TextOverflow.ellipsis,
+                    child: Column(
+                      children: [
+                        _buildTeamBadge(event.awayTeamBadge, 32),
+                        const SizedBox(height: 4),
+                        Text(
+                          event.awayTeam ?? '-',
+                          style: AppTextStyles.caption,
+                          textAlign: TextAlign.center,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -437,6 +451,20 @@ class _MatchCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildTeamBadge(String? badgeUrl, double size) {
+    if (badgeUrl != null && badgeUrl.isNotEmpty) {
+      return CachedNetworkImage(
+        imageUrl: badgeUrl,
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+        placeholder: (_, __) => Icon(Icons.shield, size: size, color: Colors.grey),
+        errorWidget: (_, __, ___) => Icon(Icons.shield, size: size, color: Colors.grey),
+      );
+    }
+    return Icon(Icons.shield, size: size, color: Colors.grey);
   }
 }
 

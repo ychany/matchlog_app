@@ -283,9 +283,13 @@ class SportsDbService {
   /// 팀의 지난 경기들
   Future<List<SportsDbEvent>> getPastTeamEvents(String teamId) async {
     final data = await _get('eventslast.php?id=$teamId');
-    if (data == null || data['events'] == null) return [];
+    if (data == null) return [];
 
-    return (data['events'] as List)
+    // API 응답이 'results' 또는 'events' 키를 사용할 수 있음
+    final events = data['results'] ?? data['events'];
+    if (events == null) return [];
+
+    return (events as List)
         .map((json) => SportsDbEvent.fromJson(json))
         .toList();
   }
