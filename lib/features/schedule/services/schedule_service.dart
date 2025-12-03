@@ -126,10 +126,10 @@ class ScheduleService {
       league: event.league ?? '',
       homeTeamId: event.homeTeamId ?? '',
       homeTeamName: event.homeTeam ?? '',
-      homeTeamLogo: null, // API에서 별도로 가져와야 함
+      homeTeamLogo: event.homeTeamBadge,
       awayTeamId: event.awayTeamId ?? '',
       awayTeamName: event.awayTeam ?? '',
-      awayTeamLogo: null,
+      awayTeamLogo: event.awayTeamBadge,
       kickoff: event.dateTime ?? DateTime.now(),
       stadium: event.venue ?? '',
       homeScore: event.homeScore,

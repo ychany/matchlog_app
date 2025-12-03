@@ -220,5 +220,8 @@ final filteredSchedulesProvider = FutureProvider<List<Match>>((ref) async {
     }).toList();
   }
 
+  // 시간순 정렬 (빠른 시간이 먼저)
+  matches.sort((a, b) => a.kickoff.compareTo(b.kickoff));
+
   return matches;
 });
