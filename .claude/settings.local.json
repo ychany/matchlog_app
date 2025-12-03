@@ -28,7 +28,8 @@
       "Bash(git rm:*)",
       "Bash(git add:*)",
       "Bash(git reset:*)",
-      "Bash(pod install:*)"
+      "Bash(pod install:*)",
+      "Skill(frontend-design:frontend-design)"
     ],
     "deny": [],
     "ask": []
