@@ -1264,7 +1264,7 @@ class _TimelineItem extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  event.player ?? event.type ?? '',
+                  event.player ?? _getEventTypeText(event.type),
                   style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
@@ -1279,12 +1279,25 @@ class _TimelineItem extends StatelessWidget {
                       color: _textSecondary,
                     ),
                   ),
-                Text(
-                  event.team ?? (event.isHome ? '홈' : '원정'),
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: _textSecondary,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      _getEventTypeText(event.type),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: _getEventColor(),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      event.team ?? (event.isHome ? '홈' : '원정'),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: _textSecondary,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -1292,6 +1305,27 @@ class _TimelineItem extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _getEventTypeText(String? type) {
+    switch (type?.toLowerCase()) {
+      case 'goal':
+        return '골';
+      case 'yellow card':
+        return '경고';
+      case 'red card':
+        return '퇴장';
+      case 'substitution':
+        return '교체';
+      case 'penalty':
+        return '페널티킥';
+      case 'own goal':
+        return '자책골';
+      case 'var':
+        return 'VAR';
+      default:
+        return type ?? '';
+    }
   }
 
   IconData _getEventIcon() {

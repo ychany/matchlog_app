@@ -143,6 +143,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
         border: Border.all(color: _border),
       ),
       child: TableCalendar(
+        locale: 'ko_KR',
         firstDay: DateTime.now().subtract(const Duration(days: 365)),
         lastDay: DateTime.now().add(const Duration(days: 365)),
         focusedDay: _focusedDay,
@@ -196,6 +197,11 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
           rightChevronIcon:
               const Icon(Icons.chevron_right, color: _textSecondary),
         ),
+        availableCalendarFormats: const {
+          CalendarFormat.month: '월간',
+          CalendarFormat.twoWeeks: '2주',
+          CalendarFormat.week: '주간',
+        },
         daysOfWeekStyle: const DaysOfWeekStyle(
           weekdayStyle: TextStyle(
             color: _textSecondary,
