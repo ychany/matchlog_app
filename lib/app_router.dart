@@ -18,6 +18,7 @@ import 'features/team/screens/team_detail_screen.dart';
 import 'features/profile/screens/profile_screen.dart';
 import 'features/profile/screens/profile_edit_screen.dart';
 import 'features/profile/screens/notification_settings_screen.dart';
+import 'features/profile/screens/help_support_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
@@ -148,6 +149,10 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'notifications',
                 builder: (context, state) => const NotificationSettingsScreen(),
+              ),
+              GoRoute(
+                path: 'help',
+                builder: (context, state) => const HelpSupportScreen(),
               ),
             ],
           ),

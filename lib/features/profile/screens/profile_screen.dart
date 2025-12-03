@@ -800,11 +800,7 @@ class _MenuSection extends StatelessWidget {
             iconColor: const Color(0xFF3B82F6),
             title: '도움말 및 지원',
             subtitle: 'FAQ, 문의하기',
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('도움말 기능 준비 중')),
-              );
-            },
+            onTap: () => context.push('/profile/help'),
           ),
         ],
       ),
