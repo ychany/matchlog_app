@@ -153,11 +153,7 @@ class HomeScreen extends ConsumerWidget {
           // 알림
           _buildIconButton(
             Icons.notifications_outlined,
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('알림 기능 준비 중')),
-              );
-            },
+            onTap: () => context.push('/profile/notifications'),
           ),
         ],
       ),
