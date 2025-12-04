@@ -183,37 +183,43 @@ class _PostCard extends ConsumerWidget {
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  CircleAvatar(
-                    radius: 18,
-                    backgroundColor: _border,
-                    backgroundImage: post.authorProfileUrl != null
-                        ? CachedNetworkImageProvider(post.authorProfileUrl!)
-                        : null,
-                    child: post.authorProfileUrl == null
-                        ? const Icon(Icons.person, size: 20, color: Colors.grey)
-                        : null,
+                  GestureDetector(
+                    onTap: () => context.push('/user/${post.authorId}?name=${Uri.encodeComponent(post.authorName)}'),
+                    child: CircleAvatar(
+                      radius: 18,
+                      backgroundColor: _border,
+                      backgroundImage: post.authorProfileUrl != null
+                          ? CachedNetworkImageProvider(post.authorProfileUrl!)
+                          : null,
+                      child: post.authorProfileUrl == null
+                          ? const Icon(Icons.person, size: 20, color: Colors.grey)
+                          : null,
+                    ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          post.authorName,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                            color: _textPrimary,
+                    child: GestureDetector(
+                      onTap: () => context.push('/user/${post.authorId}?name=${Uri.encodeComponent(post.authorName)}'),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            post.authorName,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: _textPrimary,
+                            ),
                           ),
-                        ),
-                        Text(
-                          _formatTime(post.createdAt),
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: _textSecondary,
+                          Text(
+                            _formatTime(post.createdAt),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: _textSecondary,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ],

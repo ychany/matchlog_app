@@ -29,7 +29,8 @@ service cloud.firestore {
 
     // Attendance records (직관 기록)
     match /attendance_records/{recordId} {
-      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      // 모든 인증된 사용자가 읽기 가능 (프로필 보기용)
+      allow read: if isAuthenticated();
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }

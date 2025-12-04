@@ -215,37 +215,43 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                               // 작성자 정보
                               Row(
                                 children: [
-                                  CircleAvatar(
-                                    radius: 20,
-                                    backgroundColor: _border,
-                                    backgroundImage: post.authorProfileUrl != null
-                                        ? CachedNetworkImageProvider(post.authorProfileUrl!)
-                                        : null,
-                                    child: post.authorProfileUrl == null
-                                        ? const Icon(Icons.person, size: 24, color: Colors.grey)
-                                        : null,
+                                  GestureDetector(
+                                    onTap: () => context.push('/user/${post.authorId}?name=${Uri.encodeComponent(post.authorName)}'),
+                                    child: CircleAvatar(
+                                      radius: 20,
+                                      backgroundColor: _border,
+                                      backgroundImage: post.authorProfileUrl != null
+                                          ? CachedNetworkImageProvider(post.authorProfileUrl!)
+                                          : null,
+                                      child: post.authorProfileUrl == null
+                                          ? const Icon(Icons.person, size: 24, color: Colors.grey)
+                                          : null,
+                                    ),
                                   ),
                                   const SizedBox(width: 12),
                                   Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          post.authorName,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 15,
-                                            color: _textPrimary,
+                                    child: GestureDetector(
+                                      onTap: () => context.push('/user/${post.authorId}?name=${Uri.encodeComponent(post.authorName)}'),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            post.authorName,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 15,
+                                              color: _textPrimary,
+                                            ),
                                           ),
-                                        ),
-                                        Text(
-                                          _formatDateTime(post.createdAt),
-                                          style: const TextStyle(
-                                            fontSize: 13,
-                                            color: _textSecondary,
+                                          Text(
+                                            _formatDateTime(post.createdAt),
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                              color: _textSecondary,
+                                            ),
                                           ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -699,15 +705,18 @@ class _CommentItem extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
-            radius: 16,
-            backgroundColor: _border,
-            backgroundImage: comment.authorProfileUrl != null
-                ? CachedNetworkImageProvider(comment.authorProfileUrl!)
-                : null,
-            child: comment.authorProfileUrl == null
-                ? const Icon(Icons.person, size: 18, color: Colors.grey)
-                : null,
+          GestureDetector(
+            onTap: () => context.push('/user/${comment.authorId}?name=${Uri.encodeComponent(comment.authorName)}'),
+            child: CircleAvatar(
+              radius: 16,
+              backgroundColor: _border,
+              backgroundImage: comment.authorProfileUrl != null
+                  ? CachedNetworkImageProvider(comment.authorProfileUrl!)
+                  : null,
+              child: comment.authorProfileUrl == null
+                  ? const Icon(Icons.person, size: 18, color: Colors.grey)
+                  : null,
+            ),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -716,12 +725,15 @@ class _CommentItem extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Text(
-                      comment.authorName,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                        color: _textPrimary,
+                    GestureDetector(
+                      onTap: () => context.push('/user/${comment.authorId}?name=${Uri.encodeComponent(comment.authorName)}'),
+                      child: Text(
+                        comment.authorName,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                          color: _textPrimary,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),

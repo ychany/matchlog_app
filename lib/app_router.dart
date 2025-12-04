@@ -22,6 +22,7 @@ import 'features/profile/screens/help_support_screen.dart';
 import 'features/community/screens/community_screen.dart';
 import 'features/community/screens/post_write_screen.dart';
 import 'features/community/screens/post_detail_screen.dart';
+import 'features/community/screens/user_profile_screen.dart';
 import 'features/community/models/post_model.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -68,6 +69,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final playerId = state.pathParameters['playerId']!;
           return PlayerDetailScreen(playerId: playerId);
+        },
+      ),
+
+      // User Profile (outside shell - full screen)
+      GoRoute(
+        path: '/user/:userId',
+        builder: (context, state) {
+          final userId = state.pathParameters['userId']!;
+          final userName = state.uri.queryParameters['name'];
+          return UserProfileScreen(userId: userId, userName: userName);
         },
       ),
 
