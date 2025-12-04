@@ -98,6 +98,7 @@ class _AttendanceListScreenState extends ConsumerState<AttendanceListScreen>
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+      alignment: Alignment.centerLeft,
       child: const Text(
         '나의 직관 일기',
         style: TextStyle(

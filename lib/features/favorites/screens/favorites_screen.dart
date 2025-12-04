@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
@@ -14,62 +15,101 @@ import '../providers/favorites_provider.dart';
 class FavoritesScreen extends ConsumerWidget {
   const FavoritesScreen({super.key});
 
+  static const _primary = Color(0xFF2563EB);
+  static const _primaryLight = Color(0xFFDBEAFE);
+  static const _textPrimary = Color(0xFF111827);
+  static const _background = Color(0xFFF9FAFB);
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedTab = ref.watch(selectedFavoritesTabProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('즐겨찾기'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () => _showAddDialog(context, ref, selectedTab),
-          ),
-        ],
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.dark.copyWith(
+        statusBarColor: Colors.transparent,
       ),
-      body: Column(
-        children: [
-          // Tab Bar
-          Container(
-            margin: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade200,
-              borderRadius: BorderRadius.circular(AppRadius.md),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _TabButton(
-                    label: '팀',
-                    isSelected: selectedTab == FavoritesTab.teams,
-                    onTap: () {
-                      ref.read(selectedFavoritesTabProvider.notifier).state =
-                          FavoritesTab.teams;
-                    },
-                  ),
+      child: Scaffold(
+        backgroundColor: _background,
+        body: SafeArea(
+          child: Column(
+            children: [
+              // 헤더
+              Container(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      '즐겨찾기',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                        color: _textPrimary,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => _showAddDialog(context, ref, selectedTab),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: _primaryLight,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(Icons.add, color: _primary, size: 22),
+                      ),
+                    ),
+                  ],
                 ),
-                Expanded(
-                  child: _TabButton(
-                    label: '선수',
-                    isSelected: selectedTab == FavoritesTab.players,
-                    onTap: () {
-                      ref.read(selectedFavoritesTabProvider.notifier).state =
-                          FavoritesTab.players;
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
+              ),
+              // 본문
+              Expanded(
+                child: Column(
+                  children: [
+                    // Tab Bar
+                    Container(
+                      margin: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _TabButton(
+                              label: '팀',
+                              isSelected: selectedTab == FavoritesTab.teams,
+                              onTap: () {
+                                ref.read(selectedFavoritesTabProvider.notifier).state =
+                                    FavoritesTab.teams;
+                              },
+                            ),
+                          ),
+                          Expanded(
+                            child: _TabButton(
+                              label: '선수',
+                              isSelected: selectedTab == FavoritesTab.players,
+                              onTap: () {
+                                ref.read(selectedFavoritesTabProvider.notifier).state =
+                                    FavoritesTab.players;
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
 
-          // Content
-          Expanded(
-            child: selectedTab == FavoritesTab.teams
-                ? const _TeamsTab()
-                : const _PlayersTab(),
+                    // Content
+                    Expanded(
+                      child: selectedTab == FavoritesTab.teams
+                          ? const _TeamsTab()
+                          : const _PlayersTab(),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

@@ -67,15 +67,14 @@ class ProfileScreen extends ConsumerWidget {
 
   Widget _buildHeader(BuildContext context, dynamic user) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
       child: Row(
         children: [
           const Text(
             '내 정보',
             style: TextStyle(
               color: _textPrimary,
-              fontSize: 22,
+              fontSize: 24,
               fontWeight: FontWeight.w700,
             ),
           ),

@@ -79,19 +79,18 @@ class DiaryListScreen extends ConsumerWidget {
 
   Widget _buildHeader(BuildContext context, AsyncValue<DiarySummary> summaryAsync) {
     return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           const Text(
-            '경기 다이어리',
+            '나의 직관일기',
             style: TextStyle(
-              fontSize: 20,
+              fontSize: 24,
               fontWeight: FontWeight.w700,
               color: _textPrimary,
             ),
           ),
-          const Spacer(),
           GestureDetector(
             onTap: () => _showYearlySummary(context, summaryAsync),
             child: Container(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
@@ -13,6 +14,9 @@ import '../providers/standings_provider.dart';
 class StandingsScreen extends ConsumerWidget {
   const StandingsScreen({super.key});
 
+  static const _textPrimary = Color(0xFF111827);
+  static const _background = Color(0xFFF9FAFB);
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedLeague = ref.watch(selectedStandingsLeagueProvider);
@@ -23,180 +27,208 @@ class StandingsScreen extends ConsumerWidget {
     final isCup = isCupCompetition(selectedLeague);
     final availableSeasons = getAvailableSeasons(selectedLeague);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('리그 순위'),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.dark.copyWith(
+        statusBarColor: Colors.transparent,
       ),
-      body: Column(
-        children: [
-          // League Filter
-          SizedBox(
-            height: 50,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              children: AppConstants.supportedLeagues.map((league) {
-                final isSelected = selectedLeague == league;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: FilterChip(
-                    label: Text(
-                      AppConstants.getLeagueDisplayName(league),
+      child: Scaffold(
+        backgroundColor: _background,
+        body: SafeArea(
+          child: Column(
+            children: [
+              // 헤더
+              Container(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+                child: Row(
+                  children: [
+                    const Text(
+                      '리그 순위',
                       style: TextStyle(
-                        color: isSelected ? Colors.white : Colors.black87,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                        color: _textPrimary,
                       ),
                     ),
-                    selected: isSelected,
-                    onSelected: (_) {
-                      ref.read(selectedStandingsLeagueProvider.notifier).state = league;
-                      // 리그 변경시 시즌도 리셋
-                      ref.read(selectedSeasonProvider.notifier).state = null;
-                    },
-                    selectedColor: AppColors.primary,
-                    checkmarkColor: Colors.white,
-                    backgroundColor: Colors.grey.shade200,
-                    side: BorderSide(
-                      color: isSelected ? AppColors.primary : Colors.grey.shade300,
+                  ],
+                ),
+              ),
+              // 본문
+              Expanded(
+                child: Column(
+                  children: [
+                    // League Filter
+                    SizedBox(
+                      height: 50,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        children: AppConstants.supportedLeagues.map((league) {
+                          final isSelected = selectedLeague == league;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: FilterChip(
+                              label: Text(
+                                AppConstants.getLeagueDisplayName(league),
+                                style: TextStyle(
+                                  color: isSelected ? Colors.white : Colors.black87,
+                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                ),
+                              ),
+                              selected: isSelected,
+                              onSelected: (_) {
+                                ref.read(selectedStandingsLeagueProvider.notifier).state = league;
+                                // 리그 변경시 시즌도 리셋
+                                ref.read(selectedSeasonProvider.notifier).state = null;
+                              },
+                              selectedColor: AppColors.primary,
+                              checkmarkColor: Colors.white,
+                              backgroundColor: Colors.grey.shade200,
+                              side: BorderSide(
+                                color: isSelected ? AppColors.primary : Colors.grey.shade300,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
                     ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
 
-          // Season Selector
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: availableSeasons.map((season) {
-                  final isSelected = season == currentSeason;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: ChoiceChip(
-                      label: Text(
-                        getSeasonDisplayName(season),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isSelected ? Colors.white : Colors.black87,
-                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                    // Season Selector
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: availableSeasons.map((season) {
+                            final isSelected = season == currentSeason;
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 6),
+                              child: ChoiceChip(
+                                label: Text(
+                                  getSeasonDisplayName(season),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: isSelected ? Colors.white : Colors.black87,
+                                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                  ),
+                                ),
+                                selected: isSelected,
+                                onSelected: (_) {
+                                  ref.read(selectedSeasonProvider.notifier).state = season;
+                                },
+                                selectedColor: AppColors.primary,
+                                backgroundColor: Colors.grey.shade100,
+                                side: BorderSide.none,
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                visualDensity: VisualDensity.compact,
+                              ),
+                            );
+                          }).toList(),
                         ),
                       ),
-                      selected: isSelected,
-                      onSelected: (_) {
-                        ref.read(selectedSeasonProvider.notifier).state = season;
-                      },
-                      selectedColor: AppColors.primary,
-                      backgroundColor: Colors.grey.shade100,
-                      side: BorderSide.none,
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      visualDensity: VisualDensity.compact,
                     ),
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
 
-          const Divider(height: 1),
+                    const Divider(height: 1),
 
-          // Standings Table
-          Expanded(
-            child: standingsAsync.when(
-              data: (standings) {
-                if (standings.isEmpty) {
-                  // UCL/UEL 등 컵 대회는 별도 안내
-                  if (isCup) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.emoji_events_outlined, size: 64, color: Colors.amber.shade700),
-                          const SizedBox(height: 16),
-                          Text(
-                            AppConstants.getLeagueDisplayName(selectedLeague),
-                            style: AppTextStyles.subtitle1,
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            '2024-25 시즌부터 새 리그 형식으로 변경되어',
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                          const Text(
-                            '순위표가 아직 제공되지 않습니다',
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                          const SizedBox(height: 4),
-                          const Text(
-                            '일정 탭에서 경기 일정을 확인하세요',
-                            style: TextStyle(color: Colors.grey, fontSize: 12),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
+                    // Standings Table
+                    Expanded(
+                      child: standingsAsync.when(
+                        data: (standings) {
+                          if (standings.isEmpty) {
+                            // UCL/UEL 등 컵 대회는 별도 안내
+                            if (isCup) {
+                              return Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.emoji_events_outlined, size: 64, color: Colors.amber.shade700),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      AppConstants.getLeagueDisplayName(selectedLeague),
+                                      style: AppTextStyles.subtitle1,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    const Text(
+                                      '2024-25 시즌부터 새 리그 형식으로 변경되어',
+                                      style: TextStyle(color: Colors.grey),
+                                    ),
+                                    const Text(
+                                      '순위표가 아직 제공되지 않습니다',
+                                      style: TextStyle(color: Colors.grey),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    const Text(
+                                      '일정 탭에서 경기 일정을 확인하세요',
+                                      style: TextStyle(color: Colors.grey, fontSize: 12),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
 
-                  // K리그 미지원 안내
-                  if (selectedLeague == 'Korean K League 1') {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.sports_soccer, size: 64, color: Colors.green.shade700),
-                          const SizedBox(height: 16),
-                          Text(
-                            AppConstants.getLeagueDisplayName(selectedLeague),
-                            style: AppTextStyles.subtitle1,
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'K리그 순위표는 현재 API에서 지원하지 않습니다',
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                          const SizedBox(height: 4),
-                          const Text(
-                            '일정 탭에서 경기 일정을 확인하세요',
-                            style: TextStyle(color: Colors.grey, fontSize: 12),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
+                            // K리그 미지원 안내
+                            if (selectedLeague == 'Korean K League 1') {
+                              return Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.sports_soccer, size: 64, color: Colors.green.shade700),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      AppConstants.getLeagueDisplayName(selectedLeague),
+                                      style: AppTextStyles.subtitle1,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    const Text(
+                                      'K리그 순위표는 현재 API에서 지원하지 않습니다',
+                                      style: TextStyle(color: Colors.grey),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    const Text(
+                                      '일정 탭에서 경기 일정을 확인하세요',
+                                      style: TextStyle(color: Colors.grey, fontSize: 12),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
 
-                  return const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.leaderboard_outlined, size: 64, color: Colors.grey),
-                        SizedBox(height: 16),
-                        Text('순위 정보가 없습니다', style: TextStyle(color: Colors.grey)),
-                        SizedBox(height: 8),
-                        Text(
-                          '해당 리그의 순위 정보를 불러올 수 없습니다',
-                          style: TextStyle(color: Colors.grey, fontSize: 12),
+                            return const Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.leaderboard_outlined, size: 64, color: Colors.grey),
+                                  SizedBox(height: 16),
+                                  Text('순위 정보가 없습니다', style: TextStyle(color: Colors.grey)),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    '해당 리그의 순위 정보를 불러올 수 없습니다',
+                                    style: TextStyle(color: Colors.grey, fontSize: 12),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+
+                          return RefreshIndicator(
+                            onRefresh: () async {
+                              ref.invalidate(leagueStandingsProvider(standingsKey));
+                            },
+                            child: _StandingsTable(standings: standings),
+                          );
+                        },
+                        loading: () => const LoadingIndicator(),
+                        error: (e, _) => ErrorState(
+                          message: e.toString(),
+                          onRetry: () => ref.invalidate(leagueStandingsProvider(standingsKey)),
                         ),
-                      ],
+                      ),
                     ),
-                  );
-                }
-
-                return RefreshIndicator(
-                  onRefresh: () async {
-                    ref.invalidate(leagueStandingsProvider(standingsKey));
-                  },
-                  child: _StandingsTable(standings: standings),
-                );
-              },
-              loading: () => const LoadingIndicator(),
-              error: (e, _) => ErrorState(
-                message: e.toString(),
-                onRetry: () => ref.invalidate(leagueStandingsProvider(standingsKey)),
+                  ],
+                ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
