@@ -33,6 +33,7 @@ class _AttendanceListScreenState extends ConsumerState<AttendanceListScreen>
   late TabController _tabController;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
+  bool _isFabExtended = true;
 
   @override
   void initState() {
@@ -45,6 +46,14 @@ class _AttendanceListScreenState extends ConsumerState<AttendanceListScreen>
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  void _onScroll(bool isAtTop) {
+    if (isAtTop && !_isFabExtended) {
+      setState(() => _isFabExtended = true);
+    } else if (!isAtTop && _isFabExtended) {
+      setState(() => _isFabExtended = false);
+    }
   }
 
   @override
@@ -81,14 +90,50 @@ class _AttendanceListScreenState extends ConsumerState<AttendanceListScreen>
             ],
           ),
         ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: () => _navigateToAdd(context),
-          backgroundColor: _primary,
-          foregroundColor: Colors.white,
-          icon: const Icon(Icons.add),
-          label: const Text(
-            '직관 기록',
-            style: TextStyle(fontWeight: FontWeight.w600),
+        floatingActionButton: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeInOut,
+          child: Material(
+            color: _primary,
+            borderRadius: BorderRadius.circular(28),
+            elevation: 0,
+            child: InkWell(
+              onTap: () => _navigateToAdd(context),
+              borderRadius: BorderRadius.circular(28),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeInOut,
+                height: 48,
+                padding: EdgeInsets.symmetric(
+                  horizontal: _isFabExtended ? 16 : 12,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.add, color: Colors.white, size: 22),
+                    AnimatedSize(
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeInOut,
+                      child: _isFabExtended
+                          ? const Row(
+                              children: [
+                                SizedBox(width: 6),
+                                Text(
+                                  '직관 기록',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -154,20 +199,29 @@ class _AttendanceListScreenState extends ConsumerState<AttendanceListScreen>
             onAdd: () => _navigateToAdd(context),
           );
         }
-        return RefreshIndicator(
-          onRefresh: () async {
-            ref.invalidate(attendanceListProvider);
+        return NotificationListener<ScrollNotification>(
+          onNotification: (notification) {
+            if (notification is ScrollUpdateNotification) {
+              final isAtTop = notification.metrics.pixels <= 0;
+              _onScroll(isAtTop);
+            }
+            return false;
           },
-          child: ListView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-            itemCount: records.length,
-            itemBuilder: (context, index) {
-              return _AttendanceCard(
-                record: records[index],
-                onTap: () => _navigateToDetail(context, records[index].id),
-                onLongPress: () => _showOptions(context, ref, records[index]),
-              );
+          child: RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(attendanceListProvider);
             },
+            child: ListView.builder(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+              itemCount: records.length,
+              itemBuilder: (context, index) {
+                return _AttendanceCard(
+                  record: records[index],
+                  onTap: () => _navigateToDetail(context, records[index].id),
+                  onLongPress: () => _showOptions(context, ref, records[index]),
+                );
+              },
+            ),
           ),
         );
       },
