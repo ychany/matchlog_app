@@ -14,7 +14,11 @@ import '../providers/standings_provider.dart';
 class StandingsScreen extends ConsumerWidget {
   const StandingsScreen({super.key});
 
+  static const _primary = Color(0xFF2563EB);
+  static const _primaryLight = Color(0xFFDBEAFE);
   static const _textPrimary = Color(0xFF111827);
+  static const _textSecondary = Color(0xFF6B7280);
+  static const _border = Color(0xFFE5E7EB);
   static const _background = Color(0xFFF9FAFB);
 
   @override
@@ -56,70 +60,40 @@ class StandingsScreen extends ConsumerWidget {
               Expanded(
                 child: Column(
                   children: [
-                    // League Filter
-                    SizedBox(
-                      height: 50,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        children: AppConstants.supportedLeagues.map((league) {
-                          final isSelected = selectedLeague == league;
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: FilterChip(
-                              label: Text(
-                                AppConstants.getLeagueDisplayName(league),
-                                style: TextStyle(
-                                  color: isSelected ? Colors.white : Colors.black87,
-                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                                ),
-                              ),
-                              selected: isSelected,
-                              onSelected: (_) {
-                                ref.read(selectedStandingsLeagueProvider.notifier).state = league;
-                                // 리그 변경시 시즌도 리셋
-                                ref.read(selectedSeasonProvider.notifier).state = null;
-                              },
-                              selectedColor: AppColors.primary,
-                              checkmarkColor: Colors.white,
-                              backgroundColor: Colors.grey.shade200,
-                              side: BorderSide(
-                                color: isSelected ? AppColors.primary : Colors.grey.shade300,
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-
-                    // Season Selector
+                    // League Filter - 탭바 스타일
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      margin: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: _border),
+                      ),
                       child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: Row(
-                          children: availableSeasons.map((season) {
-                            final isSelected = season == currentSeason;
-                            return Padding(
-                              padding: const EdgeInsets.only(right: 6),
-                              child: ChoiceChip(
-                                label: Text(
-                                  getSeasonDisplayName(season),
+                          children: AppConstants.supportedLeagues.map((league) {
+                            final isSelected = selectedLeague == league;
+                            return GestureDetector(
+                              onTap: () {
+                                ref.read(selectedStandingsLeagueProvider.notifier).state = league;
+                                ref.read(selectedSeasonProvider.notifier).state = null;
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: isSelected ? _primary : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  AppConstants.getLeagueDisplayName(league),
                                   style: TextStyle(
-                                    fontSize: 12,
-                                    color: isSelected ? Colors.white : Colors.black87,
-                                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                    color: isSelected ? Colors.white : _textSecondary,
+                                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                                    fontSize: 13,
                                   ),
                                 ),
-                                selected: isSelected,
-                                onSelected: (_) {
-                                  ref.read(selectedSeasonProvider.notifier).state = season;
-                                },
-                                selectedColor: AppColors.primary,
-                                backgroundColor: Colors.grey.shade100,
-                                side: BorderSide.none,
-                                padding: const EdgeInsets.symmetric(horizontal: 8),
-                                visualDensity: VisualDensity.compact,
                               ),
                             );
                           }).toList(),
@@ -127,7 +101,48 @@ class StandingsScreen extends ConsumerWidget {
                       ),
                     ),
 
-                    const Divider(height: 1),
+                    const SizedBox(height: 12),
+
+                    // Season Selector - 알약 버튼 스타일
+                    SizedBox(
+                      height: 32,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        children: availableSeasons.map((season) {
+                          final isSelected = season == currentSeason;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: GestureDetector(
+                              onTap: () {
+                                ref.read(selectedSeasonProvider.notifier).state = season;
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                decoration: BoxDecoration(
+                                  color: isSelected ? _primaryLight : Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: isSelected ? _primary : _border,
+                                  ),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  getSeasonDisplayName(season),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: isSelected ? _primary : _textSecondary,
+                                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
 
                     // Standings Table
                     Expanded(
@@ -250,8 +265,9 @@ class _StandingsTable extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
-                const SizedBox(width: 28, child: Text('#', style: TextStyle(fontWeight: FontWeight.bold))),
-                const Expanded(child: Text('팀', style: TextStyle(fontWeight: FontWeight.bold))),
+                const SizedBox(width: 28, child: Text('순위', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
+                const SizedBox(width: 8),
+                const Expanded(child: Text('팀', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
                 _HeaderCell('경기'),
                 _HeaderCell('승'),
                 _HeaderCell('무'),
