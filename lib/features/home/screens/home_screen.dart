@@ -734,11 +734,19 @@ class _ScheduleCard extends StatelessWidget {
 
   const _ScheduleCard({required this.match});
 
+  // 한국 시간 기준으로 날짜만 비교 (시간 제외)
+  int _calculateDaysUntil(DateTime eventDateTime) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final eventDate = DateTime(eventDateTime.year, eventDateTime.month, eventDateTime.day);
+    return eventDate.difference(today).inDays;
+  }
+
   @override
   Widget build(BuildContext context) {
     final event = match.event;
     final daysUntil = event.dateTime != null
-        ? event.dateTime!.difference(DateTime.now()).inDays
+        ? _calculateDaysUntil(event.dateTime!)
         : 0;
 
     return GestureDetector(
