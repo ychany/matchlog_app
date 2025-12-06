@@ -293,7 +293,7 @@ class _SettingsToggle extends StatelessWidget {
             Switch(
               value: value,
               onChanged: enabled ? onChanged : null,
-              activeColor: const Color(0xFF2563EB),
+              activeThumbColor: const Color(0xFF2563EB),
             ),
           ],
         ),

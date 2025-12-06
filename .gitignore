@@ -46,6 +46,8 @@ app.*.map.json
 
 # iOS
 ios/
+*ios/
+
 
 # macOS (not used for this project)
 macos/

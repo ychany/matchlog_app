@@ -950,7 +950,7 @@ class _NotificationSettingsDialogState extends ConsumerState<_NotificationSettin
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: _primary,
+            activeThumbColor: _primary,
           ),
         ],
       ),

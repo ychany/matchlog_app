@@ -1637,7 +1637,7 @@ class _MatchNotificationDialogState extends ConsumerState<_MatchNotificationDial
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: _primary,
+            activeThumbColor: _primary,
           ),
         ],
       ),
