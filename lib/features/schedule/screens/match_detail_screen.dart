@@ -1856,14 +1856,15 @@ class _H2HTab extends ConsumerWidget {
           );
         }
 
-        // 통계 계산
+        // 최근 10경기로 제한하여 통계 계산
+        final recentEvents = events.take(10).toList();
         int homeWins = 0;
         int awayWins = 0;
         int draws = 0;
         int homeGoals = 0;
         int awayGoals = 0;
 
-        for (final event in events) {
+        for (final event in recentEvents) {
           final hScore = event.homeScore ?? 0;
           final aScore = event.awayScore ?? 0;
 
@@ -1897,13 +1898,13 @@ class _H2HTab extends ConsumerWidget {
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              // 상대전적 요약
-              _buildSummaryCard(homeWins, draws, awayWins, homeGoals, awayGoals, events.length),
+              // 상대전적 요약 (최근 10경기 기준)
+              _buildSummaryCard(homeWins, draws, awayWins, homeGoals, awayGoals, recentEvents.length),
               const SizedBox(height: 16),
 
               // 최근 경기 목록
               Text(
-                '최근 경기',
+                '최근 ${recentEvents.length}경기',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -1911,7 +1912,7 @@ class _H2HTab extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              ...events.take(10).map((event) => _buildMatchCard(context, event)),
+              ...recentEvents.map((event) => _buildMatchCard(context, event)),
             ],
           ),
         );

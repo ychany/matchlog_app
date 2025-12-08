@@ -521,11 +521,10 @@ class SportsDbService {
       for (final away in awayVariants) {
         if (searchCount >= maxSearches) break;
 
-        final homeEncoded = home.replaceAll(' ', '_');
-        final awayEncoded = away.replaceAll(' ', '_');
-
+        // 중요: 팀 이름 내부의 공백은 유지하고, _vs_로 연결
+        // API는 "Team Name_vs_Other Team" 형식을 기대함 (공백 유지)
         // 양방향 검색
-        for (final query in ['${homeEncoded}_vs_$awayEncoded', '${awayEncoded}_vs_$homeEncoded']) {
+        for (final query in ['${home}_vs_$away', '${away}_vs_$home']) {
           print('🔍 [H2H] 검색: $query');
           final data = await _get('searchevents.php?e=${Uri.encodeComponent(query)}');
           if (data != null && data['event'] != null) {
@@ -586,11 +585,11 @@ class SportsDbService {
       for (final away in awayVariants) {
         if (searchCount >= maxSearches) break;
 
-        final homeEncoded = home.replaceAll(' ', '_');
-        final awayEncoded = away.replaceAll(' ', '_');
+        // 중요: 팀 이름 내부의 공백은 유지하고, _vs_로 연결
+        // API는 "Team Name_vs_Other Team" 형식을 기대함 (공백 유지)
 
         // 홈팀 vs 원정팀 검색
-        final data1 = await _get('searchevents.php?e=${Uri.encodeComponent('${homeEncoded}_vs_$awayEncoded')}');
+        final data1 = await _get('searchevents.php?e=${Uri.encodeComponent('${home}_vs_$away')}');
         if (data1 != null && data1['event'] != null) {
           for (final json in data1['event'] as List) {
             final event = SportsDbEvent.fromJson(json);
@@ -602,7 +601,7 @@ class SportsDbService {
         }
 
         // 원정팀 vs 홈팀 검색 (역방향)
-        final data2 = await _get('searchevents.php?e=${Uri.encodeComponent('${awayEncoded}_vs_$homeEncoded')}');
+        final data2 = await _get('searchevents.php?e=${Uri.encodeComponent('${away}_vs_$home')}');
         if (data2 != null && data2['event'] != null) {
           for (final json in data2['event'] as List) {
             final event = SportsDbEvent.fromJson(json);
