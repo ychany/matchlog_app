@@ -498,19 +498,12 @@ class SportsDbService {
     String homeTeamName,
     String awayTeamName,
   ) async {
-    print('🔍 [H2H] 이름 검색 + ID 필터링 시작');
-    print('🔍 [H2H] homeTeamId: $homeTeamId, awayTeamId: $awayTeamId');
-    print('🔍 [H2H] homeTeamName: $homeTeamName, awayTeamName: $awayTeamName');
-
     final allEvents = <SportsDbEvent>[];
     final seenIds = <String>{};
 
     // 팀 이름 변형들 가져오기
     final homeVariants = _getTeamNameVariants(homeTeamName);
     final awayVariants = _getTeamNameVariants(awayTeamName);
-
-    print('🔍 [H2H] 홈팀 변형: $homeVariants');
-    print('🔍 [H2H] 원정팀 변형: $awayVariants');
 
     // 여러 조합으로 검색 (최대 6개 조합)
     int searchCount = 0;
@@ -521,11 +514,9 @@ class SportsDbService {
       for (final away in awayVariants) {
         if (searchCount >= maxSearches) break;
 
-        // 중요: 팀 이름 내부의 공백은 유지하고, _vs_로 연결
-        // API는 "Team Name_vs_Other Team" 형식을 기대함 (공백 유지)
+        // 팀 이름 내부의 공백은 유지하고, _vs_로 연결
         // 양방향 검색
         for (final query in ['${home}_vs_$away', '${away}_vs_$home']) {
-          print('🔍 [H2H] 검색: $query');
           final data = await _get('searchevents.php?e=${Uri.encodeComponent(query)}');
           if (data != null && data['event'] != null) {
             for (final json in data['event'] as List) {
@@ -535,7 +526,6 @@ class SportsDbService {
               if (isMatch && !seenIds.contains(event.id) && event.isFinished) {
                 seenIds.add(event.id);
                 allEvents.add(event);
-                print('⚔️ [H2H] ${event.homeTeam} ${event.homeScore}-${event.awayScore} ${event.awayTeam} (${event.date}) - ${event.league}');
               }
             }
           }
@@ -545,8 +535,6 @@ class SportsDbService {
       }
       if (allEvents.length >= 15) break;
     }
-
-    print('✅ [H2H] 총 ${allEvents.length}경기 발견');
 
     // 날짜순 정렬 (최신순)
     allEvents.sort((a, b) {
