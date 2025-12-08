@@ -787,6 +787,7 @@ class SportsDbEvent {
   final String? thumb;
   final String? banner;
   final String? status;
+  final String? round;
 
   SportsDbEvent({
     required this.id,
@@ -809,6 +810,7 @@ class SportsDbEvent {
     this.thumb,
     this.banner,
     this.status,
+    this.round,
   });
 
   factory SportsDbEvent.fromJson(Map<String, dynamic> json) {
@@ -833,6 +835,7 @@ class SportsDbEvent {
       thumb: json['strThumb'],
       banner: json['strBanner'],
       status: json['strStatus'],
+      round: json['intRound']?.toString(),
     );
   }
 

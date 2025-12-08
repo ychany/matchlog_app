@@ -476,6 +476,8 @@ class _InfoTab extends StatelessWidget {
               const SizedBox(height: 16),
               _InfoRow(label: '리그', value: match.league ?? '-'),
               _InfoRow(label: '시즌', value: match.season ?? '-'),
+              if (match.round != null && match.round!.isNotEmpty && match.round != '0')
+                _InfoRow(label: '라운드', value: '${match.round}R'),
               _InfoRow(
                 label: '날짜',
                 value: match.dateTime != null
