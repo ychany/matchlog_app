@@ -345,16 +345,15 @@ class SportsDbService {
     final data = await _get('lookupeventstats.php?id=$eventId');
     if (data == null || data['eventstats'] == null) return null;
 
-    return SportsDbEventStats.fromJson(
-      (data['eventstats'] as List).isNotEmpty
-        ? (data['eventstats'] as List).first
-        : {}
-    );
+    final statsList = data['eventstats'] as List;
+    if (statsList.isEmpty) return null;
+
+    return SportsDbEventStats.fromStatsList(statsList);
   }
 
   /// 경기 타임라인 (골, 카드 등 이벤트)
   Future<List<SportsDbTimeline>> getEventTimeline(String eventId) async {
-    final data = await _get('lookupeventtimeline.php?id=$eventId');
+    final data = await _get('lookuptimeline.php?id=$eventId');
     if (data == null || data['timeline'] == null) return [];
 
     return (data['timeline'] as List)
@@ -895,6 +894,69 @@ class SportsDbEventStats {
     );
   }
 
+  /// API가 배열로 각 통계를 개별 반환하는 경우 파싱
+  factory SportsDbEventStats.fromStatsList(List<dynamic> statsList) {
+    int? homePossession, awayPossession;
+    int? homeShots, awayShots;
+    int? homeShotsOnTarget, awayShotsOnTarget;
+    int? homeCorners, awayCorners;
+    int? homeFouls, awayFouls;
+    int? homeYellowCards, awayYellowCards;
+    int? homeRedCards, awayRedCards;
+    int? homeOffsides, awayOffsides;
+
+    for (final stat in statsList) {
+      final statName = stat['strStat']?.toString().toLowerCase() ?? '';
+      final homeVal = int.tryParse(stat['intHome']?.toString() ?? '');
+      final awayVal = int.tryParse(stat['intAway']?.toString() ?? '');
+
+      if (statName.contains('possession')) {
+        homePossession = homeVal;
+        awayPossession = awayVal;
+      } else if (statName == 'total shots') {
+        homeShots = homeVal;
+        awayShots = awayVal;
+      } else if (statName.contains('shots on goal') || statName.contains('shots on target')) {
+        homeShotsOnTarget = homeVal;
+        awayShotsOnTarget = awayVal;
+      } else if (statName.contains('corner')) {
+        homeCorners = homeVal;
+        awayCorners = awayVal;
+      } else if (statName == 'fouls') {
+        homeFouls = homeVal;
+        awayFouls = awayVal;
+      } else if (statName.contains('yellow')) {
+        homeYellowCards = homeVal;
+        awayYellowCards = awayVal;
+      } else if (statName.contains('red card')) {
+        homeRedCards = homeVal;
+        awayRedCards = awayVal;
+      } else if (statName.contains('offside')) {
+        homeOffsides = homeVal;
+        awayOffsides = awayVal;
+      }
+    }
+
+    return SportsDbEventStats(
+      homePossession: homePossession,
+      awayPossession: awayPossession,
+      homeShots: homeShots,
+      awayShots: awayShots,
+      homeShotsOnTarget: homeShotsOnTarget,
+      awayShotsOnTarget: awayShotsOnTarget,
+      homeCorners: homeCorners,
+      awayCorners: awayCorners,
+      homeFouls: homeFouls,
+      awayFouls: awayFouls,
+      homeYellowCards: homeYellowCards,
+      awayYellowCards: awayYellowCards,
+      homeRedCards: homeRedCards,
+      awayRedCards: awayRedCards,
+      homeOffsides: homeOffsides,
+      awayOffsides: awayOffsides,
+    );
+  }
+
   bool get isEmpty =>
       homePossession == null &&
       awayPossession == null &&
@@ -905,12 +967,13 @@ class SportsDbEventStats {
 /// 경기 타임라인 (골, 카드 등) 모델
 class SportsDbTimeline {
   final String id;
-  final String? type; // Goal, Yellow Card, Red Card, Substitution
-  final String? time;
+  final String? type; // Goal, Card, subst
+  final String? time; // 분 (예: "45", "90")
   final String? player;
+  final String? assist; // 어시스트 선수
   final String? team;
   final String? teamId;
-  final String? detail;
+  final String? detail; // Yellow Card, Normal Goal 등
   final bool isHome;
 
   SportsDbTimeline({
@@ -918,6 +981,7 @@ class SportsDbTimeline {
     this.type,
     this.time,
     this.player,
+    this.assist,
     this.team,
     this.teamId,
     this.detail,
@@ -928,14 +992,18 @@ class SportsDbTimeline {
     return SportsDbTimeline(
       id: json['idTimeline']?.toString() ?? '',
       type: json['strTimeline'],
-      time: json['strTimelineTime'],
+      time: json['intTime']?.toString(),
       player: json['strPlayer'],
+      assist: json['strAssist'],
       team: json['strTeam'],
-      teamId: json['idTeam'],
+      teamId: json['idTeam']?.toString(),
       detail: json['strTimelineDetail'],
-      isHome: json['strHomeOrAway'] == 'Home',
+      isHome: json['strHome']?.toString().toLowerCase() == 'yes',
     );
   }
+
+  /// 시간 표시 (예: "45'")
+  String get timeDisplay => time != null ? "$time'" : '';
 }
 
 /// TV 중계 정보 모델

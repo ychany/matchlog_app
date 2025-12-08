@@ -1164,15 +1164,30 @@ class _TimelineTab extends ConsumerWidget {
           );
         }
 
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: timeline.length,
-          itemBuilder: (context, index) {
-            return _TimelineItem(
-              event: timeline[index],
-              isLast: index == timeline.length - 1,
-            );
-          },
+        // 시간순 정렬
+        final sortedTimeline = List<SportsDbTimeline>.from(timeline)
+          ..sort((a, b) {
+            final aTime = int.tryParse(a.time ?? '0') ?? 0;
+            final bTime = int.tryParse(b.time ?? '0') ?? 0;
+            return aTime.compareTo(bTime);
+          });
+
+        return Container(
+          color: Colors.white,
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            itemCount: sortedTimeline.length,
+            itemBuilder: (context, index) {
+              final event = sortedTimeline[index];
+              final isFirst = index == 0;
+              final isLast = index == sortedTimeline.length - 1;
+              return _TimelineItem(
+                event: event,
+                isFirst: isFirst,
+                isLast: isLast,
+              );
+            },
+          ),
         );
       },
       loading: () => const LoadingIndicator(),
@@ -1183,123 +1198,236 @@ class _TimelineTab extends ConsumerWidget {
 
 class _TimelineItem extends StatelessWidget {
   final SportsDbTimeline event;
+  final bool isFirst;
   final bool isLast;
 
   static const _textPrimary = Color(0xFF111827);
   static const _textSecondary = Color(0xFF6B7280);
-  static const _border = Color(0xFFE5E7EB);
-  static const _success = Color(0xFF10B981);
-  static const _warning = Color(0xFFF59E0B);
-  static const _error = Color(0xFFEF4444);
 
-  const _TimelineItem({required this.event, this.isLast = false});
+  const _TimelineItem({
+    required this.event,
+    this.isFirst = false,
+    this.isLast = false,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final isGoal = event.type?.toLowerCase() == 'goal';
+    final isCard = event.type?.toLowerCase() == 'card';
+    final isSubst = event.type?.toLowerCase() == 'subst';
+
     return IntrinsicHeight(
       child: Row(
         children: [
-          // Time
-          SizedBox(
-            width: 44,
-            child: Text(
-              event.time ?? '',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: _getEventColor(),
-              ),
-            ),
-          ),
-
-          // Timeline line and icon
-          Column(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: _getEventColor().withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                  border:
-                      Border.all(color: _getEventColor().withValues(alpha: 0.3)),
-                ),
-                child: Icon(
-                  _getEventIcon(),
-                  size: 18,
-                  color: _getEventColor(),
-                ),
-              ),
-              if (!isLast)
-                Expanded(
-                  child: Container(
-                    width: 2,
-                    color: _border,
-                  ),
-                ),
-            ],
-          ),
-
-          const SizedBox(width: 12),
-
-          // Details
+          // 홈팀 영역 (왼쪽)
           Expanded(
-            child: Container(
-              margin: EdgeInsets.only(bottom: isLast ? 0 : 16),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: _border),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    event.player ?? event.type ?? '',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: _textPrimary,
+            child: event.isHome
+                ? _buildEventContent(isGoal, isCard, isSubst, true)
+                : const SizedBox(),
+          ),
+
+          // 중앙 타임라인
+          SizedBox(
+            width: 60,
+            child: Column(
+              children: [
+                // 상단 연결선
+                if (!isFirst)
+                  Container(
+                    width: 2,
+                    height: 8,
+                    color: Colors.grey.shade300,
+                  ),
+                // 시간 원
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: _getEventColor().withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: _getEventColor(),
+                      width: 2,
                     ),
                   ),
-                  if (event.detail != null) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      event.detail!,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: _textSecondary,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        event.timeDisplay,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: _getEventColor(),
+                        ),
                       ),
-                    ),
-                  ],
-                  const SizedBox(height: 4),
-                  Text(
-                    event.team ?? (event.isHome ? '홈' : '원정'),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: _textSecondary.withValues(alpha: 0.8),
+                    ],
+                  ),
+                ),
+                // 하단 연결선
+                if (!isLast)
+                  Expanded(
+                    child: Container(
+                      width: 2,
+                      color: Colors.grey.shade300,
                     ),
                   ),
-                ],
-              ),
+              ],
             ),
+          ),
+
+          // 원정팀 영역 (오른쪽)
+          Expanded(
+            child: !event.isHome
+                ? _buildEventContent(isGoal, isCard, isSubst, false)
+                : const SizedBox(),
           ),
         ],
       ),
     );
   }
 
+  Widget _buildEventContent(bool isGoal, bool isCard, bool isSubst, bool isHome) {
+    return Container(
+      margin: EdgeInsets.only(
+        left: isHome ? 16 : 8,
+        right: isHome ? 8 : 16,
+        bottom: 12,
+      ),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: _getEventColor().withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: _getEventColor().withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: isHome ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: [
+          // 이벤트 타입 뱃지
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                _getEventIcon(),
+                size: 14,
+                color: _getEventColor(),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                _getEventTypeText(),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: _getEventColor(),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+
+          // 선수 이름
+          Text(
+            event.player ?? '',
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: _textPrimary,
+            ),
+            textAlign: isHome ? TextAlign.right : TextAlign.left,
+          ),
+
+          // 어시스트 또는 세부 정보
+          if (isGoal && event.assist != null && event.assist!.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              '어시스트: ${event.assist}',
+              style: TextStyle(
+                fontSize: 11,
+                color: _textSecondary,
+              ),
+              textAlign: isHome ? TextAlign.right : TextAlign.left,
+            ),
+          ] else if (isSubst && event.detail != null && event.detail!.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.arrow_upward, size: 10, color: Colors.green),
+                const SizedBox(width: 2),
+                Text(
+                  event.detail!,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.green.shade700,
+                  ),
+                ),
+              ],
+            ),
+          ] else if (event.detail != null && event.detail!.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              event.detail!,
+              style: TextStyle(
+                fontSize: 11,
+                color: _textSecondary,
+              ),
+              textAlign: isHome ? TextAlign.right : TextAlign.left,
+            ),
+          ],
+
+          // 팀 이름
+          const SizedBox(height: 4),
+          Text(
+            event.team ?? '',
+            style: TextStyle(
+              fontSize: 10,
+              color: _textSecondary,
+            ),
+            textAlign: isHome ? TextAlign.right : TextAlign.left,
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getEventTypeText() {
+    switch (event.type?.toLowerCase()) {
+      case 'goal':
+        if (event.detail?.toLowerCase().contains('penalty') == true) {
+          return '페널티골';
+        } else if (event.detail?.toLowerCase().contains('own') == true) {
+          return '자책골';
+        }
+        return '골';
+      case 'card':
+        if (event.detail?.toLowerCase().contains('yellow') == true) {
+          return '경고';
+        } else if (event.detail?.toLowerCase().contains('red') == true) {
+          return '퇴장';
+        }
+        return '카드';
+      case 'subst':
+        return '교체';
+      case 'var':
+        return 'VAR';
+      default:
+        return event.type ?? '';
+    }
+  }
+
   IconData _getEventIcon() {
     switch (event.type?.toLowerCase()) {
       case 'goal':
         return Icons.sports_soccer;
-      case 'yellow card':
-        return Icons.square;
-      case 'red card':
-        return Icons.square;
-      case 'substitution':
+      case 'card':
+        return Icons.style;
+      case 'subst':
         return Icons.swap_horiz;
+      case 'var':
+        return Icons.tv;
       default:
         return Icons.circle;
     }
@@ -1308,15 +1436,18 @@ class _TimelineItem extends StatelessWidget {
   Color _getEventColor() {
     switch (event.type?.toLowerCase()) {
       case 'goal':
-        return _success;
-      case 'yellow card':
-        return _warning;
-      case 'red card':
-        return _error;
-      case 'substitution':
-        return const Color(0xFF2563EB);
+        return const Color(0xFF10B981);
+      case 'card':
+        if (event.detail?.toLowerCase().contains('red') == true) {
+          return const Color(0xFFEF4444);
+        }
+        return const Color(0xFFF59E0B);
+      case 'subst':
+        return const Color(0xFF3B82F6);
+      case 'var':
+        return const Color(0xFF8B5CF6);
       default:
-        return _textSecondary;
+        return const Color(0xFF6B7280);
     }
   }
 }

@@ -1183,12 +1183,30 @@ class _TimelineTab extends ConsumerWidget {
           );
         }
 
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: timeline.length,
-          itemBuilder: (context, index) {
-            return _TimelineItem(event: timeline[index]);
-          },
+        // 시간순 정렬
+        final sortedTimeline = List<SportsDbTimeline>.from(timeline)
+          ..sort((a, b) {
+            final aTime = int.tryParse(a.time ?? '0') ?? 0;
+            final bTime = int.tryParse(b.time ?? '0') ?? 0;
+            return aTime.compareTo(bTime);
+          });
+
+        return Container(
+          color: Colors.white,
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            itemCount: sortedTimeline.length,
+            itemBuilder: (context, index) {
+              final event = sortedTimeline[index];
+              final isFirst = index == 0;
+              final isLast = index == sortedTimeline.length - 1;
+              return _TimelineItem(
+                event: event,
+                isFirst: isFirst,
+                isLast: isLast,
+              );
+            },
+          ),
         );
       },
       loading: () => const LoadingIndicator(),
@@ -1201,131 +1219,223 @@ class _TimelineTab extends ConsumerWidget {
 
 class _TimelineItem extends StatelessWidget {
   final SportsDbTimeline event;
+  final bool isFirst;
+  final bool isLast;
 
-  static const _primary = Color(0xFF2563EB);
   static const _textPrimary = Color(0xFF111827);
   static const _textSecondary = Color(0xFF6B7280);
-  static const _border = Color(0xFFE5E7EB);
 
-  const _TimelineItem({required this.event});
+  const _TimelineItem({
+    required this.event,
+    this.isFirst = false,
+    this.isLast = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: _border),
-      ),
+    final isGoal = event.type?.toLowerCase() == 'goal';
+    final isCard = event.type?.toLowerCase() == 'card';
+    final isSubst = event.type?.toLowerCase() == 'subst';
+
+    return IntrinsicHeight(
       child: Row(
         children: [
-          // Time
-          Container(
-            width: 40,
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            decoration: BoxDecoration(
-              color: _primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text(
-              event.time ?? '',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: _primary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-
-          const SizedBox(width: 12),
-
-          // Icon
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: _getEventColor().withValues(alpha: 0.15),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              _getEventIcon(),
-              size: 16,
-              color: _getEventColor(),
-            ),
-          ),
-
-          const SizedBox(width: 12),
-
-          // Details
+          // 홈팀 영역 (왼쪽)
           Expanded(
+            child: event.isHome
+                ? _buildEventContent(isGoal, isCard, isSubst, true)
+                : const SizedBox(),
+          ),
+
+          // 중앙 타임라인
+          SizedBox(
+            width: 60,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  event.player ?? _getEventTypeText(event.type),
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: _textPrimary,
+                // 상단 연결선
+                if (!isFirst)
+                  Container(
+                    width: 2,
+                    height: 8,
+                    color: Colors.grey.shade300,
+                  ),
+                // 시간 원
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: _getEventColor().withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: _getEventColor(),
+                      width: 2,
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        event.timeDisplay,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: _getEventColor(),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                if (event.detail != null)
-                  Text(
-                    event.detail!,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: _textSecondary,
+                // 하단 연결선
+                if (!isLast)
+                  Expanded(
+                    child: Container(
+                      width: 2,
+                      color: Colors.grey.shade300,
                     ),
                   ),
-                Row(
-                  children: [
-                    Text(
-                      _getEventTypeText(event.type),
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: _getEventColor(),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      event.team ?? (event.isHome ? '홈' : '원정'),
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: _textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
               ],
             ),
+          ),
+
+          // 원정팀 영역 (오른쪽)
+          Expanded(
+            child: !event.isHome
+                ? _buildEventContent(isGoal, isCard, isSubst, false)
+                : const SizedBox(),
           ),
         ],
       ),
     );
   }
 
-  String _getEventTypeText(String? type) {
-    switch (type?.toLowerCase()) {
+  Widget _buildEventContent(bool isGoal, bool isCard, bool isSubst, bool isHome) {
+    return Container(
+      margin: EdgeInsets.only(
+        left: isHome ? 16 : 8,
+        right: isHome ? 8 : 16,
+        bottom: 12,
+      ),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: _getEventColor().withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: _getEventColor().withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: isHome ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: [
+          // 이벤트 타입 뱃지
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                _getEventIcon(),
+                size: 14,
+                color: _getEventColor(),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                _getEventTypeText(),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: _getEventColor(),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+
+          // 선수 이름
+          Text(
+            event.player ?? '',
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: _textPrimary,
+            ),
+            textAlign: isHome ? TextAlign.right : TextAlign.left,
+          ),
+
+          // 어시스트 또는 세부 정보
+          if (isGoal && event.assist != null && event.assist!.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              '어시스트: ${event.assist}',
+              style: TextStyle(
+                fontSize: 11,
+                color: _textSecondary,
+              ),
+              textAlign: isHome ? TextAlign.right : TextAlign.left,
+            ),
+          ] else if (isSubst && event.detail != null && event.detail!.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.arrow_upward, size: 10, color: Colors.green),
+                const SizedBox(width: 2),
+                Text(
+                  event.detail!,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.green.shade700,
+                  ),
+                ),
+              ],
+            ),
+          ] else if (event.detail != null && event.detail!.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              event.detail!,
+              style: TextStyle(
+                fontSize: 11,
+                color: _textSecondary,
+              ),
+              textAlign: isHome ? TextAlign.right : TextAlign.left,
+            ),
+          ],
+
+          // 팀 이름
+          const SizedBox(height: 4),
+          Text(
+            event.team ?? '',
+            style: TextStyle(
+              fontSize: 10,
+              color: _textSecondary,
+            ),
+            textAlign: isHome ? TextAlign.right : TextAlign.left,
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getEventTypeText() {
+    switch (event.type?.toLowerCase()) {
       case 'goal':
+        if (event.detail?.toLowerCase().contains('penalty') == true) {
+          return '페널티골';
+        } else if (event.detail?.toLowerCase().contains('own') == true) {
+          return '자책골';
+        }
         return '골';
-      case 'yellow card':
-        return '경고';
-      case 'red card':
-        return '퇴장';
-      case 'substitution':
+      case 'card':
+        if (event.detail?.toLowerCase().contains('yellow') == true) {
+          return '경고';
+        } else if (event.detail?.toLowerCase().contains('red') == true) {
+          return '퇴장';
+        }
+        return '카드';
+      case 'subst':
         return '교체';
-      case 'penalty':
-        return '페널티킥';
-      case 'own goal':
-        return '자책골';
       case 'var':
         return 'VAR';
       default:
-        return type ?? '';
+        return event.type ?? '';
     }
   }
 
@@ -1333,12 +1443,12 @@ class _TimelineItem extends StatelessWidget {
     switch (event.type?.toLowerCase()) {
       case 'goal':
         return Icons.sports_soccer;
-      case 'yellow card':
-        return Icons.square;
-      case 'red card':
-        return Icons.square;
-      case 'substitution':
+      case 'card':
+        return Icons.style; // 카드 아이콘
+      case 'subst':
         return Icons.swap_horiz;
+      case 'var':
+        return Icons.tv;
       default:
         return Icons.circle;
     }
@@ -1347,15 +1457,18 @@ class _TimelineItem extends StatelessWidget {
   Color _getEventColor() {
     switch (event.type?.toLowerCase()) {
       case 'goal':
-        return Colors.green;
-      case 'yellow card':
-        return Colors.amber;
-      case 'red card':
-        return Colors.red;
-      case 'substitution':
-        return Colors.blue;
+        return const Color(0xFF10B981); // 초록색
+      case 'card':
+        if (event.detail?.toLowerCase().contains('red') == true) {
+          return const Color(0xFFEF4444); // 빨간색
+        }
+        return const Color(0xFFF59E0B); // 노란색
+      case 'subst':
+        return const Color(0xFF3B82F6); // 파란색
+      case 'var':
+        return const Color(0xFF8B5CF6); // 보라색
       default:
-        return Colors.grey;
+        return const Color(0xFF6B7280); // 회색
     }
   }
 }
