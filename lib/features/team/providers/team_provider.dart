@@ -24,3 +24,9 @@ final teamPlayersProvider = FutureProvider.family<List<SportsDbPlayer>, String>(
   final service = SportsDbService();
   return service.getPlayersByTeam(teamId);
 });
+
+/// 팀의 전체 시즌 일정 Provider (V2 API)
+final teamFullScheduleProvider = FutureProvider.family<List<SportsDbEvent>, String>((ref, teamId) async {
+  final service = SportsDbService();
+  return service.getTeamFullSchedule(teamId);
+});

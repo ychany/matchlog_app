@@ -494,149 +494,182 @@ class _ScheduleTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final nextEventsAsync = ref.watch(teamNextEventsProvider(teamId));
-    final pastEventsAsync = ref.watch(teamPastEventsProvider(teamId));
+    final scheduleAsync = ref.watch(teamFullScheduleProvider(teamId));
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        // Next Matches
-        Container(
+    return scheduleAsync.when(
+      data: (events) {
+        if (events.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.event_busy, size: 48, color: _textSecondary),
+                const SizedBox(height: 12),
+                Text(
+                  '일정이 없습니다',
+                  style: TextStyle(color: _textSecondary, fontSize: 14),
+                ),
+              ],
+            ),
+          );
+        }
+
+        // 날짜순 정렬 (최신순)
+        final sortedEvents = List<SportsDbEvent>.from(events)
+          ..sort((a, b) {
+            final aDate = a.dateTime ?? DateTime(1900);
+            final bDate = b.dateTime ?? DateTime(1900);
+            return bDate.compareTo(aDate); // 최신순
+          });
+
+        final now = DateTime.now();
+        final todayStart = DateTime(now.year, now.month, now.day);
+
+        // 지난 경기, 예정된 경기 분리
+        final pastEvents = sortedEvents.where((e) {
+          final dt = e.dateTime;
+          return dt != null && dt.isBefore(todayStart);
+        }).toList();
+
+        final upcomingEvents = sortedEvents.where((e) {
+          final dt = e.dateTime;
+          return dt != null && !dt.isBefore(todayStart);
+        }).toList()
+          ..sort((a, b) {
+            // 예정된 경기는 가까운 순서로
+            final aDate = a.dateTime ?? DateTime(2100);
+            final bDate = b.dateTime ?? DateTime(2100);
+            return aDate.compareTo(bDate);
+          });
+
+        return ListView(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: _border),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: _primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
+          children: [
+            // Upcoming Matches
+            if (upcomingEvents.isNotEmpty) ...[
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: _border),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: _primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(Icons.event_outlined, color: _primary, size: 20),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          '예정된 경기',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: _textPrimary,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: _primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            '${upcomingEvents.length}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: _primary,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    child: Icon(Icons.event_outlined, color: _primary, size: 20),
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    '다음 경기',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: _textPrimary,
-                    ),
-                  ),
-                ],
+                    const SizedBox(height: 12),
+                    ...upcomingEvents.map((e) => _MatchCard(event: e)),
+                  ],
+                ),
               ),
               const SizedBox(height: 12),
-              nextEventsAsync.when(
-                data: (events) {
-                  if (events.isEmpty) {
-                    return Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Center(
-                        child: Text(
-                          '예정된 경기가 없습니다',
-                          style: TextStyle(color: _textSecondary, fontSize: 14),
-                        ),
-                      ),
-                    );
-                  }
-                  return Column(
-                    children: events
-                        .take(5)
-                        .map((e) => _MatchCard(event: e))
-                        .toList(),
-                  );
-                },
-                loading: () => const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-                error: (e, _) => Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text('오류: $e',
-                      style: const TextStyle(color: Colors.red)),
-                ),
-              ),
             ],
-          ),
-        ),
 
-        const SizedBox(height: 12),
-
-        // Past Matches
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: _border),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: _textSecondary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child:
-                        Icon(Icons.history, color: _textSecondary, size: 20),
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    '지난 경기',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: _textPrimary,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              pastEventsAsync.when(
-                data: (events) {
-                  if (events.isEmpty) {
-                    return Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Center(
-                        child: Text(
-                          '지난 경기가 없습니다',
-                          style: TextStyle(color: _textSecondary, fontSize: 14),
+            // Past Matches
+            if (pastEvents.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: _border),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: _textSecondary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(Icons.history, color: _textSecondary, size: 20),
                         ),
-                      ),
-                    );
-                  }
-                  return Column(
-                    children: events
-                        .take(5)
-                        .map((e) => _MatchCard(event: e, isPast: true))
-                        .toList(),
-                  );
-                },
-                loading: () => const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-                error: (e, _) => Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text('오류: $e',
-                      style: const TextStyle(color: Colors.red)),
+                        const SizedBox(width: 12),
+                        Text(
+                          '지난 경기',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: _textPrimary,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: _textSecondary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            '${pastEvents.length}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: _textSecondary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    ...pastEvents.map((e) => _MatchCard(event: e, isPast: true)),
+                  ],
                 ),
               ),
-            ],
-          ),
+          ],
+        );
+      },
+      loading: () => const LoadingIndicator(),
+      error: (e, _) => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 48, color: _textSecondary),
+            const SizedBox(height: 12),
+            Text('오류: $e', style: TextStyle(color: _textSecondary, fontSize: 14)),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

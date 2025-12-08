@@ -429,6 +429,18 @@ class SportsDbService {
         .toList();
   }
 
+  /// 팀의 전체 시즌 일정 조회 (V2 API)
+  /// V1 API의 eventsnext/eventslast는 각각 5경기만 반환하지만
+  /// V2 API의 schedule/full/team은 전체 시즌 일정을 반환
+  Future<List<SportsDbEvent>> getTeamFullSchedule(String teamId) async {
+    final data = await _getV2('schedule/full/team/$teamId');
+    if (data == null || data['schedule'] == null) return [];
+
+    return (data['schedule'] as List)
+        .map((json) => SportsDbEvent.fromJson(json))
+        .toList();
+  }
+
   // ============ 상대전적 (Head to Head) ============
 
   // 팀 이름 변형 맵 (정식 이름 -> 약어/과거 이름들)
