@@ -270,6 +270,16 @@ class SportsDbService {
         .toList();
   }
 
+  /// 리그의 시즌별 경기들
+  Future<List<SportsDbEvent>> getLeagueEventsBySeason(String leagueId, String season) async {
+    final data = await _get('eventsseason.php?id=$leagueId&s=$season');
+    if (data == null || data['events'] == null) return [];
+
+    return (data['events'] as List)
+        .map((json) => SportsDbEvent.fromJson(json))
+        .toList();
+  }
+
   /// 팀의 다음 경기들
   Future<List<SportsDbEvent>> getNextTeamEvents(String teamId) async {
     final data = await _get('eventsnext.php?id=$teamId');

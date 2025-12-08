@@ -302,15 +302,12 @@ class _ScheduleTab extends ConsumerWidget {
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            // 예정된 경기
             if (upcomingMatches.isNotEmpty) ...[
               _buildSectionHeader('예정된 경기', Icons.event_outlined, _primary, upcomingMatches.length),
               const SizedBox(height: 12),
               ...upcomingMatches.map((m) => _MatchCard(match: m, isPast: false)),
               const SizedBox(height: 24),
             ],
-
-            // 지난 경기
             if (pastMatches.isNotEmpty) ...[
               _buildSectionHeader('지난 경기', Icons.history, _textSecondary, pastMatches.length),
               const SizedBox(height: 12),
@@ -580,6 +577,15 @@ class _InfoTab extends ConsumerWidget {
   static const _textSecondary = Color(0xFF6B7280);
   static const _border = Color(0xFFE5E7EB);
 
+  void _showCompetitionMatches(BuildContext context, WidgetRef ref, NationalTeamCompetition competition) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _CompetitionMatchesSheet(competition: competition),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final teamAsync = ref.watch(koreaTeamProvider);
@@ -712,19 +718,33 @@ class _InfoTab extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    '참가 대회',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: _textPrimary,
-                    ),
+                  Row(
+                    children: [
+                      const Text(
+                        '참가 대회',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: _textPrimary,
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        '탭하여 일정 보기',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: _textSecondary,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
-                  _CompetitionItem(name: 'FIFA 월드컵', icon: '🏆'),
-                  _CompetitionItem(name: '월드컵 예선 (AFC)', icon: '⚽'),
-                  _CompetitionItem(name: 'AFC 아시안컵', icon: '🏅'),
-                  _CompetitionItem(name: '친선경기', icon: '🤝'),
+                  ...NationalTeamLeagues.competitions.map((comp) =>
+                    _CompetitionItem(
+                      competition: comp,
+                      onTap: () => _showCompetitionMatches(context, ref, comp),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -841,28 +861,208 @@ class _StatItem extends StatelessWidget {
   }
 }
 
-class _CompetitionItem extends StatelessWidget {
-  final String name;
-  final String icon;
+// 대회별 일정 바텀시트
+class _CompetitionMatchesSheet extends ConsumerWidget {
+  final NationalTeamCompetition competition;
 
-  const _CompetitionItem({required this.name, required this.icon});
+  static const _textPrimary = Color(0xFF111827);
+  static const _textSecondary = Color(0xFF6B7280);
+  static const _primary = Color(0xFF2563EB);
+
+  const _CompetitionMatchesSheet({required this.competition});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final matchesAsync = ref.watch(competitionMatchesProvider(competition.id));
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.7,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      builder: (context, scrollController) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            children: [
+              // 핸들바
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              // 헤더
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Text(competition.icon, style: const TextStyle(fontSize: 24)),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        competition.name,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: _textPrimary,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              // 일정 목록
+              Expanded(
+                child: matchesAsync.when(
+                  data: (matches) {
+                    if (matches.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(competition.icon, style: const TextStyle(fontSize: 48)),
+                            const SizedBox(height: 16),
+                            Text(
+                              '${competition.name} 일정이 없습니다',
+                              style: TextStyle(color: _textSecondary, fontSize: 14),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    final now = DateTime.now();
+                    final todayStart = DateTime(now.year, now.month, now.day);
+
+                    final upcomingMatches = matches.where((m) {
+                      final dt = m.dateTime;
+                      return dt != null && !dt.isBefore(todayStart);
+                    }).toList()
+                      ..sort((a, b) {
+                        final aDate = a.dateTime ?? DateTime(2100);
+                        final bDate = b.dateTime ?? DateTime(2100);
+                        return aDate.compareTo(bDate);
+                      });
+
+                    final pastMatches = matches.where((m) {
+                      final dt = m.dateTime;
+                      return dt != null && dt.isBefore(todayStart);
+                    }).toList();
+
+                    return ListView(
+                      controller: scrollController,
+                      padding: const EdgeInsets.all(16),
+                      children: [
+                        if (upcomingMatches.isNotEmpty) ...[
+                          _buildSectionHeader('예정된 경기', Icons.event_outlined, _primary, upcomingMatches.length),
+                          const SizedBox(height: 12),
+                          ...upcomingMatches.map((m) => _MatchCard(match: m, isPast: false)),
+                          const SizedBox(height: 24),
+                        ],
+                        if (pastMatches.isNotEmpty) ...[
+                          _buildSectionHeader('지난 경기', Icons.history, _textSecondary, pastMatches.length),
+                          const SizedBox(height: 12),
+                          ...pastMatches.map((m) => _MatchCard(match: m, isPast: true)),
+                        ],
+                      ],
+                    );
+                  },
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (e, _) => Center(
+                    child: Text('오류: $e', style: TextStyle(color: _textSecondary)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSectionHeader(String title, IconData icon, Color color, int count) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: color, size: 20),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: _textPrimary,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Text(
+            '$count',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CompetitionItem extends StatelessWidget {
+  final NationalTeamCompetition competition;
+  final VoidCallback onTap;
+
+  static const _textSecondary = Color(0xFF6B7280);
+
+  const _CompetitionItem({required this.competition, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Text(icon, style: const TextStyle(fontSize: 20)),
-          const SizedBox(width: 12),
-          Text(
-            name,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Color(0xFF111827),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+        child: Row(
+          children: [
+            Text(competition.icon, style: const TextStyle(fontSize: 20)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                competition.name,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF111827),
+                ),
+              ),
             ),
-          ),
-        ],
+            Icon(Icons.chevron_right, color: _textSecondary, size: 20),
+          ],
+        ),
       ),
     );
   }
@@ -872,94 +1072,174 @@ class _CompetitionItem extends StatelessWidget {
 // 선수단 탭
 // ============================================================================
 class _SquadTab extends ConsumerWidget {
+  static const _textPrimary = Color(0xFF111827);
   static const _textSecondary = Color(0xFF6B7280);
+  static const _border = Color(0xFFE5E7EB);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 국가대표 팀은 API에서 선수 정보를 제공하지 않음
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.info_outline, size: 48, color: _textSecondary),
-          const SizedBox(height: 16),
-          Text(
-            '국가대표 선수단 정보는\n대회별로 소집됩니다',
-            style: TextStyle(
-              color: _textSecondary,
-              fontSize: 14,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          Container(
-            padding: const EdgeInsets.all(16),
-            margin: const EdgeInsets.symmetric(horizontal: 32),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE5E7EB)),
-            ),
+    final squadAsync = ref.watch(koreaSquadProvider);
+
+    return squadAsync.when(
+      data: (players) {
+        if (players.isEmpty) {
+          return Center(
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _ManagerRow(
-                  name: '홍명보',
-                  role: '감독',
-                  since: '2024~',
+                Icon(Icons.info_outline, size: 48, color: _textSecondary),
+                const SizedBox(height: 16),
+                Text(
+                  '선수단 정보가 없습니다',
+                  style: TextStyle(color: _textSecondary, fontSize: 14),
                 ),
               ],
             ),
+          );
+        }
+
+        // 감독과 선수 분리
+        final managers = players.where((p) =>
+          p.position?.toLowerCase() == 'manager' ||
+          p.position?.toLowerCase() == 'coach'
+        ).toList();
+        final otherPlayers = players.where((p) =>
+          p.position?.toLowerCase() != 'manager' &&
+          p.position?.toLowerCase() != 'coach'
+        ).toList();
+
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            // 감독진
+            if (managers.isNotEmpty) ...[
+              _buildSectionCard('감독진', managers),
+              const SizedBox(height: 16),
+            ],
+            // 선수
+            if (otherPlayers.isNotEmpty)
+              _buildSectionCard('선수', otherPlayers)
+            else
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: _border),
+                ),
+                child: Center(
+                  child: Column(
+                    children: [
+                      Icon(Icons.info_outline, size: 32, color: _textSecondary),
+                      const SizedBox(height: 8),
+                      Text(
+                        '국가대표 선수단 정보는\n대회별로 소집됩니다',
+                        style: TextStyle(color: _textSecondary, fontSize: 14),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 48, color: _textSecondary),
+            const SizedBox(height: 12),
+            Text('오류: $e', style: TextStyle(color: _textSecondary, fontSize: 14)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionCard(String title, List<SportsDbPlayer> players) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: _textPrimary,
+            ),
           ),
+          const SizedBox(height: 12),
+          ...players.map((player) => _PlayerRow(player: player)),
         ],
       ),
     );
   }
 }
 
-class _ManagerRow extends StatelessWidget {
-  final String name;
-  final String role;
-  final String since;
+class _PlayerRow extends StatelessWidget {
+  final SportsDbPlayer player;
 
-  const _ManagerRow({required this.name, required this.role, required this.since});
+  const _PlayerRow({required this.player});
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 50,
-          height: 50,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.grey.shade100,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.grey.shade100,
+            ),
+            child: player.thumb != null
+                ? ClipOval(
+                    child: CachedNetworkImage(
+                      imageUrl: player.thumb!,
+                      fit: BoxFit.cover,
+                      errorWidget: (_, __, ___) =>
+                          const Icon(Icons.person, color: Color(0xFF6B7280)),
+                    ),
+                  )
+                : const Icon(Icons.person, color: Color(0xFF6B7280)),
           ),
-          child: const Icon(Icons.person, color: Color(0xFF6B7280)),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                name,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF111827),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  player.name,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF111827),
+                  ),
                 ),
-              ),
-              Text(
-                '$role · $since',
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: Color(0xFF6B7280),
-                ),
-              ),
-            ],
+                if (player.position != null)
+                  Text(
+                    player.position!,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF6B7280),
+                    ),
+                  ),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
