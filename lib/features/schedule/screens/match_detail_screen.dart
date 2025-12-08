@@ -36,7 +36,14 @@ final matchTimelineProvider =
   return service.getEventTimeline(eventId);
 });
 
-// Provider for head to head
+// Provider for head to head (팀 ID 기반 필터링 - 모든 대회 포함)
+final matchH2HByIdProvider =
+    FutureProvider.family<List<SportsDbEvent>, ({String homeTeamId, String awayTeamId, String homeTeamName, String awayTeamName})>((ref, params) async {
+  final service = SportsDbService();
+  return service.getHeadToHeadById(params.homeTeamId, params.awayTeamId, params.homeTeamName, params.awayTeamName);
+});
+
+// Provider for head to head (팀 이름 기반 - fallback)
 final matchH2HProvider =
     FutureProvider.family<List<SportsDbEvent>, ({String homeTeam, String awayTeam})>((ref, params) async {
   final service = SportsDbService();
@@ -1814,6 +1821,8 @@ class _H2HTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final homeTeam = match.homeTeam ?? '';
     final awayTeam = match.awayTeam ?? '';
+    final homeTeamId = match.homeTeamId;
+    final awayTeamId = match.awayTeamId;
 
     if (homeTeam.isEmpty || awayTeam.isEmpty) {
       return Center(
@@ -1824,7 +1833,10 @@ class _H2HTab extends ConsumerWidget {
       );
     }
 
-    final h2hAsync = ref.watch(matchH2HProvider((homeTeam: homeTeam, awayTeam: awayTeam)));
+    // 팀 ID가 있으면 ID 기반 필터링 (정확), 없으면 이름 기반 검색 (fallback)
+    final h2hAsync = (homeTeamId != null && awayTeamId != null)
+        ? ref.watch(matchH2HByIdProvider((homeTeamId: homeTeamId, awayTeamId: awayTeamId, homeTeamName: homeTeam, awayTeamName: awayTeam)))
+        : ref.watch(matchH2HProvider((homeTeam: homeTeam, awayTeam: awayTeam)));
 
     return h2hAsync.when(
       data: (events) {

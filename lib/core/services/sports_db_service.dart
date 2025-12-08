@@ -440,6 +440,7 @@ class SportsDbService {
     'newcastle united': ['newcastle'],
     'west ham united': ['west ham'],
     'wolverhampton wanderers': ['wolves', 'wolverhampton'],
+    'wolves': ['wolverhampton wanderers', 'wolverhampton'],
     'nottingham forest': ["nott'm forest", 'nottingham'],
     'brighton & hove albion': ['brighton'],
     'leicester city': ['leicester'],
@@ -489,8 +490,85 @@ class SportsDbService {
     return variants.toList();
   }
 
-  /// 두 팀 간의 상대전적 조회
-  /// homeTeam vs awayTeam 형식으로 검색하여 양쪽 경기를 모두 가져옴
+  /// 두 팀 간의 상대전적 조회 (이름 검색 + 팀 ID 필터링)
+  /// searchevents로 이름 검색 후, 팀 ID로 정확히 필터링
+  Future<List<SportsDbEvent>> getHeadToHeadById(
+    String homeTeamId,
+    String awayTeamId,
+    String homeTeamName,
+    String awayTeamName,
+  ) async {
+    print('🔍 [H2H] 이름 검색 + ID 필터링 시작');
+    print('🔍 [H2H] homeTeamId: $homeTeamId, awayTeamId: $awayTeamId');
+    print('🔍 [H2H] homeTeamName: $homeTeamName, awayTeamName: $awayTeamName');
+
+    final allEvents = <SportsDbEvent>[];
+    final seenIds = <String>{};
+
+    // 팀 이름 변형들 가져오기
+    final homeVariants = _getTeamNameVariants(homeTeamName);
+    final awayVariants = _getTeamNameVariants(awayTeamName);
+
+    print('🔍 [H2H] 홈팀 변형: $homeVariants');
+    print('🔍 [H2H] 원정팀 변형: $awayVariants');
+
+    // 여러 조합으로 검색 (최대 6개 조합)
+    int searchCount = 0;
+    const maxSearches = 6;
+
+    for (final home in homeVariants) {
+      if (searchCount >= maxSearches) break;
+      for (final away in awayVariants) {
+        if (searchCount >= maxSearches) break;
+
+        final homeEncoded = home.replaceAll(' ', '_');
+        final awayEncoded = away.replaceAll(' ', '_');
+
+        // 양방향 검색
+        for (final query in ['${homeEncoded}_vs_$awayEncoded', '${awayEncoded}_vs_$homeEncoded']) {
+          print('🔍 [H2H] 검색: $query');
+          final data = await _get('searchevents.php?e=${Uri.encodeComponent(query)}');
+          if (data != null && data['event'] != null) {
+            for (final json in data['event'] as List) {
+              final event = SportsDbEvent.fromJson(json);
+              // 팀 ID로 정확히 필터링
+              final isMatch = _isH2HMatch(event, homeTeamId, awayTeamId);
+              if (isMatch && !seenIds.contains(event.id) && event.isFinished) {
+                seenIds.add(event.id);
+                allEvents.add(event);
+                print('⚔️ [H2H] ${event.homeTeam} ${event.homeScore}-${event.awayScore} ${event.awayTeam} (${event.date}) - ${event.league}');
+              }
+            }
+          }
+        }
+        searchCount++;
+        if (allEvents.length >= 15) break;
+      }
+      if (allEvents.length >= 15) break;
+    }
+
+    print('✅ [H2H] 총 ${allEvents.length}경기 발견');
+
+    // 날짜순 정렬 (최신순)
+    allEvents.sort((a, b) {
+      final aDate = a.dateTime ?? DateTime(1900);
+      final bDate = b.dateTime ?? DateTime(1900);
+      return bDate.compareTo(aDate);
+    });
+
+    return allEvents;
+  }
+
+  /// H2H 매칭 확인 (팀 ID로 정확히)
+  bool _isH2HMatch(SportsDbEvent event, String homeTeamId, String awayTeamId) {
+    final matchHomeId = event.homeTeamId;
+    final matchAwayId = event.awayTeamId;
+    return (matchHomeId == homeTeamId && matchAwayId == awayTeamId) ||
+           (matchHomeId == awayTeamId && matchAwayId == homeTeamId);
+  }
+
+  /// 두 팀 간의 상대전적 조회 (팀 이름 기반 - fallback)
+  /// 팀 ID가 없을 때 사용, 이름 변형으로 검색
   Future<List<SportsDbEvent>> getHeadToHead(String homeTeam, String awayTeam) async {
     final allEvents = <SportsDbEvent>[];
     final seenIds = <String>{};
