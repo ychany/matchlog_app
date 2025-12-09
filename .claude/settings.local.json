@@ -31,7 +31,8 @@
       "Bash(pod install:*)",
       "Skill(frontend-design:frontend-design)",
       "Bash(firebase deploy:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(npx firebase deploy:*)"
     ],
     "deny": [],
     "ask": []

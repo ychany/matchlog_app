@@ -640,6 +640,63 @@ class _PostCard extends ConsumerWidget {
               ),
             ],
 
+            // 직관 통계 미니 카드 (있을 경우)
+            if (post.hasStats) ...[
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.bar_chart_rounded, size: 14, color: Color(0xFF10B981)),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${post.statsTotalMatches ?? 0}경기',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF10B981),
+                        ),
+                      ),
+                      Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 8),
+                        width: 1,
+                        height: 12,
+                        color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                      ),
+                      Text(
+                        '${(post.statsWinRate ?? 0).toStringAsFixed(0)}%',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF10B981),
+                        ),
+                      ),
+                      Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 8),
+                        width: 1,
+                        height: 12,
+                        color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                      ),
+                      Text(
+                        '${post.statsWins ?? 0}승 ${post.statsDraws ?? 0}무 ${post.statsLosses ?? 0}패',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: const Color(0xFF10B981).withValues(alpha: 0.8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+
             // 이미지 미리보기 (있을 경우)
             if (post.imageUrls.isNotEmpty) ...[
               const SizedBox(height: 12),

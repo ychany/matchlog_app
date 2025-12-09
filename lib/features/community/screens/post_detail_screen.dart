@@ -297,6 +297,12 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                                 _buildAttendanceCard(post),
                               ],
 
+                              // 직관 통계 카드
+                              if (post.hasStats) ...[
+                                const SizedBox(height: 16),
+                                _buildStatsCard(post),
+                              ],
+
                               // 이미지
                               if (post.imageUrls.isNotEmpty) ...[
                                 const SizedBox(height: 16),
@@ -543,6 +549,140 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
 
   String _formatDateTime(DateTime dateTime) {
     return '${dateTime.year}.${dateTime.month.toString().padLeft(2, '0')}.${dateTime.day.toString().padLeft(2, '0')} ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+  }
+
+  Widget _buildStatsCard(Post post) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF10B981), Color(0xFF059669)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          // 상단 타이틀
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.sports_soccer, color: Colors.white, size: 18),
+              SizedBox(width: 8),
+              Text(
+                '나의 직관 통계',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // 통계 그리드
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatItem('총 직관', '${post.statsTotalMatches ?? 0}경기'),
+              ),
+              Container(width: 1, height: 40, color: Colors.white24),
+              Expanded(
+                child: _buildStatItem('승률', '${(post.statsWinRate ?? 0).toStringAsFixed(1)}%'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildResultItem('승', post.statsWins ?? 0, const Color(0xFF3B82F6)),
+                _buildResultItem('무', post.statsDraws ?? 0, const Color(0xFF9CA3AF)),
+                _buildResultItem('패', post.statsLosses ?? 0, const Color(0xFFEF4444)),
+              ],
+            ),
+          ),
+          if (post.statsTopStadium != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.location_on, color: Colors.white70, size: 14),
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text(
+                      '최다 방문: ${post.statsTopStadium} (${post.statsTopStadiumCount ?? 0}회)',
+                      style: const TextStyle(color: Colors.white70, fontSize: 12),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem(String label, String value) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 12,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildResultItem(String label, int count, Color color) {
+    return Row(
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          '$label $count',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildAttendanceCard(Post post) {

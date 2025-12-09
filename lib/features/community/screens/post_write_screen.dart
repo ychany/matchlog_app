@@ -38,8 +38,12 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
   String? _stadium;
   String? _league;
 
+  // 직관 통계 자랑하기
+  AttendanceStats? _selectedStats;
+
   bool get isEditMode => widget.editPost != null;
   bool get hasAttendanceData => _attendanceId != null || _selectedRecord != null;
+  bool get hasStatsData => _selectedStats != null;
 
   static const _primary = Color(0xFF2563EB);
   static const _primaryLight = Color(0xFFDBEAFE);
@@ -116,6 +120,16 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
       final stadium = _selectedRecord?.stadium ?? _stadium;
       final league = _selectedRecord?.league ?? _league;
 
+      // 통계 데이터
+      String? statsTopStadium;
+      int? statsTopStadiumCount;
+      if (_selectedStats != null && _selectedStats!.stadiumVisits.isNotEmpty) {
+        final topEntry = _selectedStats!.stadiumVisits.entries
+            .reduce((a, b) => a.value > b.value ? a : b);
+        statsTopStadium = topEntry.key;
+        statsTopStadiumCount = topEntry.value;
+      }
+
       if (isEditMode) {
         await service.updatePost(
           postId: widget.editPost!.id,
@@ -133,6 +147,14 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
           stadium: stadium,
           league: league,
           clearAttendance: !hasAttendanceData && widget.editPost!.hasAttendanceRecord,
+          statsTotalMatches: _selectedStats?.totalMatches,
+          statsWins: _selectedStats?.wins,
+          statsDraws: _selectedStats?.draws,
+          statsLosses: _selectedStats?.losses,
+          statsWinRate: _selectedStats?.winRate,
+          statsTopStadium: statsTopStadium,
+          statsTopStadiumCount: statsTopStadiumCount,
+          clearStats: !hasStatsData && widget.editPost!.hasStats,
         );
       } else {
         await service.createPost(
@@ -149,6 +171,13 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
           matchDate: matchDate,
           stadium: stadium,
           league: league,
+          statsTotalMatches: _selectedStats?.totalMatches,
+          statsWins: _selectedStats?.wins,
+          statsDraws: _selectedStats?.draws,
+          statsLosses: _selectedStats?.losses,
+          statsWinRate: _selectedStats?.winRate,
+          statsTopStadium: statsTopStadium,
+          statsTopStadiumCount: statsTopStadiumCount,
         );
       }
 
@@ -323,6 +352,170 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
       _stadium = null;
       _league = null;
     });
+  }
+
+  void _showStatsSelector() {
+    final statsAsync = ref.read(attendanceStatsProvider);
+
+    statsAsync.when(
+      data: (stats) {
+        if (stats.totalMatches == 0) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('직관 기록이 없습니다')),
+          );
+          return;
+        }
+        setState(() => _selectedStats = stats);
+      },
+      loading: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('통계를 불러오는 중...')),
+        );
+      },
+      error: (e, _) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('오류: $e')),
+        );
+      },
+    );
+  }
+
+  Widget _buildStatsCard(AttendanceStats stats) {
+    final topStadium = stats.stadiumVisits.entries.isEmpty
+        ? null
+        : stats.stadiumVisits.entries.reduce((a, b) => a.value > b.value ? a : b);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [const Color(0xFF10B981), const Color(0xFF059669)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          // 상단 타이틀
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.sports_soccer, color: Colors.white, size: 18),
+              const SizedBox(width: 8),
+              const Text(
+                '나의 직관 통계',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // 통계 그리드
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatItem('총 직관', '${stats.totalMatches}경기'),
+              ),
+              Container(width: 1, height: 40, color: Colors.white24),
+              Expanded(
+                child: _buildStatItem('승률', '${stats.winRate.toStringAsFixed(1)}%'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildResultItem('승', stats.wins, const Color(0xFF3B82F6)),
+                _buildResultItem('무', stats.draws, const Color(0xFF9CA3AF)),
+                _buildResultItem('패', stats.losses, const Color(0xFFEF4444)),
+              ],
+            ),
+          ),
+          if (topStadium != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.location_on, color: Colors.white70, size: 14),
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text(
+                      '최다 방문: ${topStadium.key} (${topStadium.value}회)',
+                      style: const TextStyle(color: Colors.white70, fontSize: 12),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem(String label, String value) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 12,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildResultItem(String label, int count, Color color) {
+    return Row(
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          '$label $count',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
   }
 
   // 현재 표시할 직관 기록 정보 헬퍼
@@ -592,6 +785,74 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
                           const Expanded(
                             child: Text(
                               '나의 직관 기록 불러오기 (선택)',
+                              style: TextStyle(fontSize: 14, color: _textSecondary),
+                            ),
+                          ),
+                          const Icon(Icons.chevron_right, color: _textSecondary, size: 20),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Divider(height: 1, color: _border),
+              ],
+
+              // 직관 통계 자랑하기 카드 (선택된 경우)
+              if (hasStatsData) ...[
+                Container(
+                  color: Colors.white,
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.bar_chart_rounded, color: _primary, size: 16),
+                          const SizedBox(width: 6),
+                          const Text(
+                            '나의 직관 통계',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: _textSecondary,
+                            ),
+                          ),
+                          const Spacer(),
+                          GestureDetector(
+                            onTap: () => setState(() => _selectedStats = null),
+                            child: const Icon(Icons.close, size: 18, color: _textSecondary),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      _buildStatsCard(_selectedStats!),
+                    ],
+                  ),
+                ),
+                Divider(height: 1, color: _border),
+              ],
+
+              // 직관 통계 자랑하기 버튼 (선택 안된 경우)
+              if (!hasStatsData) ...[
+                Container(
+                  color: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  child: GestureDetector(
+                    onTap: _showStatsSelector,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF3F4F6),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: _border),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.bar_chart_outlined, color: _textSecondary, size: 20),
+                          const SizedBox(width: 12),
+                          const Expanded(
+                            child: Text(
+                              '나의 직관 통계 자랑하기 (선택)',
                               style: TextStyle(fontSize: 14, color: _textSecondary),
                             ),
                           ),

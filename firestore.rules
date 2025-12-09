@@ -69,7 +69,14 @@ service cloud.firestore {
     match /posts/{postId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && request.resource.data.authorId == request.auth.uid;
-      allow update: if isAuthenticated() && resource.data.authorId == request.auth.uid;
+      // 작성자는 모든 필드 수정 가능, 다른 사용자는 likeCount/commentCount만 수정 가능
+      allow update: if isAuthenticated() && (
+        resource.data.authorId == request.auth.uid ||
+        (
+          // likeCount 또는 commentCount만 변경하는 경우
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount', 'commentCount'])
+        )
+      );
       allow delete: if isAuthenticated() && resource.data.authorId == request.auth.uid;
     }
 

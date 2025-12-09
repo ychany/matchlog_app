@@ -26,6 +26,15 @@ class Post {
   final String? stadium;
   final String? league;
 
+  // 직관 통계 관련 필드
+  final int? statsTotalMatches;
+  final int? statsWins;
+  final int? statsDraws;
+  final int? statsLosses;
+  final double? statsWinRate;
+  final String? statsTopStadium;
+  final int? statsTopStadiumCount;
+
   Post({
     required this.id,
     required this.authorId,
@@ -49,9 +58,17 @@ class Post {
     this.matchDate,
     this.stadium,
     this.league,
+    this.statsTotalMatches,
+    this.statsWins,
+    this.statsDraws,
+    this.statsLosses,
+    this.statsWinRate,
+    this.statsTopStadium,
+    this.statsTopStadiumCount,
   });
 
   bool get hasAttendanceRecord => attendanceId != null;
+  bool get hasStats => statsTotalMatches != null && statsTotalMatches! > 0;
 
   String get scoreDisplay {
     if (homeScore == null || awayScore == null) return '-';
@@ -83,6 +100,13 @@ class Post {
       matchDate: (data['matchDate'] as Timestamp?)?.toDate(),
       stadium: data['stadium'],
       league: data['league'],
+      statsTotalMatches: data['statsTotalMatches'],
+      statsWins: data['statsWins'],
+      statsDraws: data['statsDraws'],
+      statsLosses: data['statsLosses'],
+      statsWinRate: (data['statsWinRate'] as num?)?.toDouble(),
+      statsTopStadium: data['statsTopStadium'],
+      statsTopStadiumCount: data['statsTopStadiumCount'],
     );
   }
 
@@ -109,6 +133,13 @@ class Post {
       if (matchDate != null) 'matchDate': Timestamp.fromDate(matchDate!),
       if (stadium != null) 'stadium': stadium,
       if (league != null) 'league': league,
+      if (statsTotalMatches != null) 'statsTotalMatches': statsTotalMatches,
+      if (statsWins != null) 'statsWins': statsWins,
+      if (statsDraws != null) 'statsDraws': statsDraws,
+      if (statsLosses != null) 'statsLosses': statsLosses,
+      if (statsWinRate != null) 'statsWinRate': statsWinRate,
+      if (statsTopStadium != null) 'statsTopStadium': statsTopStadium,
+      if (statsTopStadiumCount != null) 'statsTopStadiumCount': statsTopStadiumCount,
     };
   }
 
@@ -135,6 +166,13 @@ class Post {
     DateTime? matchDate,
     String? stadium,
     String? league,
+    int? statsTotalMatches,
+    int? statsWins,
+    int? statsDraws,
+    int? statsLosses,
+    double? statsWinRate,
+    String? statsTopStadium,
+    int? statsTopStadiumCount,
   }) {
     return Post(
       id: id ?? this.id,
@@ -159,6 +197,13 @@ class Post {
       matchDate: matchDate ?? this.matchDate,
       stadium: stadium ?? this.stadium,
       league: league ?? this.league,
+      statsTotalMatches: statsTotalMatches ?? this.statsTotalMatches,
+      statsWins: statsWins ?? this.statsWins,
+      statsDraws: statsDraws ?? this.statsDraws,
+      statsLosses: statsLosses ?? this.statsLosses,
+      statsWinRate: statsWinRate ?? this.statsWinRate,
+      statsTopStadium: statsTopStadium ?? this.statsTopStadium,
+      statsTopStadiumCount: statsTopStadiumCount ?? this.statsTopStadiumCount,
     );
   }
 }
