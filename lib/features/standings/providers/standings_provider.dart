@@ -127,3 +127,18 @@ final supportedLeaguesForStandingsProvider = Provider<List<LeagueInfo>>((ref) {
 int? getLeagueIdByName(String leagueName) {
   return ApiFootballIds.getLeagueId(leagueName);
 }
+
+/// 선택된 탭 상태 (0: 순위, 1: 득점, 2: 어시스트)
+final selectedStandingsTabProvider = StateProvider<int>((ref) => 0);
+
+/// 득점왕 순위 Provider
+final topScorersProvider = FutureProvider.family<List<ApiFootballTopScorer>, StandingsKey>((ref, key) async {
+  final service = ref.watch(_apiFootballServiceProvider);
+  return service.getTopScorers(key.leagueId, key.season);
+});
+
+/// 어시스트왕 순위 Provider
+final topAssistsProvider = FutureProvider.family<List<ApiFootballTopScorer>, StandingsKey>((ref, key) async {
+  final service = ref.watch(_apiFootballServiceProvider);
+  return service.getTopAssists(key.leagueId, key.season);
+});

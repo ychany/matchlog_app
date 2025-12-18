@@ -393,6 +393,28 @@ class ApiFootballService {
         .map((json) => ApiFootballStanding.fromJson(json))
         .toList();
   }
+
+  // ============ 득점왕/어시스트왕 ============
+
+  /// 리그 득점왕 순위
+  Future<List<ApiFootballTopScorer>> getTopScorers(int leagueId, int season) async {
+    final data = await _get('players/topscorers?league=$leagueId&season=$season');
+    if (data == null || data['response'] == null) return [];
+
+    return (data['response'] as List)
+        .map((json) => ApiFootballTopScorer.fromJson(json))
+        .toList();
+  }
+
+  /// 리그 어시스트왕 순위
+  Future<List<ApiFootballTopScorer>> getTopAssists(int leagueId, int season) async {
+    final data = await _get('players/topassists?league=$leagueId&season=$season');
+    if (data == null || data['response'] == null) return [];
+
+    return (data['response'] as List)
+        .map((json) => ApiFootballTopScorer.fromJson(json))
+        .toList();
+  }
 }
 
 // ============ 모델 클래스들 ============
@@ -1898,6 +1920,66 @@ class ApiFootballStanding {
       lose: all['lose'] ?? 0,
       goalsFor: goals['for'] ?? 0,
       goalsAgainst: goals['against'] ?? 0,
+    );
+  }
+}
+
+/// 득점왕/어시스트왕 모델
+class ApiFootballTopScorer {
+  final int rank;
+  final int playerId;
+  final String playerName;
+  final String? playerPhoto;
+  final int teamId;
+  final String teamName;
+  final String? teamLogo;
+  final int? goals;
+  final int? assists;
+  final int? appearances;
+  final int? minutes;
+  final int? penalties;
+  final String? nationality;
+
+  ApiFootballTopScorer({
+    required this.rank,
+    required this.playerId,
+    required this.playerName,
+    this.playerPhoto,
+    required this.teamId,
+    required this.teamName,
+    this.teamLogo,
+    this.goals,
+    this.assists,
+    this.appearances,
+    this.minutes,
+    this.penalties,
+    this.nationality,
+  });
+
+  factory ApiFootballTopScorer.fromJson(Map<String, dynamic> json) {
+    final player = json['player'] ?? {};
+    final statistics = (json['statistics'] as List?)?.isNotEmpty == true
+        ? json['statistics'][0]
+        : {};
+    final team = statistics['team'] ?? {};
+    final goals = statistics['goals'] ?? {};
+    final games = statistics['games'] ?? {};
+    final penalty = statistics['penalty'] ?? {};
+
+    return ApiFootballTopScorer(
+      rank: 0, // API에서 순위 제공 안 함, 리스트 인덱스로 설정
+      playerId: player['id'] ?? 0,
+      playerName: player['name'] ?? '',
+      playerPhoto: player['photo'],
+      teamId: team['id'] ?? 0,
+      teamName: team['name'] ?? '',
+      teamLogo: team['logo'],
+      goals: goals['total'],
+      assists: goals['assists'],
+      appearances: games['appearences'], // API 오타 그대로 사용
+      minutes: games['minutes'],
+      penalties: penalty['scored'],
+      nationality: player['nationality'],
     );
   }
 }
