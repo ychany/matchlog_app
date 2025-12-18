@@ -53,6 +53,15 @@ final matchH2HProvider =
   return service.getHeadToHead(params.homeTeamId, params.awayTeamId);
 });
 
+// Provider for injuries (API-Football)
+final matchInjuriesProvider =
+    FutureProvider.family<List<ApiFootballInjury>, String>((ref, fixtureId) async {
+  final service = ApiFootballService();
+  final id = int.tryParse(fixtureId);
+  if (id == null) return [];
+  return service.getFixtureInjuries(id);
+});
+
 // Provider for match prediction (API-Football)
 final matchPredictionProvider =
     FutureProvider.family<ApiFootballPrediction?, String>((ref, fixtureId) async {
@@ -1161,90 +1170,388 @@ class _LineupTab extends ConsumerWidget {
   final ApiFootballFixture match;
 
   static const _textSecondary = Color(0xFF6B7280);
+  static const _border = Color(0xFFE5E7EB);
 
   const _LineupTab({required this.fixtureId, required this.match});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final lineupAsync = ref.watch(matchLineupProvider(fixtureId));
+    final injuriesAsync = ref.watch(matchInjuriesProvider(fixtureId));
 
-    return lineupAsync.when(
-      data: (lineups) {
-        if (lineups.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(20),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 1. 라인업 섹션
+          lineupAsync.when(
+            data: (lineups) {
+              if (lineups.isEmpty) {
+                return Container(
+                  padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    shape: BoxShape.circle,
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: _border),
                   ),
-                  child:
-                      Icon(Icons.people_outline, size: 48, color: _textSecondary),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  '라인업 정보가 없습니다',
-                  style: TextStyle(
-                    color: _textSecondary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
+                  child: Center(
+                    child: Column(
+                      children: [
+                        Icon(Icons.people_outline, size: 40, color: _textSecondary),
+                        const SizedBox(height: 12),
+                        const Text(
+                          '라인업 정보가 없습니다',
+                          style: TextStyle(
+                            color: _textSecondary,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '경기 시작 전 업데이트됩니다',
+                          style: TextStyle(
+                            color: _textSecondary.withValues(alpha: 0.7),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '경기 종료 후 업데이트됩니다',
-                  style: TextStyle(
-                    color: _textSecondary.withValues(alpha: 0.7),
-                    fontSize: 13,
+                );
+              }
+
+              // API-Football returns list of lineups (home, away)
+              final homeLineup = lineups.isNotEmpty ? lineups.first : null;
+              final awayLineup = lineups.length > 1 ? lineups[1] : null;
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Home Team
+                  Expanded(
+                    child: _TeamLineup(
+                      teamName: homeLineup?.teamName ?? match.homeTeam.name,
+                      formation: homeLineup?.formation,
+                      players: homeLineup?.startXI ?? [],
+                      substitutes: homeLineup?.substitutes ?? [],
+                      isHome: true,
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 12),
+                  // Away Team
+                  Expanded(
+                    child: _TeamLineup(
+                      teamName: awayLineup?.teamName ?? match.awayTeam.name,
+                      formation: awayLineup?.formation,
+                      players: awayLineup?.startXI ?? [],
+                      substitutes: awayLineup?.substitutes ?? [],
+                      isHome: false,
+                    ),
+                  ),
+                ],
+              );
+            },
+            loading: () => const Padding(
+              padding: EdgeInsets.only(top: 24),
+              child: Center(child: CircularProgressIndicator()),
             ),
-          );
+            error: (e, _) => Container(
+              padding: const EdgeInsets.all(16),
+              child: Text('라인업 로딩 오류: $e', style: TextStyle(color: _textSecondary)),
+            ),
+          ),
+
+          // 2. 결장 선수 섹션 (라인업 아래)
+          const SizedBox(height: 16),
+          _InjuriesSection(
+            injuriesAsync: injuriesAsync,
+            homeTeamId: match.homeTeam.id,
+            homeTeamName: match.homeTeam.name,
+            awayTeamId: match.awayTeam.id,
+            awayTeamName: match.awayTeam.name,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// 결장 선수 섹션 위젯
+class _InjuriesSection extends StatelessWidget {
+  final AsyncValue<List<ApiFootballInjury>> injuriesAsync;
+  final int homeTeamId;
+  final String homeTeamName;
+  final int awayTeamId;
+  final String awayTeamName;
+
+  static const _error = Color(0xFFEF4444);
+  static const _textPrimary = Color(0xFF111827);
+  static const _textSecondary = Color(0xFF6B7280);
+  static const _border = Color(0xFFE5E7EB);
+
+  const _InjuriesSection({
+    required this.injuriesAsync,
+    required this.homeTeamId,
+    required this.homeTeamName,
+    required this.awayTeamId,
+    required this.awayTeamName,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return injuriesAsync.when(
+      data: (injuries) {
+        if (injuries.isEmpty) {
+          return const SizedBox.shrink(); // 결장 선수 없으면 표시 안함
         }
 
-        // API-Football returns list of lineups (home, away)
-        final homeLineup = lineups.isNotEmpty ? lineups.first : null;
-        final awayLineup = lineups.length > 1 ? lineups[1] : null;
+        // 홈/어웨이 팀별로 분류
+        final homeInjuries = injuries.where((i) => i.teamId == homeTeamId).toList();
+        final awayInjuries = injuries.where((i) => i.teamId == awayTeamId).toList();
 
-        return SingleChildScrollView(
+        return Container(
           padding: const EdgeInsets.all(16),
-          child: Row(
+          decoration: BoxDecoration(
+            color: _error.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: _error.withValues(alpha: 0.2)),
+          ),
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Home Team
-              Expanded(
-                child: _TeamLineup(
-                  teamName: homeLineup?.teamName ?? match.homeTeam.name,
-                  formation: homeLineup?.formation,
-                  players: homeLineup?.startXI ?? [],
-                  substitutes: homeLineup?.substitutes ?? [],
+              // 섹션 헤더
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: _error.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(Icons.personal_injury, size: 18, color: _error),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    '결장 선수',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: _textPrimary,
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: _error.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '${injuries.length}명',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: _error,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // 홈팀 결장 선수
+              if (homeInjuries.isNotEmpty) ...[
+                _TeamInjuriesList(
+                  teamName: homeTeamName,
+                  injuries: homeInjuries,
                   isHome: true,
                 ),
-              ),
-              const SizedBox(width: 12),
-              // Away Team
-              Expanded(
-                child: _TeamLineup(
-                  teamName: awayLineup?.teamName ?? match.awayTeam.name,
-                  formation: awayLineup?.formation,
-                  players: awayLineup?.startXI ?? [],
-                  substitutes: awayLineup?.substitutes ?? [],
+              ],
+
+              // 어웨이팀 결장 선수
+              if (awayInjuries.isNotEmpty) ...[
+                if (homeInjuries.isNotEmpty) const SizedBox(height: 12),
+                _TeamInjuriesList(
+                  teamName: awayTeamName,
+                  injuries: awayInjuries,
                   isHome: false,
                 ),
-              ),
+              ],
             ],
           ),
         );
       },
-      loading: () => const LoadingIndicator(),
-      error: (e, _) => Center(
-        child: Text('오류: $e', style: const TextStyle(color: _textSecondary)),
+      loading: () => Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: _border),
+        ),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2, color: _textSecondary),
+            ),
+            const SizedBox(width: 12),
+            Text('결장 정보 확인 중...', style: TextStyle(color: _textSecondary, fontSize: 13)),
+          ],
+        ),
       ),
+      error: (_, __) => const SizedBox.shrink(), // 오류시 표시 안함
     );
+  }
+}
+
+// 팀별 결장 선수 목록
+class _TeamInjuriesList extends StatelessWidget {
+  final String teamName;
+  final List<ApiFootballInjury> injuries;
+  final bool isHome;
+
+  static const _primary = Color(0xFF2563EB);
+  static const _secondary = Color(0xFF8B5CF6);
+  static const _error = Color(0xFFEF4444);
+  static const _warning = Color(0xFFF59E0B);
+  static const _textPrimary = Color(0xFF111827);
+  static const _textSecondary = Color(0xFF6B7280);
+
+  const _TeamInjuriesList({
+    required this.teamName,
+    required this.injuries,
+    required this.isHome,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 팀 이름
+        Row(
+          children: [
+            Container(
+              width: 3,
+              height: 14,
+              decoration: BoxDecoration(
+                color: isHome ? _primary : _secondary,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              teamName,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: _textPrimary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        // 선수 목록
+        ...injuries.map((injury) => Padding(
+          padding: const EdgeInsets.only(left: 11, bottom: 6),
+          child: InkWell(
+            onTap: () => context.push('/player/${injury.playerId}'),
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+              child: Row(
+                children: [
+                  // 선수 사진
+                  if (injury.playerPhoto != null)
+                    ClipOval(
+                      child: CachedNetworkImage(
+                        imageUrl: injury.playerPhoto!,
+                        width: 28,
+                        height: 28,
+                        fit: BoxFit.cover,
+                        placeholder: (_, __) => Container(
+                          width: 28,
+                          height: 28,
+                          color: Colors.grey.shade200,
+                          child: Icon(Icons.person, size: 16, color: _textSecondary),
+                        ),
+                        errorWidget: (_, __, ___) => Container(
+                          width: 28,
+                          height: 28,
+                          color: Colors.grey.shade200,
+                          child: Icon(Icons.person, size: 16, color: _textSecondary),
+                        ),
+                      ),
+                    )
+                  else
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade200,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.person, size: 16, color: _textSecondary),
+                    ),
+                  const SizedBox(width: 10),
+                  // 선수 이름
+                  Expanded(
+                    child: Text(
+                      injury.playerName,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: _textPrimary,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  // 상태 배지
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: _getReasonColor(injury).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      _getReasonText(injury),
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: _getReasonColor(injury),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        )),
+      ],
+    );
+  }
+
+  Color _getReasonColor(ApiFootballInjury injury) {
+    if (injury.isSuspended) return _error;
+    if (injury.isInjury) return _warning;
+    if (injury.isDoubtful) return Colors.orange;
+    return _textSecondary;
+  }
+
+  String _getReasonText(ApiFootballInjury injury) {
+    final reason = injury.reason ?? '';
+    if (injury.isSuspended) return '정지';
+    if (reason.toLowerCase().contains('knee')) return '무릎 부상';
+    if (reason.toLowerCase().contains('hamstring')) return '햄스트링';
+    if (reason.toLowerCase().contains('ankle')) return '발목 부상';
+    if (reason.toLowerCase().contains('muscle')) return '근육 부상';
+    if (reason.toLowerCase().contains('back')) return '허리 부상';
+    if (reason.toLowerCase().contains('illness')) return '질병';
+    if (injury.isInjury) return '부상';
+    if (injury.isDoubtful) return '불투명';
+    return '결장';
   }
 }
 

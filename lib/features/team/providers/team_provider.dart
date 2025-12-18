@@ -88,6 +88,18 @@ final teamTransfersProvider = FutureProvider.family<List<ApiFootballTeamTransfer
   return service.getTeamTransfers(apiTeamId);
 });
 
+/// 팀 부상/결장 선수 Provider
+final teamInjuriesProvider = FutureProvider.family<List<ApiFootballInjury>, String>((ref, teamId) async {
+  final service = ref.watch(_apiFootballServiceProvider);
+
+  // API-Football ID로 변환 시도
+  final apiTeamId = ApiFootballIds.convertTeamId(teamId) ?? int.tryParse(teamId);
+  if (apiTeamId == null) return [];
+
+  final season = LeagueIds.getCurrentSeason();
+  return service.getTeamInjuries(apiTeamId, season);
+});
+
 /// 팀 시즌 통계 Provider (리그별)
 final teamStatisticsProvider = FutureProvider.family<List<ApiFootballTeamSeasonStats>, String>((ref, teamId) async {
   final service = ref.watch(_apiFootballServiceProvider);

@@ -1580,12 +1580,16 @@ class _PlayersTab extends ConsumerWidget {
 
   static const _textSecondary = Color(0xFF6B7280);
   static const _border = Color(0xFFE5E7EB);
+  static const _error = Color(0xFFEF4444);
+  static const _warning = Color(0xFFF59E0B);
+  static const _textPrimary = Color(0xFF111827);
 
   const _PlayersTab({required this.teamId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final playersAsync = ref.watch(teamPlayersProvider(teamId));
+    final injuriesAsync = ref.watch(teamInjuriesProvider(teamId));
 
     return playersAsync.when(
       data: (players) {
@@ -1604,6 +1608,16 @@ class _PlayersTab extends ConsumerWidget {
             ),
           );
         }
+
+        // 부상 선수 ID 목록 (부상 표시용)
+        final injuredPlayerIds = injuriesAsync.whenOrNull(
+          data: (injuries) => injuries.map((i) => i.playerId).toSet(),
+        ) ?? <int>{};
+
+        // 부상 선수 상세 정보 맵
+        final injuryMap = injuriesAsync.whenOrNull(
+          data: (injuries) => {for (var i in injuries) i.playerId: i},
+        ) ?? <int, ApiFootballInjury>{};
 
         // 포지션별 그룹화
         final grouped = <String, List<ApiFootballSquadPlayer>>{};
@@ -1625,82 +1639,93 @@ class _PlayersTab extends ConsumerWidget {
 
         return ListView(
           padding: const EdgeInsets.all(16),
-          children: sortedKeys.map((position) {
-            final positionPlayers = grouped[position]!;
-            return Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _border),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Position Header
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: _getPositionColor(position).withValues(alpha: 0.1),
-                      borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(11)),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 4,
-                          height: 16,
-                          decoration: BoxDecoration(
-                            color: _getPositionColor(position),
-                            borderRadius: BorderRadius.circular(2),
+          children: [
+            // 부상/결장 선수 섹션 (상단에 표시)
+            _buildInjuriesSection(injuriesAsync),
+            // 포지션별 선수 목록
+            ...sortedKeys.map((position) {
+              final positionPlayers = grouped[position]!;
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: _border),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Position Header
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: _getPositionColor(position).withValues(alpha: 0.1),
+                        borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(11)),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 4,
+                            height: 16,
+                            decoration: BoxDecoration(
+                              color: _getPositionColor(position),
+                              borderRadius: BorderRadius.circular(2),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          _getPositionKr(position),
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: _getPositionColor(position),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: _getPositionColor(position)
-                                .withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            '${positionPlayers.length}',
+                          const SizedBox(width: 10),
+                          Text(
+                            _getPositionKr(position),
                             style: TextStyle(
-                              fontSize: 11,
+                              fontSize: 14,
                               fontWeight: FontWeight.w600,
                               color: _getPositionColor(position),
                             ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: _getPositionColor(position)
+                                  .withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              '${positionPlayers.length}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: _getPositionColor(position),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  // Players List
-                  ...positionPlayers.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final player = entry.value;
-                    return Column(
-                      children: [
-                        if (index > 0)
-                          Divider(height: 1, color: _border, indent: 16, endIndent: 16),
-                        _PlayerCard(player: player),
-                      ],
-                    );
-                  }),
-                ],
-              ),
-            );
-          }).toList(),
+                    // Players List
+                    ...positionPlayers.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final player = entry.value;
+                      final isInjured = injuredPlayerIds.contains(player.id);
+                      final injury = injuryMap[player.id];
+                      return Column(
+                        children: [
+                          if (index > 0)
+                            Divider(height: 1, color: _border, indent: 16, endIndent: 16),
+                          _PlayerCard(
+                            player: player,
+                            isInjured: isInjured,
+                            injury: injury,
+                          ),
+                        ],
+                      );
+                    }),
+                  ],
+                ),
+              );
+            }),
+          ],
         );
       },
       loading: () => const LoadingIndicator(),
@@ -1708,6 +1733,161 @@ class _PlayersTab extends ConsumerWidget {
         child: Text('오류: $e', style: TextStyle(color: _textSecondary)),
       ),
     );
+  }
+
+  Widget _buildInjuriesSection(AsyncValue<List<ApiFootballInjury>> injuriesAsync) {
+    return injuriesAsync.when(
+      data: (injuries) {
+        if (injuries.isEmpty) return const SizedBox.shrink();
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: _error.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: _error.withValues(alpha: 0.2)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: _error.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(Icons.personal_injury, size: 18, color: _error),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    '부상/결장 선수',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: _textPrimary,
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: _error.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '${injuries.length}명',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: _error,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              ...injuries.map((injury) => _buildInjuryPlayerRow(injury)),
+            ],
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildInjuryPlayerRow(ApiFootballInjury injury) {
+    return Builder(
+      builder: (context) => InkWell(
+        onTap: () => context.push('/player/${injury.playerId}'),
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Row(
+            children: [
+              // 선수 사진
+              if (injury.playerPhoto != null)
+                ClipOval(
+                  child: CachedNetworkImage(
+                    imageUrl: injury.playerPhoto!,
+                    width: 32,
+                    height: 32,
+                    fit: BoxFit.cover,
+                    errorWidget: (_, __, ___) => Container(
+                      width: 32,
+                      height: 32,
+                      color: Colors.grey.shade200,
+                      child: Icon(Icons.person, size: 18, color: _textSecondary),
+                    ),
+                  ),
+                )
+              else
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.person, size: 18, color: _textSecondary),
+                ),
+              const SizedBox(width: 10),
+              // 선수 이름
+              Expanded(
+                child: Text(
+                  injury.playerName,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: _textPrimary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              // 상태 배지
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: _getInjuryColor(injury).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  _getInjuryText(injury),
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: _getInjuryColor(injury),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Color _getInjuryColor(ApiFootballInjury injury) {
+    if (injury.isSuspended) return _error;
+    if (injury.isInjury) return _warning;
+    if (injury.isDoubtful) return Colors.orange;
+    return _textSecondary;
+  }
+
+  String _getInjuryText(ApiFootballInjury injury) {
+    final reason = injury.reason ?? '';
+    if (injury.isSuspended) return '정지';
+    if (reason.toLowerCase().contains('knee')) return '무릎 부상';
+    if (reason.toLowerCase().contains('hamstring')) return '햄스트링';
+    if (reason.toLowerCase().contains('ankle')) return '발목 부상';
+    if (reason.toLowerCase().contains('muscle')) return '근육 부상';
+    if (reason.toLowerCase().contains('back')) return '허리 부상';
+    if (reason.toLowerCase().contains('illness')) return '질병';
+    if (injury.isInjury) return '부상';
+    if (injury.isDoubtful) return '불투명';
+    return '결장';
   }
 
   String _getPositionKr(String position) {
@@ -1746,12 +1926,20 @@ class _PlayersTab extends ConsumerWidget {
 
 class _PlayerCard extends StatelessWidget {
   final ApiFootballSquadPlayer player;
+  final bool isInjured;
+  final ApiFootballInjury? injury;
 
   static const _primary = Color(0xFF2563EB);
+  static const _error = Color(0xFFEF4444);
+  static const _warning = Color(0xFFF59E0B);
   static const _textPrimary = Color(0xFF111827);
   static const _textSecondary = Color(0xFF6B7280);
 
-  const _PlayerCard({required this.player});
+  const _PlayerCard({
+    required this.player,
+    this.isInjured = false,
+    this.injury,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1761,49 +1949,76 @@ class _PlayerCard extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         child: Row(
           children: [
-            // Player Photo
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.grey.shade100,
-                border: Border.all(color: Colors.grey.shade200),
-              ),
-              child: ClipOval(
-                child: player.photo != null
-                    ? CachedNetworkImage(
-                        imageUrl: player.photo!,
-                        fit: BoxFit.cover,
-                        placeholder: (_, __) => Center(
-                          child: Text(
-                            player.name.isNotEmpty ? player.name[0] : '?',
-                            style: TextStyle(
-                              color: _textSecondary,
-                              fontWeight: FontWeight.w600,
+            // Player Photo with injury indicator
+            Stack(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.grey.shade100,
+                    border: Border.all(
+                      color: isInjured ? _warning.withValues(alpha: 0.5) : Colors.grey.shade200,
+                      width: isInjured ? 2 : 1,
+                    ),
+                  ),
+                  child: ClipOval(
+                    child: player.photo != null
+                        ? CachedNetworkImage(
+                            imageUrl: player.photo!,
+                            fit: BoxFit.cover,
+                            placeholder: (_, __) => Center(
+                              child: Text(
+                                player.name.isNotEmpty ? player.name[0] : '?',
+                                style: TextStyle(
+                                  color: _textSecondary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            errorWidget: (_, __, ___) => Center(
+                              child: Text(
+                                player.name.isNotEmpty ? player.name[0] : '?',
+                                style: TextStyle(
+                                  color: _textSecondary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          )
+                        : Center(
+                            child: Text(
+                              player.name.isNotEmpty ? player.name[0] : '?',
+                              style: TextStyle(
+                                color: _textSecondary,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
-                        ),
-                        errorWidget: (_, __, ___) => Center(
-                          child: Text(
-                            player.name.isNotEmpty ? player.name[0] : '?',
-                            style: TextStyle(
-                              color: _textSecondary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      )
-                    : Center(
-                        child: Text(
-                          player.name.isNotEmpty ? player.name[0] : '?',
-                          style: TextStyle(
-                            color: _textSecondary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                  ),
+                ),
+                // 부상 아이콘
+                if (isInjured)
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      width: 16,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: injury?.isSuspended == true ? _error : _warning,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 1.5),
                       ),
-              ),
+                      child: Icon(
+                        injury?.isSuspended == true ? Icons.block : Icons.personal_injury,
+                        size: 10,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(width: 12),
 
@@ -1812,13 +2027,38 @@ class _PlayerCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    player.name,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: _textPrimary,
-                    ),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          player.name,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: isInjured ? _textSecondary : _textPrimary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (isInjured && injury != null) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: (injury!.isSuspended ? _error : _warning).withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            _getInjuryShortText(injury!),
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500,
+                              color: injury!.isSuspended ? _error : _warning,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                   if (player.age != null) ...[
                     const SizedBox(height: 2),
@@ -1859,6 +2099,13 @@ class _PlayerCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _getInjuryShortText(ApiFootballInjury injury) {
+    if (injury.isSuspended) return '정지';
+    if (injury.isInjury) return '부상';
+    if (injury.isDoubtful) return '불투명';
+    return '결장';
   }
 }
 

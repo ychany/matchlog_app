@@ -137,9 +137,17 @@ class ApiFootballService {
     final teamData = (data['response'] as List).first;
     if (teamData['players'] == null) return [];
 
-    return (teamData['players'] as List)
+    final players = (teamData['players'] as List)
         .map((json) => ApiFootballSquadPlayer.fromJson(json))
         .toList();
+
+    // 선수 ID 기준 중복 제거
+    final seenIds = <int>{};
+    return players.where((player) {
+      if (seenIds.contains(player.id)) return false;
+      seenIds.add(player.id);
+      return true;
+    }).toList();
   }
 
   /// 선수 이적 기록
@@ -165,6 +173,34 @@ class ApiFootballService {
     return (data['response'] as List)
         .map((json) => ApiFootballTeamTransfer.fromJson(json))
         .toList();
+  }
+
+  /// 경기별 부상/결장 선수 조회
+  Future<List<ApiFootballInjury>> getFixtureInjuries(int fixtureId) async {
+    final data = await _get('injuries?fixture=$fixtureId');
+    if (data == null || data['response'] == null) return [];
+
+    return (data['response'] as List)
+        .map((json) => ApiFootballInjury.fromJson(json))
+        .toList();
+  }
+
+  /// 팀별 부상/결장 선수 조회 (현재 시즌)
+  Future<List<ApiFootballInjury>> getTeamInjuries(int teamId, int season) async {
+    final data = await _get('injuries?team=$teamId&season=$season');
+    if (data == null || data['response'] == null) return [];
+
+    final injuries = (data['response'] as List)
+        .map((json) => ApiFootballInjury.fromJson(json))
+        .toList();
+
+    // 선수 ID 기준 중복 제거 (가장 최근 부상 정보만 유지)
+    final seenPlayerIds = <int>{};
+    return injuries.where((injury) {
+      if (seenPlayerIds.contains(injury.playerId)) return false;
+      seenPlayerIds.add(injury.playerId);
+      return true;
+    }).toList();
   }
 
   /// 선수 트로피
@@ -1863,5 +1899,83 @@ class ApiFootballStanding {
       goalsFor: goals['for'] ?? 0,
       goalsAgainst: goals['against'] ?? 0,
     );
+  }
+}
+
+/// 부상/결장 선수 모델
+class ApiFootballInjury {
+  final int playerId;
+  final String playerName;
+  final String? playerPhoto;
+  final String? type; // "Missing Fixture" 등
+  final String? reason; // "Injury", "Suspended", "Doubtful" 등
+  final int teamId;
+  final String teamName;
+  final String? teamLogo;
+  final int? fixtureId;
+  final int? leagueId;
+  final String? leagueName;
+  final int? season;
+
+  ApiFootballInjury({
+    required this.playerId,
+    required this.playerName,
+    this.playerPhoto,
+    this.type,
+    this.reason,
+    required this.teamId,
+    required this.teamName,
+    this.teamLogo,
+    this.fixtureId,
+    this.leagueId,
+    this.leagueName,
+    this.season,
+  });
+
+  factory ApiFootballInjury.fromJson(Map<String, dynamic> json) {
+    final player = json['player'] ?? {};
+    final team = json['team'] ?? {};
+    final fixture = json['fixture'] ?? {};
+    final league = json['league'] ?? {};
+
+    return ApiFootballInjury(
+      playerId: player['id'] ?? 0,
+      playerName: player['name'] ?? '',
+      playerPhoto: player['photo'],
+      type: player['type'],
+      reason: player['reason'],
+      teamId: team['id'] ?? 0,
+      teamName: team['name'] ?? '',
+      teamLogo: team['logo'],
+      fixtureId: fixture['id'],
+      leagueId: league['id'],
+      leagueName: league['name'],
+      season: league['season'],
+    );
+  }
+
+  /// 부상인지 확인
+  bool get isInjury => reason?.toLowerCase().contains('injur') ?? false;
+
+  /// 출전 정지인지 확인
+  bool get isSuspended => reason?.toLowerCase().contains('suspend') ?? false;
+
+  /// 의심스러운 상태인지 (출전 불확실)
+  bool get isDoubtful => reason?.toLowerCase().contains('doubt') ?? false;
+
+  /// 상태 아이콘 (UI용)
+  String get statusIcon {
+    if (isSuspended) return '🟥'; // 레드카드/정지
+    if (isInjury) return '🤕'; // 부상
+    if (isDoubtful) return '❓'; // 불확실
+    return '❌'; // 기타 결장
+  }
+
+  /// 상태 텍스트 (한국어)
+  String get statusText {
+    if (isSuspended) return '출전 정지';
+    if (isInjury) return '부상';
+    if (isDoubtful) return '출전 불투명';
+    return '결장';
   }
 }
