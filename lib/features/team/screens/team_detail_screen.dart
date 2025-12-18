@@ -314,7 +314,14 @@ class _TeamDetailContentState extends ConsumerState<_TeamDetailContent>
 }
 
 // ============ Info Tab ============
-class _InfoTab extends StatelessWidget {
+
+// 감독 정보 Provider
+final teamCoachProvider = FutureProvider.family<ApiFootballCoach?, int>((ref, teamId) async {
+  final service = ApiFootballService();
+  return service.getCoachByTeam(teamId);
+});
+
+class _InfoTab extends ConsumerWidget {
   final ApiFootballTeam team;
 
   static const _primary = Color(0xFF2563EB);
@@ -325,7 +332,9 @@ class _InfoTab extends StatelessWidget {
   const _InfoTab({required this.team});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final coachAsync = ref.watch(teamCoachProvider(team.id));
+
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -515,7 +524,241 @@ class _InfoTab extends StatelessWidget {
             ),
           ),
         ],
+
+        // Coach Info Card
+        const SizedBox(height: 12),
+        coachAsync.when(
+          data: (coach) {
+            if (coach == null) return const SizedBox.shrink();
+            return _CoachInfoCard(coach: coach);
+          },
+          loading: () => Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: _border),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 100,
+                      height: 16,
+                      color: Colors.grey.shade200,
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      width: 60,
+                      height: 12,
+                      color: Colors.grey.shade200,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          error: (_, __) => const SizedBox.shrink(),
+        ),
       ],
+    );
+  }
+}
+
+// ============ Coach Info Card ============
+class _CoachInfoCard extends StatelessWidget {
+  final ApiFootballCoach coach;
+
+  static const _primary = Color(0xFF2563EB);
+  static const _textPrimary = Color(0xFF111827);
+  static const _textSecondary = Color(0xFF6B7280);
+  static const _border = Color(0xFFE5E7EB);
+
+  const _CoachInfoCard({required this.coach});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        context.push('/coach/${coach.id}');
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: _border),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 헤더
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: _primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(Icons.person_outline, color: _primary, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    '감독',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: _textPrimary,
+                    ),
+                  ),
+                  const Spacer(),
+                  Icon(Icons.chevron_right, color: _textSecondary, size: 20),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // 감독 정보
+              Row(
+                children: [
+                  // 프로필 이미지
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: _border, width: 2),
+                      color: Colors.grey.shade100,
+                    ),
+                    child: ClipOval(
+                      child: coach.photo != null
+                          ? CachedNetworkImage(
+                              imageUrl: coach.photo!,
+                              fit: BoxFit.cover,
+                              placeholder: (_, __) => Icon(
+                                Icons.person,
+                                size: 32,
+                                color: _textSecondary,
+                              ),
+                              errorWidget: (_, __, ___) => Icon(
+                                Icons.person,
+                                size: 32,
+                                color: _textSecondary,
+                              ),
+                            )
+                          : Icon(
+                              Icons.person,
+                              size: 32,
+                              color: _textSecondary,
+                            ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+
+                  // 감독 정보
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          coach.name,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: _textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        if (coach.nationality != null)
+                          Row(
+                            children: [
+                              Icon(Icons.flag_outlined, size: 14, color: _textSecondary),
+                              const SizedBox(width: 4),
+                              Text(
+                                coach.nationality!,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: _textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        if (coach.age != null) ...[
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              Icon(Icons.cake_outlined, size: 14, color: _textSecondary),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${coach.age}세',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: _textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+
+              // 경력 요약
+              if (coach.career.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: _primary.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.work_outline, size: 16, color: _primary),
+                      const SizedBox(width: 8),
+                      Text(
+                        '경력: ${coach.career.length}개 팀',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: _primary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      if (coach.totalCareerYears > 0) ...[
+                        const SizedBox(width: 16),
+                        Icon(Icons.schedule, size: 16, color: _primary),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${coach.totalCareerYears}년',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: _primary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

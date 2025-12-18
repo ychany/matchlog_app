@@ -456,6 +456,79 @@ class ApiFootballService {
         .map((json) => ApiFootballTopScorer.fromJson(json))
         .toList();
   }
+
+  // ============ 감독 ============
+
+  /// 팀 감독 조회
+  Future<ApiFootballCoach?> getCoachByTeam(int teamId) async {
+    final data = await _get('coachs?team=$teamId');
+    if (data == null || data['response'] == null || (data['response'] as List).isEmpty) {
+      return null;
+    }
+    // 가장 최근 감독 반환 (첫 번째)
+    return ApiFootballCoach.fromJson((data['response'] as List).first);
+  }
+
+  /// 감독 ID로 조회
+  Future<ApiFootballCoach?> getCoachById(int coachId) async {
+    final data = await _get('coachs?id=$coachId');
+    if (data == null || data['response'] == null || (data['response'] as List).isEmpty) {
+      return null;
+    }
+    return ApiFootballCoach.fromJson((data['response'] as List).first);
+  }
+
+  /// 감독 이름으로 검색
+  Future<List<ApiFootballCoach>> searchCoaches(String query) async {
+    final data = await _get('coachs?search=${Uri.encodeComponent(query)}');
+    if (data == null || data['response'] == null) return [];
+
+    return (data['response'] as List)
+        .map((json) => ApiFootballCoach.fromJson(json))
+        .toList();
+  }
+
+  /// 감독 트로피 조회
+  Future<List<CoachTrophy>> getCoachTrophies(int coachId) async {
+    final data = await _get('trophies?coach=$coachId');
+    if (data == null || data['response'] == null) return [];
+
+    return (data['response'] as List)
+        .map((json) => CoachTrophy.fromJson(json))
+        .toList();
+  }
+
+  // ============ 국가 ============
+
+  /// 모든 국가 조회
+  Future<List<ApiFootballCountry>> getAllCountries() async {
+    final data = await _get('countries');
+    if (data == null || data['response'] == null) return [];
+
+    return (data['response'] as List)
+        .map((json) => ApiFootballCountry.fromJson(json))
+        .toList();
+  }
+
+  /// 국가 이름으로 검색
+  Future<List<ApiFootballCountry>> searchCountries(String query) async {
+    final data = await _get('countries?search=${Uri.encodeComponent(query)}');
+    if (data == null || data['response'] == null) return [];
+
+    return (data['response'] as List)
+        .map((json) => ApiFootballCountry.fromJson(json))
+        .toList();
+  }
+
+  /// 국가별 리그 조회
+  Future<List<ApiFootballLeague>> getLeaguesByCountry(String countryCode) async {
+    final data = await _get('leagues?code=$countryCode');
+    if (data == null || data['response'] == null) return [];
+
+    return (data['response'] as List)
+        .map((json) => ApiFootballLeague.fromJson(json))
+        .toList();
+  }
 }
 
 // ============ 모델 클래스들 ============
@@ -1010,7 +1083,7 @@ class ApiFootballLineup {
       teamName: team['name'] ?? '',
       teamLogo: team['logo'],
       formation: json['formation'],
-      coach: json['coach'] != null ? ApiFootballCoach.fromJson(json['coach']) : null,
+      coach: json['coach'] != null ? ApiFootballCoach.fromLineupJson(json['coach']) : null,
       startXI: startXIList.map((p) => ApiFootballLineupPlayer.fromJson(p['player'] ?? p)).toList(),
       substitutes: substitutesList.map((p) => ApiFootballLineupPlayer.fromJson(p['player'] ?? p)).toList(),
     );
@@ -1019,23 +1092,169 @@ class ApiFootballLineup {
 
 /// 감독 모델
 class ApiFootballCoach {
-  final int? id;
-  final String? name;
+  final int id;
+  final String name;
+  final String? firstName;
+  final String? lastName;
+  final int? age;
+  final String? birthDate;
+  final String? birthPlace;
+  final String? birthCountry;
+  final String? nationality;
   final String? photo;
+  final int? teamId;
+  final String? teamName;
+  final String? teamLogo;
+  final List<CoachCareer> career;
 
   ApiFootballCoach({
-    this.id,
-    this.name,
+    required this.id,
+    required this.name,
+    this.firstName,
+    this.lastName,
+    this.age,
+    this.birthDate,
+    this.birthPlace,
+    this.birthCountry,
+    this.nationality,
     this.photo,
+    this.teamId,
+    this.teamName,
+    this.teamLogo,
+    this.career = const [],
   });
 
   factory ApiFootballCoach.fromJson(Map<String, dynamic> json) {
+    final birth = json['birth'] ?? {};
+    final team = json['team'] ?? {};
+    final careerList = json['career'] as List? ?? [];
+
     return ApiFootballCoach(
-      id: json['id'],
-      name: json['name'],
+      id: json['id'] ?? 0,
+      name: json['name'] ?? '',
+      firstName: json['firstname'],
+      lastName: json['lastname'],
+      age: json['age'],
+      birthDate: birth['date'],
+      birthPlace: birth['place'],
+      birthCountry: birth['country'],
+      nationality: json['nationality'],
+      photo: json['photo'],
+      teamId: team['id'],
+      teamName: team['name'],
+      teamLogo: team['logo'],
+      career: careerList.map((c) => CoachCareer.fromJson(c)).toList(),
+    );
+  }
+
+  /// 라인업용 간단한 팩토리
+  factory ApiFootballCoach.fromLineupJson(Map<String, dynamic> json) {
+    return ApiFootballCoach(
+      id: json['id'] ?? 0,
+      name: json['name'] ?? '',
       photo: json['photo'],
     );
   }
+
+  /// 현재 소속팀 경력
+  CoachCareer? get currentCareer {
+    if (career.isEmpty) return null;
+    return career.firstWhere(
+      (c) => c.end == null,
+      orElse: () => career.first,
+    );
+  }
+
+  /// 총 경력 연수
+  int get totalCareerYears {
+    if (career.isEmpty) return 0;
+    final firstYear = career.last.startYear;
+    final now = DateTime.now().year;
+    return firstYear != null ? now - firstYear : 0;
+  }
+}
+
+/// 감독 경력 모델
+class CoachCareer {
+  final int? teamId;
+  final String? teamName;
+  final String? teamLogo;
+  final String? start;
+  final String? end;
+
+  CoachCareer({
+    this.teamId,
+    this.teamName,
+    this.teamLogo,
+    this.start,
+    this.end,
+  });
+
+  factory CoachCareer.fromJson(Map<String, dynamic> json) {
+    final team = json['team'] ?? {};
+    return CoachCareer(
+      teamId: team['id'],
+      teamName: team['name'],
+      teamLogo: team['logo'],
+      start: json['start'],
+      end: json['end'],
+    );
+  }
+
+  /// 시작 연도
+  int? get startYear {
+    if (start == null) return null;
+    return int.tryParse(start!.split('-').first);
+  }
+
+  /// 종료 연도
+  int? get endYear {
+    if (end == null) return null;
+    return int.tryParse(end!.split('-').first);
+  }
+
+  /// 재직 기간 텍스트
+  String get periodText {
+    final startY = startYear?.toString() ?? '?';
+    final endY = end == null ? '현재' : (endYear?.toString() ?? '?');
+    return '$startY - $endY';
+  }
+}
+
+/// 감독 트로피 모델
+class CoachTrophy {
+  final String league;
+  final String? country;
+  final String season;
+  final String place;
+
+  CoachTrophy({
+    required this.league,
+    this.country,
+    required this.season,
+    required this.place,
+  });
+
+  factory CoachTrophy.fromJson(Map<String, dynamic> json) {
+    return CoachTrophy(
+      league: json['league'] ?? '',
+      country: json['country'],
+      season: json['season'] ?? '',
+      place: json['place'] ?? '',
+    );
+  }
+
+  /// 우승 여부
+  bool get isWinner => place.toLowerCase() == 'winner';
+
+  /// 준우승 여부
+  bool get isRunnerUp => place.toLowerCase().contains('runner') ||
+                          place.toLowerCase().contains('2nd') ||
+                          place.toLowerCase() == 'finalist';
+
+  /// 3위 여부
+  bool get isThirdPlace => place.toLowerCase().contains('3rd') ||
+                            place.toLowerCase().contains('third');
 }
 
 /// 라인업 선수 모델
@@ -2100,5 +2319,26 @@ class ApiFootballInjury {
     if (isInjury) return '부상';
     if (isDoubtful) return '출전 불투명';
     return '결장';
+  }
+}
+
+/// 국가 모델
+class ApiFootballCountry {
+  final String name;
+  final String? code;
+  final String? flag;
+
+  ApiFootballCountry({
+    required this.name,
+    this.code,
+    this.flag,
+  });
+
+  factory ApiFootballCountry.fromJson(Map<String, dynamic> json) {
+    return ApiFootballCountry(
+      name: json['name'] ?? '',
+      code: json['code'],
+      flag: json['flag'],
+    );
   }
 }

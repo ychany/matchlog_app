@@ -56,6 +56,33 @@ class StandingsScreen extends ConsumerWidget {
                         color: _textPrimary,
                       ),
                     ),
+                    const Spacer(),
+                    // 국가별 리그 버튼
+                    GestureDetector(
+                      onTap: () => context.push('/leagues-by-country'),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: _primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.public, size: 16, color: _primary),
+                            const SizedBox(width: 6),
+                            Text(
+                              '국가별',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: _primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),

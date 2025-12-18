@@ -14,7 +14,10 @@ import 'features/schedule/screens/match_detail_screen.dart';
 import 'features/schedule/screens/player_detail_screen.dart';
 import 'features/favorites/screens/favorites_screen.dart';
 import 'features/standings/screens/standings_screen.dart';
+import 'features/standings/screens/leagues_by_country_screen.dart';
+import 'features/standings/screens/league_standings_screen.dart';
 import 'features/team/screens/team_detail_screen.dart';
+import 'features/team/screens/coach_detail_screen.dart';
 import 'features/profile/screens/profile_screen.dart';
 import 'features/profile/screens/profile_edit_screen.dart';
 import 'features/profile/screens/notification_settings_screen.dart';
@@ -89,6 +92,30 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final teamId = state.pathParameters['teamId']!;
           return TeamDetailScreen(teamId: teamId);
+        },
+      ),
+
+      // Coach Detail (outside shell - full screen)
+      GoRoute(
+        path: '/coach/:coachId',
+        builder: (context, state) {
+          final coachId = state.pathParameters['coachId']!;
+          return CoachDetailScreen(coachId: coachId);
+        },
+      ),
+
+      // Leagues by Country (outside shell - full screen)
+      GoRoute(
+        path: '/leagues-by-country',
+        builder: (context, state) => const LeaguesByCountryScreen(),
+      ),
+
+      // League Standings (outside shell - for viewing specific league standings)
+      GoRoute(
+        path: '/league/:leagueId/standings',
+        builder: (context, state) {
+          final leagueId = state.pathParameters['leagueId']!;
+          return LeagueStandingsScreen(leagueId: leagueId);
         },
       ),
 
