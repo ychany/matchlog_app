@@ -428,20 +428,41 @@ class _BasicInfoCard extends StatelessWidget {
 class _StatisticsCard extends StatelessWidget {
   final ApiFootballPlayer player;
 
-  static const _primary = Color(0xFF2563EB);
-  static const _textPrimary = Color(0xFF111827);
-  static const _textSecondary = Color(0xFF6B7280);
-  static const _border = Color(0xFFE5E7EB);
-
   const _StatisticsCard({required this.player});
 
   @override
   Widget build(BuildContext context) {
-    final stats = player.statistics.first;
+    // 모든 시즌/리그 통계 표시
+    return Column(
+      children: player.statistics.map((stats) {
+        return _SingleSeasonStatsCard(stats: stats);
+      }).toList(),
+    );
+  }
+}
+
+class _SingleSeasonStatsCard extends StatelessWidget {
+  final ApiFootballPlayerStats stats;
+
+  static const _primary = Color(0xFF2563EB);
+  static const _success = Color(0xFF10B981);
+  static const _warning = Color(0xFFF59E0B);
+  static const _error = Color(0xFFEF4444);
+  static const _textPrimary = Color(0xFF111827);
+  static const _textSecondary = Color(0xFF6B7280);
+  static const _border = Color(0xFFE5E7EB);
+
+  const _SingleSeasonStatsCard({required this.stats});
+
+  @override
+  Widget build(BuildContext context) {
+    // 출전 기록이 없으면 표시하지 않음
+    if ((stats.appearances ?? 0) == 0) {
+      return const SizedBox.shrink();
+    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -450,63 +471,268 @@ class _StatisticsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: _primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(Icons.sports_soccer, color: _primary, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      '시즌 통계',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: _textPrimary,
-                      ),
-                    ),
-                    if (stats.leagueName != null)
+          // 리그/시즌 헤더
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: _primary.withValues(alpha: 0.05),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
+            ),
+            child: Row(
+              children: [
+                if (stats.teamLogo != null)
+                  CachedNetworkImage(
+                    imageUrl: stats.teamLogo!,
+                    width: 24,
+                    height: 24,
+                    placeholder: (_, __) => Icon(Icons.shield, size: 24, color: _textSecondary),
+                    errorWidget: (_, __, ___) => Icon(Icons.shield, size: 24, color: _textSecondary),
+                  )
+                else
+                  Icon(Icons.shield, size: 24, color: _textSecondary),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        '${stats.leagueName} ${stats.season ?? ''}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: _textSecondary,
+                        stats.leagueName ?? '리그',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: _textPrimary,
                         ),
                       ),
-                  ],
+                      if (stats.teamName != null || stats.season != null)
+                        Text(
+                          '${stats.teamName ?? ''} ${stats.season != null ? '${stats.season}/${stats.season! + 1}' : ''}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: _textSecondary,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+                // 평점 뱃지
+                if (stats.rating != null)
+                  Builder(
+                    builder: (context) {
+                      final ratingValue = double.tryParse(stats.rating!) ?? 0;
+                      final formattedRating = ratingValue.toStringAsFixed(2);
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: _getRatingColor(ratingValue).withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.star, size: 12, color: _getRatingColor(ratingValue)),
+                            const SizedBox(width: 4),
+                            Text(
+                              formattedRating,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: _getRatingColor(ratingValue),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              _StatItem(label: '출전', value: '${stats.appearances ?? 0}'),
-              _StatItem(label: '선발', value: '${stats.lineups ?? 0}'),
-              _StatItem(label: '골', value: '${stats.goals ?? 0}'),
-              _StatItem(label: '도움', value: '${stats.assists ?? 0}'),
-            ],
+
+          // 주요 통계 (골, 어시스트)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Row(
+              children: [
+                _HighlightStatBox(
+                  icon: Icons.sports_soccer,
+                  label: '골',
+                  value: '${stats.goals ?? 0}',
+                  color: _success,
+                ),
+                const SizedBox(width: 12),
+                _HighlightStatBox(
+                  icon: Icons.handshake_outlined,
+                  label: '도움',
+                  value: '${stats.assists ?? 0}',
+                  color: _primary,
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              _StatItem(label: '출전시간', value: '${stats.minutes ?? 0}분'),
-              _StatItem(label: '경고', value: '${stats.yellowCards ?? 0}', valueColor: Colors.amber),
-              _StatItem(label: '퇴장', value: '${stats.redCards ?? 0}', valueColor: Colors.red),
-              if (stats.rating != null)
-                _StatItem(label: '평점', value: stats.rating!, valueColor: _primary),
-            ],
+
+          // 출전 통계
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                _StatItem(label: '출전', value: '${stats.appearances ?? 0}'),
+                _StatItem(label: '선발', value: '${stats.lineups ?? 0}'),
+                _StatItem(label: '출전시간', value: '${stats.minutes ?? 0}분'),
+              ],
+            ),
+          ),
+
+          // 카드 통계
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _CardStatItem(
+                  color: _warning,
+                  value: stats.yellowCards ?? 0,
+                  label: '경고',
+                ),
+                Container(
+                  width: 1,
+                  height: 30,
+                  color: _border,
+                ),
+                _CardStatItem(
+                  color: _error,
+                  value: stats.redCards ?? 0,
+                  label: '퇴장',
+                ),
+              ],
+            ),
           ),
         ],
       ),
+    );
+  }
+
+  Color _getRatingColor(double rating) {
+    if (rating >= 8.0) return _success;
+    if (rating >= 7.0) return _primary;
+    if (rating >= 6.0) return _warning;
+    return _error;
+  }
+}
+
+class _HighlightStatBox extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color color;
+
+  const _HighlightStatBox({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                    color: color,
+                  ),
+                ),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: color.withValues(alpha: 0.8),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CardStatItem extends StatelessWidget {
+  final Color color;
+  final int value;
+  final String label;
+
+  static const _textPrimary = Color(0xFF111827);
+  static const _textSecondary = Color(0xFF6B7280);
+
+  const _CardStatItem({
+    required this.color,
+    required this.value,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 18,
+          height: 24,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(3),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '$value',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: _textPrimary,
+              ),
+            ),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                color: _textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -514,7 +740,6 @@ class _StatisticsCard extends StatelessWidget {
 class _StatItem extends StatelessWidget {
   final String label;
   final String value;
-  final Color? valueColor;
 
   static const _textPrimary = Color(0xFF111827);
   static const _textSecondary = Color(0xFF6B7280);
@@ -522,7 +747,6 @@ class _StatItem extends StatelessWidget {
   const _StatItem({
     required this.label,
     required this.value,
-    this.valueColor,
   });
 
   @override
@@ -532,10 +756,10 @@ class _StatItem extends StatelessWidget {
         children: [
           Text(
             value,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: valueColor ?? _textPrimary,
+              color: _textPrimary,
             ),
           ),
           const SizedBox(height: 2),
