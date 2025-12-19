@@ -1727,20 +1727,130 @@ class ApiFootballHomeAwayTotal {
   }
 }
 
+/// 시간대별 골 데이터
+class ApiFootballGoalMinute {
+  final int? total;
+  final double? percentage;
+
+  ApiFootballGoalMinute({this.total, this.percentage});
+
+  factory ApiFootballGoalMinute.fromJson(Map<String, dynamic>? json) {
+    if (json == null) return ApiFootballGoalMinute();
+    return ApiFootballGoalMinute(
+      total: json['total'],
+      percentage: json['percentage'] != null
+          ? double.tryParse(json['percentage'].toString().replaceAll('%', ''))
+          : null,
+    );
+  }
+}
+
+/// 시간대별 골 분포 맵
+class ApiFootballGoalsByMinute {
+  final ApiFootballGoalMinute min0_15;
+  final ApiFootballGoalMinute min16_30;
+  final ApiFootballGoalMinute min31_45;
+  final ApiFootballGoalMinute min46_60;
+  final ApiFootballGoalMinute min61_75;
+  final ApiFootballGoalMinute min76_90;
+  final ApiFootballGoalMinute min91_105;
+  final ApiFootballGoalMinute min106_120;
+
+  ApiFootballGoalsByMinute({
+    required this.min0_15,
+    required this.min16_30,
+    required this.min31_45,
+    required this.min46_60,
+    required this.min61_75,
+    required this.min76_90,
+    required this.min91_105,
+    required this.min106_120,
+  });
+
+  factory ApiFootballGoalsByMinute.fromJson(Map<String, dynamic>? json) {
+    if (json == null) {
+      return ApiFootballGoalsByMinute(
+        min0_15: ApiFootballGoalMinute(),
+        min16_30: ApiFootballGoalMinute(),
+        min31_45: ApiFootballGoalMinute(),
+        min46_60: ApiFootballGoalMinute(),
+        min61_75: ApiFootballGoalMinute(),
+        min76_90: ApiFootballGoalMinute(),
+        min91_105: ApiFootballGoalMinute(),
+        min106_120: ApiFootballGoalMinute(),
+      );
+    }
+    return ApiFootballGoalsByMinute(
+      min0_15: ApiFootballGoalMinute.fromJson(json['0-15']),
+      min16_30: ApiFootballGoalMinute.fromJson(json['16-30']),
+      min31_45: ApiFootballGoalMinute.fromJson(json['31-45']),
+      min46_60: ApiFootballGoalMinute.fromJson(json['46-60']),
+      min61_75: ApiFootballGoalMinute.fromJson(json['61-75']),
+      min76_90: ApiFootballGoalMinute.fromJson(json['76-90']),
+      min91_105: ApiFootballGoalMinute.fromJson(json['91-105']),
+      min106_120: ApiFootballGoalMinute.fromJson(json['106-120']),
+    );
+  }
+
+  /// 모든 시간대 데이터를 리스트로 반환
+  List<MapEntry<String, ApiFootballGoalMinute>> get allPeriods => [
+        MapEntry('0-15', min0_15),
+        MapEntry('16-30', min16_30),
+        MapEntry('31-45', min31_45),
+        MapEntry('46-60', min46_60),
+        MapEntry('61-75', min61_75),
+        MapEntry('76-90', min76_90),
+        MapEntry('91-105', min91_105),
+        MapEntry('106-120', min106_120),
+      ];
+
+  /// 정규 시간 (0-90분) 시간대만 반환
+  List<MapEntry<String, ApiFootballGoalMinute>> get regularTimePeriods => [
+        MapEntry('0-15', min0_15),
+        MapEntry('16-30', min16_30),
+        MapEntry('31-45', min31_45),
+        MapEntry('46-60', min46_60),
+        MapEntry('61-75', min61_75),
+        MapEntry('76-90', min76_90),
+      ];
+
+  /// 총 골 수
+  int get totalGoals {
+    int sum = 0;
+    for (final entry in allPeriods) {
+      sum += entry.value.total ?? 0;
+    }
+    return sum;
+  }
+}
+
 /// 골 통계
 class ApiFootballGoalsStats {
   final ApiFootballGoalDetail goalsFor;
   final ApiFootballGoalDetail goalsAgainst;
+  final ApiFootballGoalsByMinute? goalsForByMinute;
+  final ApiFootballGoalsByMinute? goalsAgainstByMinute;
 
   ApiFootballGoalsStats({
     required this.goalsFor,
     required this.goalsAgainst,
+    this.goalsForByMinute,
+    this.goalsAgainstByMinute,
   });
 
   factory ApiFootballGoalsStats.fromJson(Map<String, dynamic> json) {
+    final forData = json['for'] ?? {};
+    final againstData = json['against'] ?? {};
+
     return ApiFootballGoalsStats(
-      goalsFor: ApiFootballGoalDetail.fromJson(json['for'] ?? {}),
-      goalsAgainst: ApiFootballGoalDetail.fromJson(json['against'] ?? {}),
+      goalsFor: ApiFootballGoalDetail.fromJson(forData),
+      goalsAgainst: ApiFootballGoalDetail.fromJson(againstData),
+      goalsForByMinute: forData['minute'] != null
+          ? ApiFootballGoalsByMinute.fromJson(forData['minute'])
+          : null,
+      goalsAgainstByMinute: againstData['minute'] != null
+          ? ApiFootballGoalsByMinute.fromJson(againstData['minute'])
+          : null,
     );
   }
 }

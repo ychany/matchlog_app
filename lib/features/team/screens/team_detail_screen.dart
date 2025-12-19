@@ -1297,6 +1297,15 @@ class _LeagueStatsCard extends StatelessWidget {
                     ],
                   ),
                 ],
+
+                // 시간대별 골 분포
+                if (stats.goals.goalsForByMinute != null) ...[
+                  const Divider(height: 24),
+                  _GoalsByMinuteChart(
+                    goalsFor: stats.goals.goalsForByMinute!,
+                    goalsAgainst: stats.goals.goalsAgainstByMinute,
+                  ),
+                ],
               ],
             ),
           ),
@@ -1543,6 +1552,266 @@ class _HomeAwayCompareRow extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 시간대별 골 분포 차트
+class _GoalsByMinuteChart extends StatelessWidget {
+  final ApiFootballGoalsByMinute goalsFor;
+  final ApiFootballGoalsByMinute? goalsAgainst;
+
+  static const _success = Color(0xFF10B981);
+  static const _error = Color(0xFFEF4444);
+  static const _textPrimary = Color(0xFF111827);
+  static const _textSecondary = Color(0xFF6B7280);
+
+  const _GoalsByMinuteChart({
+    required this.goalsFor,
+    this.goalsAgainst,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final periods = goalsFor.regularTimePeriods;
+    final maxGoals = _getMaxGoals(periods);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.access_time, size: 16, color: _textSecondary),
+            const SizedBox(width: 8),
+            Text(
+              '시간대별 골 분포',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: _textPrimary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // 범례
+        Row(
+          children: [
+            _LegendItem(color: _success, label: '득점'),
+            const SizedBox(width: 16),
+            if (goalsAgainst != null)
+              _LegendItem(color: _error, label: '실점'),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        // 차트
+        SizedBox(
+          height: 130,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: periods.asMap().entries.map((entry) {
+              final index = entry.key;
+              final period = entry.value;
+              final forGoals = period.value.total ?? 0;
+              final againstGoals = goalsAgainst != null
+                  ? goalsAgainst!.regularTimePeriods[index].value.total ?? 0
+                  : 0;
+
+              return Expanded(
+                child: _GoalBar(
+                  label: period.key,
+                  forGoals: forGoals,
+                  againstGoals: againstGoals,
+                  maxGoals: maxGoals,
+                  showAgainst: goalsAgainst != null,
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+
+        // 하프 구분선
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              flex: 3,
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  '전반',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: _textSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 4),
+            Expanded(
+              flex: 3,
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  '후반',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: _textSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  int _getMaxGoals(List<MapEntry<String, ApiFootballGoalMinute>> periods) {
+    int max = 1;
+    for (int i = 0; i < periods.length; i++) {
+      final forGoals = periods[i].value.total ?? 0;
+      final againstGoals = goalsAgainst != null
+          ? goalsAgainst!.regularTimePeriods[i].value.total ?? 0
+          : 0;
+      if (forGoals > max) max = forGoals;
+      if (againstGoals > max) max = againstGoals;
+    }
+    return max;
+  }
+}
+
+class _LegendItem extends StatelessWidget {
+  final Color color;
+  final String label;
+
+  const _LegendItem({required this.color, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: const Color(0xFF6B7280),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _GoalBar extends StatelessWidget {
+  final String label;
+  final int forGoals;
+  final int againstGoals;
+  final int maxGoals;
+  final bool showAgainst;
+
+  static const _success = Color(0xFF10B981);
+  static const _error = Color(0xFFEF4444);
+  static const _textSecondary = Color(0xFF6B7280);
+
+  const _GoalBar({
+    required this.label,
+    required this.forGoals,
+    required this.againstGoals,
+    required this.maxGoals,
+    required this.showAgainst,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final forHeight = maxGoals > 0 ? (forGoals / maxGoals) * 80 : 0.0;
+    final againstHeight = maxGoals > 0 ? (againstGoals / maxGoals) * 80 : 0.0;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          // 골 수 표시
+          if (forGoals > 0 || againstGoals > 0)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(
+                showAgainst ? '$forGoals/$againstGoals' : '$forGoals',
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w600,
+                  color: _textSecondary,
+                ),
+              ),
+            ),
+
+          // 바 차트
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              // 득점 바
+              Container(
+                width: showAgainst ? 10 : 16,
+                height: forHeight.clamp(4, 80),
+                decoration: BoxDecoration(
+                  color: _success,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(2)),
+                ),
+              ),
+              if (showAgainst) ...[
+                const SizedBox(width: 2),
+                // 실점 바
+                Container(
+                  width: 10,
+                  height: againstHeight.clamp(4, 80),
+                  decoration: BoxDecoration(
+                    color: _error,
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(2)),
+                  ),
+                ),
+              ],
+            ],
+          ),
+
+          // 시간대 레이블
+          const SizedBox(height: 4),
+          Text(
+            label.replaceAll('-', '\n'),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 8,
+              color: _textSecondary,
+              height: 1.2,
+            ),
           ),
         ],
       ),
