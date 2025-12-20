@@ -174,7 +174,7 @@ class StandingsScreen extends ConsumerWidget {
 
                     const SizedBox(height: 12),
 
-                    // 탭 선택 (순위 | 득점 | 어시스트)
+                    // 탭 선택 (순위 | 득점 | 어시스트 | 통계)
                     Container(
                       margin: const EdgeInsets.symmetric(horizontal: 16),
                       padding: const EdgeInsets.all(4),
@@ -196,9 +196,14 @@ class StandingsScreen extends ConsumerWidget {
                             onTap: () => ref.read(selectedStandingsTabProvider.notifier).state = 1,
                           ),
                           _TabButton(
-                            label: '어시스트',
+                            label: '도움',
                             isSelected: selectedTab == 2,
                             onTap: () => ref.read(selectedStandingsTabProvider.notifier).state = 2,
+                          ),
+                          _TabButton(
+                            label: '통계',
+                            isSelected: selectedTab == 3,
+                            onTap: () => ref.read(selectedStandingsTabProvider.notifier).state = 3,
                           ),
                         ],
                       ),
@@ -212,7 +217,9 @@ class StandingsScreen extends ConsumerWidget {
                           ? _buildStandingsContent(ref, standingsAsync, standingsKey, isCup, selectedLeague)
                           : selectedTab == 1
                               ? _buildTopScorersContent(ref, topScorersAsync, standingsKey)
-                              : _buildTopAssistsContent(ref, topAssistsAsync, standingsKey),
+                              : selectedTab == 2
+                                  ? _buildTopAssistsContent(ref, topAssistsAsync, standingsKey)
+                                  : _buildLeagueStatsContent(standingsAsync),
                     ),
                   ],
                 ),
@@ -369,6 +376,45 @@ class StandingsScreen extends ConsumerWidget {
       error: (e, _) => ErrorState(
         message: e.toString(),
         onRetry: () => ref.invalidate(topAssistsProvider(standingsKey)),
+      ),
+    );
+  }
+
+  Widget _buildLeagueStatsContent(
+    AsyncValue<List<ApiFootballStanding>> standingsAsync,
+  ) {
+    return standingsAsync.when(
+      data: (standings) {
+        if (standings.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.bar_chart, size: 64, color: _textSecondary),
+                const SizedBox(height: 16),
+                const Text('리그 통계 정보가 없습니다', style: TextStyle(color: _textSecondary)),
+              ],
+            ),
+          );
+        }
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              _LeagueOverviewCard(standings: standings),
+              const SizedBox(height: 12),
+              _TopTeamsCard(standings: standings),
+              const SizedBox(height: 12),
+              _GoalStatsCard(standings: standings),
+              const SizedBox(height: 32),
+            ],
+          ),
+        );
+      },
+      loading: () => const LoadingIndicator(),
+      error: (e, _) => Center(
+        child: Text('오류: $e', style: TextStyle(color: _textSecondary)),
       ),
     );
   }
@@ -1027,6 +1073,581 @@ class _StatCell extends StatelessWidget {
         text,
         style: TextStyle(fontSize: 12, color: color),
         textAlign: TextAlign.center,
+      ),
+    );
+  }
+}
+
+// 리그 개요 카드
+class _LeagueOverviewCard extends StatelessWidget {
+  final List<ApiFootballStanding> standings;
+
+  static const _primary = Color(0xFF2563EB);
+  static const _success = Color(0xFF10B981);
+  static const _warning = Color(0xFFF59E0B);
+  static const _textPrimary = Color(0xFF111827);
+  static const _border = Color(0xFFE5E7EB);
+
+  const _LeagueOverviewCard({required this.standings});
+
+  @override
+  Widget build(BuildContext context) {
+    int totalMatches = 0;
+    int totalGoals = 0;
+    int totalHomeWins = 0;
+    int totalAwayWins = 0;
+    int totalDraws = 0;
+
+    for (final team in standings) {
+      totalMatches += team.played;
+      totalGoals += team.goalsFor;
+    }
+
+    final matchesPlayed = totalMatches ~/ 2;
+    final goalsPerMatch = matchesPlayed > 0 ? totalGoals / matchesPlayed : 0.0;
+
+    for (final team in standings) {
+      totalHomeWins += team.homeWin ?? 0;
+      totalAwayWins += team.awayWin ?? 0;
+      totalDraws += team.draw;
+    }
+    totalDraws = totalDraws ~/ 2;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: _primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(Icons.analytics, color: _primary, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                '리그 개요',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: _textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              _OverviewStatBox(
+                icon: Icons.sports_soccer,
+                label: '총 골',
+                value: '$totalGoals',
+                color: _success,
+              ),
+              const SizedBox(width: 12),
+              _OverviewStatBox(
+                icon: Icons.speed,
+                label: '경기당 골',
+                value: goalsPerMatch.toStringAsFixed(2),
+                color: _primary,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              _OverviewStatBox(
+                icon: Icons.home,
+                label: '홈 승리',
+                value: '$totalHomeWins',
+                color: _success,
+              ),
+              const SizedBox(width: 12),
+              _OverviewStatBox(
+                icon: Icons.flight,
+                label: '원정 승리',
+                value: '$totalAwayWins',
+                color: _warning,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('홈 승', style: TextStyle(fontSize: 12, color: _success, fontWeight: FontWeight.w600)),
+                    Text('무승부', style: TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w600)),
+                    Text('원정 승', style: TextStyle(fontSize: 12, color: _warning, fontWeight: FontWeight.w600)),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: totalHomeWins > 0 ? totalHomeWins : 1,
+                        child: Container(height: 8, color: _success),
+                      ),
+                      Expanded(
+                        flex: totalDraws > 0 ? totalDraws : 1,
+                        child: Container(height: 8, color: Colors.grey.shade400),
+                      ),
+                      Expanded(
+                        flex: totalAwayWins > 0 ? totalAwayWins : 1,
+                        child: Container(height: 8, color: _warning),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('$totalHomeWins경기', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                    Text('$totalDraws경기', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                    Text('$totalAwayWins경기', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OverviewStatBox extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color color;
+
+  const _OverviewStatBox({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 18),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: color,
+                    ),
+                  ),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: color.withValues(alpha: 0.8),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// 상위 팀 카드
+class _TopTeamsCard extends StatelessWidget {
+  final List<ApiFootballStanding> standings;
+
+  static const _primary = Color(0xFF2563EB);
+  static const _success = Color(0xFF10B981);
+  static const _error = Color(0xFFEF4444);
+  static const _textPrimary = Color(0xFF111827);
+  static const _textSecondary = Color(0xFF6B7280);
+  static const _border = Color(0xFFE5E7EB);
+
+  const _TopTeamsCard({required this.standings});
+
+  @override
+  Widget build(BuildContext context) {
+    final topScorer = standings.reduce((a, b) => a.goalsFor > b.goalsFor ? a : b);
+    final topConceder = standings.reduce((a, b) => a.goalsAgainst > b.goalsAgainst ? a : b);
+    final topWinner = standings.reduce((a, b) => a.win > b.win ? a : b);
+    final topDrawer = standings.reduce((a, b) => a.draw > b.draw ? a : b);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: _primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(Icons.emoji_events, color: _primary, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                '팀 순위',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: _textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _TeamStatRow(
+            icon: Icons.sports_soccer,
+            label: '최다 득점',
+            team: topScorer,
+            value: '${topScorer.goalsFor}골',
+            color: _success,
+          ),
+          _TeamStatRow(
+            icon: Icons.gpp_bad,
+            label: '최다 실점',
+            team: topConceder,
+            value: '${topConceder.goalsAgainst}골',
+            color: _error,
+          ),
+          _TeamStatRow(
+            icon: Icons.military_tech,
+            label: '최다 승리',
+            team: topWinner,
+            value: '${topWinner.win}승',
+            color: _primary,
+          ),
+          _TeamStatRow(
+            icon: Icons.balance,
+            label: '최다 무승부',
+            team: topDrawer,
+            value: '${topDrawer.draw}무',
+            color: _textSecondary,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TeamStatRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final ApiFootballStanding team;
+  final String value;
+  final Color color;
+
+  static const _textSecondary = Color(0xFF6B7280);
+
+  const _TeamStatRow({
+    required this.icon,
+    required this.label,
+    required this.team,
+    required this.value,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Icon(icon, size: 14, color: color),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            flex: 2,
+            child: Text(
+              label,
+              style: TextStyle(fontSize: 12, color: _textSecondary),
+            ),
+          ),
+          if (team.teamLogo != null)
+            CachedNetworkImage(
+              imageUrl: team.teamLogo!,
+              width: 20,
+              height: 20,
+              errorWidget: (_, __, ___) => const Icon(Icons.shield, size: 20),
+            ),
+          const SizedBox(width: 8),
+          Expanded(
+            flex: 3,
+            child: Text(
+              team.teamName,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// 골 통계 카드
+class _GoalStatsCard extends StatelessWidget {
+  final List<ApiFootballStanding> standings;
+
+  static const _primary = Color(0xFF2563EB);
+  static const _success = Color(0xFF10B981);
+  static const _textPrimary = Color(0xFF111827);
+  static const _textSecondary = Color(0xFF6B7280);
+  static const _border = Color(0xFFE5E7EB);
+
+  const _GoalStatsCard({required this.standings});
+
+  @override
+  Widget build(BuildContext context) {
+    int totalHomeGoals = 0;
+    int totalAwayGoals = 0;
+
+    for (final team in standings) {
+      totalHomeGoals += team.homeGoalsFor ?? 0;
+      totalAwayGoals += team.awayGoalsFor ?? 0;
+    }
+
+    final sortedByGD = [...standings]..sort((a, b) => b.goalsDiff.compareTo(a.goalsDiff));
+    final topGDTeams = sortedByGD.take(5).toList();
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: _success.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(Icons.sports_soccer, color: _success, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                '골 분석',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: _textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('홈 골', style: TextStyle(fontSize: 12, color: _textSecondary)),
+                        Text('$totalHomeGoals', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: _primary)),
+                      ],
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        '총 ${totalHomeGoals + totalAwayGoals}골',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: _textPrimary),
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text('원정 골', style: TextStyle(fontSize: 12, color: _textSecondary)),
+                        Text('$totalAwayGoals', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: _success)),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: totalHomeGoals > 0 ? totalHomeGoals : 1,
+                        child: Container(height: 8, color: _primary),
+                      ),
+                      const SizedBox(width: 2),
+                      Expanded(
+                        flex: totalAwayGoals > 0 ? totalAwayGoals : 1,
+                        child: Container(height: 8, color: _success),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            '득실차 상위 5팀',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _textPrimary),
+          ),
+          const SizedBox(height: 12),
+          ...topGDTeams.asMap().entries.map((entry) {
+            final index = entry.key;
+            final team = entry.value;
+            final maxGD = topGDTeams.first.goalsDiff;
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 20,
+                    child: Text(
+                      '${index + 1}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: index == 0 ? _primary : _textSecondary,
+                      ),
+                    ),
+                  ),
+                  if (team.teamLogo != null)
+                    CachedNetworkImage(
+                      imageUrl: team.teamLogo!,
+                      width: 18,
+                      height: 18,
+                      errorWidget: (_, __, ___) => const Icon(Icons.shield, size: 18),
+                    ),
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    width: 100,
+                    child: Text(
+                      team.teamName,
+                      style: const TextStyle(fontSize: 12),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(3),
+                      child: LinearProgressIndicator(
+                        value: maxGD > 0 ? team.goalsDiff / maxGD : 0,
+                        backgroundColor: Colors.grey.shade200,
+                        valueColor: AlwaysStoppedAnimation(
+                          team.goalsDiff > 0 ? _success : Colors.grey,
+                        ),
+                        minHeight: 6,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    width: 36,
+                    child: Text(
+                      team.goalsDiff >= 0 ? '+${team.goalsDiff}' : '${team.goalsDiff}',
+                      textAlign: TextAlign.right,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: team.goalsDiff > 0 ? _success : _textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
       ),
     );
   }

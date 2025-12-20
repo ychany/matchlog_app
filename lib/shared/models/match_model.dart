@@ -28,6 +28,7 @@ class Match extends Equatable {
   final MatchStatus status;
   final bool followedBoost;
   final List<MatchEvent>? events;
+  final int? elapsed; // 라이브 경기 경과 시간 (분)
 
   const Match({
     required this.id,
@@ -48,6 +49,7 @@ class Match extends Equatable {
     this.status = MatchStatus.scheduled,
     this.followedBoost = false,
     this.events,
+    this.elapsed,
   });
 
   bool get isFinished => status == MatchStatus.finished;
@@ -93,6 +95,7 @@ class Match extends Equatable {
       events: (data['events'] as List<dynamic>?)
           ?.map((e) => MatchEvent.fromJson(e as Map<String, dynamic>))
           .toList(),
+      elapsed: data['elapsed'] as int?,
     );
   }
 
@@ -115,6 +118,7 @@ class Match extends Equatable {
       'status': status.name,
       'followedBoost': followedBoost,
       'events': events?.map((e) => e.toJson()).toList(),
+      'elapsed': elapsed,
     };
   }
 
@@ -137,6 +141,7 @@ class Match extends Equatable {
     MatchStatus? status,
     bool? followedBoost,
     List<MatchEvent>? events,
+    int? elapsed,
   }) {
     return Match(
       id: id ?? this.id,
@@ -157,6 +162,7 @@ class Match extends Equatable {
       status: status ?? this.status,
       followedBoost: followedBoost ?? this.followedBoost,
       events: events ?? this.events,
+      elapsed: elapsed ?? this.elapsed,
     );
   }
 
@@ -170,6 +176,7 @@ class Match extends Equatable {
         homeScore,
         awayScore,
         status,
+        elapsed,
       ];
 
   // Example dummy data

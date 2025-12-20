@@ -381,6 +381,7 @@ class _ScheduleMatchCard extends ConsumerWidget {
   static const _primary = Color(0xFF2563EB);
   static const _primaryLight = Color(0xFFDBEAFE);
   static const _success = Color(0xFF10B981);
+  static const _error = Color(0xFFEF4444);
   static const _textPrimary = Color(0xFF111827);
   static const _textSecondary = Color(0xFF6B7280);
   static const _border = Color(0xFFE5E7EB);
@@ -432,24 +433,81 @@ class _ScheduleMatchCard extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(width: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _primaryLight,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        DateFormat('HH:mm').format(match.kickoff),
-                        style: const TextStyle(
-                          color: _primary,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
+                    // 라이브 경기면 경과 시간, 아니면 킥오프 시간 표시
+                    if (match.isLive)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _error,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 6,
+                              height: 6,
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              match.elapsed != null ? "${match.elapsed}'" : 'LIVE',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _primaryLight,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          DateFormat('HH:mm').format(match.kickoff),
+                          style: const TextStyle(
+                            color: _primary,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
-                    ),
+                    // 경기 종료 시 "종료" 배지 추가
+                    if (match.isFinished) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _textSecondary.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Text(
+                          '종료',
+                          style: TextStyle(
+                            color: _textSecondary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
                 hasNotificationAsync.when(
@@ -513,22 +571,22 @@ class _ScheduleMatchCard extends ConsumerWidget {
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  child: match.isFinished
+                  child: match.isFinished || match.isLive
                       ? Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 10,
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: _primaryLight,
+                            color: match.isLive ? _error.withValues(alpha: 0.1) : _primaryLight,
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
                             match.scoreDisplay,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
-                              color: _primary,
+                              color: match.isLive ? _error : _primary,
                             ),
                           ),
                         )

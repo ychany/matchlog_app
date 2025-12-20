@@ -288,23 +288,94 @@ class _MatchDetailContentState extends ConsumerState<_MatchDetailContent>
             ),
           ),
 
-          // 날짜
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            margin: const EdgeInsets.only(bottom: 12),
-            decoration: BoxDecoration(
-              color: _primaryLight,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Text(
-              dateStr,
-              style: TextStyle(
-                color: _primary,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
+          // 날짜 또는 라이브/종료 상태
+          if (match.isLive)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEF4444),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    match.status.elapsed != null ? "${match.status.elapsed}'" : 'LIVE',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else if (match.isFinished)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: _textSecondary.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Text(
+                    '경기 종료',
+                    style: TextStyle(
+                      color: _textSecondary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: _primaryLight,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Text(
+                    dateStr,
+                    style: TextStyle(
+                      color: _primary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            )
+          else
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: _primaryLight,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Text(
+                dateStr,
+                style: TextStyle(
+                  color: _primary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
-          ),
 
           // 팀 정보
           Padding(
@@ -345,13 +416,15 @@ class _MatchDetailContentState extends ConsumerState<_MatchDetailContent>
                             vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            color: _primaryLight,
+                            color: match.isLive
+                                ? const Color(0xFFEF4444).withValues(alpha: 0.1)
+                                : _primaryLight,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
                             match.scoreDisplay,
-                            style: const TextStyle(
-                              color: _primary,
+                            style: TextStyle(
+                              color: match.isLive ? const Color(0xFFEF4444) : _primary,
                               fontSize: 24,
                               fontWeight: FontWeight.w700,
                             ),
