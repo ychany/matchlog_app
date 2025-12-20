@@ -747,9 +747,9 @@ class _PredictionTab extends ConsumerWidget {
               }
               // 초기 배당값도 함께 전달
               return oddsAsync.when(
-                data: (oddsList) => _buildLiveOddsCard(liveOdds, initialOdds: oddsList),
-                loading: () => _buildLiveOddsCard(liveOdds),
-                error: (_, __) => _buildLiveOddsCard(liveOdds),
+                data: (oddsList) => _buildLiveOddsCard(context, liveOdds, initialOdds: oddsList),
+                loading: () => _buildLiveOddsCard(context, liveOdds),
+                error: (_, __) => _buildLiveOddsCard(context, liveOdds),
               );
             },
             loading: () => _buildLoadingCard(),
@@ -970,7 +970,7 @@ class _PredictionTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildLiveOddsCard(ApiFootballLiveOdds liveOdds, {List<ApiFootballOdds>? initialOdds}) {
+  Widget _buildLiveOddsCard(BuildContext context, ApiFootballLiveOdds liveOdds, {List<ApiFootballOdds>? initialOdds}) {
     // 승무패 배당 찾기
     final matchWinnerBet = liveOdds.findMatchWinnerBet();
 
@@ -1072,6 +1072,34 @@ class _PredictionTab extends ConsumerWidget {
                 ),
               ),
               const Spacer(),
+              // 전체 배팅 종류 버튼
+              GestureDetector(
+                onTap: () => _showAllBetsModal(context, liveOdds),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: _primary.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.list_alt, size: 12, color: _primary),
+                      const SizedBox(width: 4),
+                      Text(
+                        '전체',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: _primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
               Text(
                 DateFormat('HH:mm:ss').format(liveOdds.updateAt.toLocal()),
                 style: TextStyle(
@@ -1120,6 +1148,183 @@ class _PredictionTab extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  /// 전체 배팅 종류 모달 표시
+  void _showAllBetsModal(BuildContext context, ApiFootballLiveOdds liveOdds) {
+    // 모든 배팅 종류 수집
+    List<ApiFootballLiveOddsBet> allBets = [];
+
+    if (liveOdds.directOdds.isNotEmpty) {
+      allBets = liveOdds.directOdds;
+    } else if (liveOdds.bookmakers.isNotEmpty) {
+      allBets = liveOdds.bookmakers.first.bets;
+    }
+
+    if (allBets.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('배팅 정보가 없습니다')),
+      );
+      return;
+    }
+
+    // 카테고리별로 그룹화
+    final groupedBets = _groupBetsByCategory(allBets);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _AllBetsModalContent(
+        allBets: allBets,
+        groupedBets: groupedBets,
+        getCategoryInfo: _getCategoryInfo,
+        getBetKoreanName: _getBetKoreanName,
+      ),
+    );
+  }
+
+  /// 배팅을 카테고리별로 그룹화
+  Map<String, List<ApiFootballLiveOddsBet>> _groupBetsByCategory(List<ApiFootballLiveOddsBet> bets) {
+    final Map<String, List<ApiFootballLiveOddsBet>> grouped = {};
+
+    for (final bet in bets) {
+      final category = _getBetCategory(bet.name);
+      grouped.putIfAbsent(category, () => []);
+      grouped[category]!.add(bet);
+    }
+
+    // 카테고리 정렬 (주요 → 골 → 핸디캡 → 기타)
+    final orderedCategories = ['주요 배팅', '골 관련', '핸디캡', '전/후반', '팀 관련', '기타'];
+    final sortedGrouped = <String, List<ApiFootballLiveOddsBet>>{};
+
+    for (final cat in orderedCategories) {
+      if (grouped.containsKey(cat)) {
+        sortedGrouped[cat] = grouped[cat]!;
+      }
+    }
+    // 정의되지 않은 카테고리 추가
+    for (final entry in grouped.entries) {
+      if (!sortedGrouped.containsKey(entry.key)) {
+        sortedGrouped[entry.key] = entry.value;
+      }
+    }
+
+    return sortedGrouped;
+  }
+
+  /// 배팅 이름으로 카테고리 결정
+  String _getBetCategory(String name) {
+    final nameLower = name.toLowerCase();
+
+    // 주요 배팅
+    if (nameLower.contains('winner') ||
+        nameLower.contains('1x2') ||
+        nameLower == 'home/away' ||
+        nameLower.contains('double chance')) {
+      return '주요 배팅';
+    }
+
+    // 골 관련
+    if (nameLower.contains('goal') ||
+        nameLower.contains('score') ||
+        nameLower.contains('over') ||
+        nameLower.contains('under') ||
+        nameLower.contains('total') ||
+        nameLower.contains('btts') ||
+        nameLower.contains('both teams')) {
+      return '골 관련';
+    }
+
+    // 핸디캡
+    if (nameLower.contains('handicap') ||
+        nameLower.contains('spread')) {
+      return '핸디캡';
+    }
+
+    // 전후반
+    if (nameLower.contains('half') ||
+        nameLower.contains('1st') ||
+        nameLower.contains('2nd')) {
+      return '전/후반';
+    }
+
+    // 팀 관련
+    if (nameLower.contains('home') ||
+        nameLower.contains('away') ||
+        nameLower.contains('team') ||
+        nameLower.contains('clean sheet') ||
+        nameLower.contains('win to nil')) {
+      return '팀 관련';
+    }
+
+    return '기타';
+  }
+
+  /// 카테고리 정보 (아이콘, 색상)
+  Map<String, dynamic> _getCategoryInfo(String category) {
+    switch (category) {
+      case '주요 배팅':
+        return {'icon': Icons.star, 'color': const Color(0xFF2563EB)};
+      case '골 관련':
+        return {'icon': Icons.sports_soccer, 'color': const Color(0xFF10B981)};
+      case '핸디캡':
+        return {'icon': Icons.balance, 'color': const Color(0xFF8B5CF6)};
+      case '전/후반':
+        return {'icon': Icons.timelapse, 'color': const Color(0xFFF59E0B)};
+      case '팀 관련':
+        return {'icon': Icons.shield_outlined, 'color': const Color(0xFF06B6D4)};
+      default:
+        return {'icon': Icons.more_horiz, 'color': const Color(0xFF6B7280)};
+    }
+  }
+
+  /// 배팅 이름 한글화
+  String _getBetKoreanName(String name) {
+    final Map<String, String> translations = {
+      'Match Winner': '승무패',
+      '1X2': '승무패',
+      'Home/Away': '홈/원정',
+      'Double Chance': '더블찬스',
+      'Both Teams Score': '양팀 모두 득점',
+      'Exact Score': '정확한 스코어',
+      'Goals Over/Under': '총 골 수',
+      'Over/Under': '오버/언더',
+      'Asian Handicap': '아시안 핸디캡',
+      'Handicap': '핸디캡',
+      'First Half Winner': '전반전 승자',
+      'Second Half Winner': '후반전 승자',
+      'Half Time / Full Time': '전반/후반 결과',
+      'Odd/Even': '홀/짝',
+      'Total - Home': '홈팀 총 골',
+      'Total - Away': '원정팀 총 골',
+      'Clean Sheet - Home': '홈팀 무실점',
+      'Clean Sheet - Away': '원정팀 무실점',
+      'Win to Nil - Home': '홈팀 완봉승',
+      'Win to Nil - Away': '원정팀 완봉승',
+      'Corners Over Under': '코너킥 수',
+      'Cards Over Under': '카드 수',
+      'First Team To Score': '선제골 팀',
+      'Last Team To Score': '마지막 득점 팀',
+      'Highest Scoring Half': '최다 득점 반',
+      'To Score In Both Halves': '양 반전 득점',
+      'Home Win Both Halves': '홈팀 양 반전 승리',
+      'Away Win Both Halves': '원정팀 양 반전 승리',
+    };
+
+    // 정확히 일치하는 경우
+    if (translations.containsKey(name)) {
+      return translations[name]!;
+    }
+
+    // 부분 일치 검색
+    for (final entry in translations.entries) {
+      if (name.toLowerCase().contains(entry.key.toLowerCase())) {
+        return entry.value;
+      }
+    }
+
+    return name;
   }
 
   Widget _buildLiveOddBox({
@@ -5698,5 +5903,440 @@ class _CommentItem extends StatelessWidget {
     } else {
       return DateFormat('MM/dd').format(dateTime);
     }
+  }
+}
+
+/// 전체 배팅 모달 컨텐츠 (탭 지원)
+class _AllBetsModalContent extends StatefulWidget {
+  final List<ApiFootballLiveOddsBet> allBets;
+  final Map<String, List<ApiFootballLiveOddsBet>> groupedBets;
+  final Map<String, dynamic> Function(String) getCategoryInfo;
+  final String Function(String) getBetKoreanName;
+
+  const _AllBetsModalContent({
+    required this.allBets,
+    required this.groupedBets,
+    required this.getCategoryInfo,
+    required this.getBetKoreanName,
+  });
+
+  @override
+  State<_AllBetsModalContent> createState() => _AllBetsModalContentState();
+}
+
+class _AllBetsModalContentState extends State<_AllBetsModalContent> {
+  static const _primary = Color(0xFF2563EB);
+  static const _textPrimary = Color(0xFF111827);
+  static const _textSecondary = Color(0xFF6B7280);
+
+  int _selectedIndex = 0;
+  late List<String> _categories;
+
+  @override
+  void initState() {
+    super.initState();
+    _categories = ['전체', ...widget.groupedBets.keys];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.75,
+      minChildSize: 0.4,
+      maxChildSize: 0.95,
+      builder: (context, scrollController) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          children: [
+            // 핸들바
+            Container(
+              margin: const EdgeInsets.only(top: 12, bottom: 4),
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            // 헤더
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+              child: Row(
+                children: [
+                  // LIVE 뱃지 with 애니메이션 효과
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFEF4444), Color(0xFFDC2626)],
+                      ),
+                      borderRadius: BorderRadius.circular(6),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFEF4444).withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        const Text(
+                          'LIVE',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 11,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    '실시간 배당률',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: _textPrimary,
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: _primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '${widget.allBets.length}개',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: _primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // 카테고리 필터 칩
+            SizedBox(
+              height: 40,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: _categories.length,
+                itemBuilder: (context, index) {
+                  final cat = _categories[index];
+                  final isSelected = _selectedIndex == index;
+                  final info = cat == '전체'
+                      ? {'icon': Icons.grid_view_rounded, 'color': _primary}
+                      : widget.getCategoryInfo(cat);
+                  final count = cat == '전체'
+                      ? widget.allBets.length
+                      : widget.groupedBets[cat]?.length ?? 0;
+                  final color = info['color'] as Color;
+
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: GestureDetector(
+                      onTap: () => setState(() => _selectedIndex = index),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        decoration: BoxDecoration(
+                          color: isSelected ? color : Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: isSelected ? color : Colors.grey.shade200,
+                            width: 1.5,
+                          ),
+                          boxShadow: isSelected
+                              ? [
+                                  BoxShadow(
+                                    color: color.withValues(alpha: 0.25),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ]
+                              : null,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              info['icon'] as IconData,
+                              size: 15,
+                              color: isSelected ? Colors.white : color,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              cat,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: isSelected ? Colors.white : _textPrimary,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? Colors.white.withValues(alpha: 0.25)
+                                    : color.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                '$count',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: isSelected ? Colors.white : color,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 12),
+            // 배팅 목록
+            Expanded(
+              child: Container(
+                color: Colors.grey.shade50,
+                child: _buildBetsList(scrollController),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBetsList(ScrollController scrollController) {
+    final cat = _categories[_selectedIndex];
+    final bets = cat == '전체'
+        ? widget.allBets
+        : widget.groupedBets[cat] ?? [];
+
+    if (bets.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.sports_soccer, size: 40, color: _textSecondary),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              '해당 카테고리에 배팅이 없습니다',
+              style: TextStyle(color: _textSecondary, fontSize: 15, fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      controller: scrollController,
+      padding: const EdgeInsets.all(16),
+      itemCount: bets.length,
+      itemBuilder: (context, index) {
+        final bet = bets[index];
+        return _buildBetCard(bet, index);
+      },
+    );
+  }
+
+  Widget _buildBetCard(ApiFootballLiveOddsBet bet, int index) {
+    final koreanName = widget.getBetKoreanName(bet.name);
+    final cat = _categories[_selectedIndex];
+    final info = cat == '전체'
+        ? {'color': _primary}
+        : widget.getCategoryInfo(cat);
+    final accentColor = info['color'] as Color;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 배팅 헤더
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+            decoration: BoxDecoration(
+              color: accentColor.withValues(alpha: 0.05),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '${index + 1}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: accentColor,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        koreanName,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: _textPrimary,
+                        ),
+                      ),
+                      if (koreanName != bet.name)
+                        Text(
+                          bet.name,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: _textSecondary,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${bet.values.length}개',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: accentColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // 배당값들
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: bet.values.map((value) => _buildOddChip(value, accentColor)).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOddChip(ApiFootballLiveOddsValue value, Color accentColor) {
+    final isSuspended = value.suspended;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: isSuspended ? Colors.grey.shade100 : Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: isSuspended ? Colors.grey.shade300 : Colors.grey.shade200,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            value.handicap != null && value.handicap!.isNotEmpty
+                ? '${value.value} (${value.handicap})'
+                : value.value,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: isSuspended ? Colors.grey : _textPrimary,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              gradient: isSuspended
+                  ? null
+                  : LinearGradient(
+                      colors: [accentColor, accentColor.withValues(alpha: 0.85)],
+                    ),
+              color: isSuspended ? Colors.grey.shade300 : null,
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: isSuspended
+                  ? null
+                  : [
+                      BoxShadow(
+                        color: accentColor.withValues(alpha: 0.3),
+                        blurRadius: 4,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+            ),
+            child: Text(
+              isSuspended ? '-' : value.odd,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: isSuspended ? Colors.grey.shade500 : Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
