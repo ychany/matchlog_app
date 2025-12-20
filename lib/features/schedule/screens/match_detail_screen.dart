@@ -391,6 +391,12 @@ class _MatchDetailContentState extends ConsumerState<_MatchDetailContent>
     final dateTime = match.dateKST;
     final dateStr = DateFormat('yyyy.MM.dd (E) HH:mm', 'ko').format(dateTime);
 
+    // 골 이벤트 가져오기
+    final eventsAsync = ref.watch(matchTimelineProvider(match.id.toString()));
+    final goalEvents = eventsAsync.valueOrNull?.where((e) => e.type == 'Goal').toList() ?? [];
+    final homeGoals = goalEvents.where((e) => e.teamId == match.homeTeam.id).toList();
+    final awayGoals = goalEvents.where((e) => e.teamId == match.awayTeam.id).toList();
+
     return Container(
       color: Colors.white,
       child: Column(
@@ -620,27 +626,88 @@ class _MatchDetailContentState extends ConsumerState<_MatchDetailContent>
             ),
           ),
 
-          // 경기장
-          if (match.venue != null)
+          // 골 득점자 표시 (경기 중이거나 종료된 경우)
+          if ((match.isLive || match.isFinished) && goalEvents.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.only(top: 12, bottom: 16),
+              padding: const EdgeInsets.only(top: 12, left: 20, right: 20),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.stadium_outlined, size: 14, color: _textSecondary),
-                  const SizedBox(width: 4),
-                  Text(
-                    match.venue!.name ?? '',
-                    style: TextStyle(
-                      color: _textSecondary,
-                      fontSize: 12,
+                  // 홈팀 골
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: homeGoals.map((goal) => _buildGoalScorerRow(goal, isHome: true)).toList(),
+                    ),
+                  ),
+                  const SizedBox(width: 60), // 스코어 영역 공간
+                  // 원정팀 골
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: awayGoals.map((goal) => _buildGoalScorerRow(goal, isHome: false)).toList(),
                     ),
                   ),
                 ],
               ),
-            )
-          else
-            const SizedBox(height: 16),
+            ),
+
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGoalScorerRow(ApiFootballEvent goal, {required bool isHome}) {
+    final timeStr = goal.extra != null
+        ? "${goal.elapsed}+${goal.extra}'"
+        : "${goal.elapsed}'";
+    final isPenalty = goal.detail == 'Penalty';
+    final isOwnGoal = goal.detail == 'Own Goal';
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: isHome ? MainAxisAlignment.start : MainAxisAlignment.end,
+        children: [
+          if (!isHome) ...[
+            Text(
+              timeStr,
+              style: TextStyle(
+                fontSize: 11,
+                color: _textSecondary,
+              ),
+            ),
+            const SizedBox(width: 4),
+          ],
+          Icon(
+            Icons.sports_soccer,
+            size: 12,
+            color: isOwnGoal ? Colors.red : _textSecondary,
+          ),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              '${goal.playerName ?? ''}${isPenalty ? ' (P)' : ''}${isOwnGoal ? ' (자책)' : ''}',
+              style: TextStyle(
+                fontSize: 12,
+                color: _textPrimary,
+                fontWeight: FontWeight.w500,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          if (isHome) ...[
+            const SizedBox(width: 4),
+            Text(
+              timeStr,
+              style: TextStyle(
+                fontSize: 11,
+                color: _textSecondary,
+              ),
+            ),
+          ],
         ],
       ),
     );
