@@ -219,7 +219,7 @@ class StandingsScreen extends ConsumerWidget {
                               ? _buildTopScorersContent(ref, topScorersAsync, standingsKey)
                               : selectedTab == 2
                                   ? _buildTopAssistsContent(ref, topAssistsAsync, standingsKey)
-                                  : _buildLeagueStatsContent(standingsAsync),
+                                  : _buildLeagueStatsContent(ref, standingsAsync, standingsKey),
                     ),
                   ],
                 ),
@@ -381,8 +381,13 @@ class StandingsScreen extends ConsumerWidget {
   }
 
   Widget _buildLeagueStatsContent(
+    WidgetRef ref,
     AsyncValue<List<ApiFootballStanding>> standingsAsync,
+    StandingsKey standingsKey,
   ) {
+    final topYellowAsync = ref.watch(topYellowCardsProvider(standingsKey));
+    final topRedAsync = ref.watch(topRedCardsProvider(standingsKey));
+
     return standingsAsync.when(
       data: (standings) {
         if (standings.isEmpty) {
@@ -407,6 +412,11 @@ class StandingsScreen extends ConsumerWidget {
               _TopTeamsCard(standings: standings),
               const SizedBox(height: 12),
               _GoalStatsCard(standings: standings),
+              const SizedBox(height: 12),
+              _TopCardsCard(
+                topYellowAsync: topYellowAsync,
+                topRedAsync: topRedAsync,
+              ),
               const SizedBox(height: 32),
             ],
           ),
@@ -1649,6 +1659,268 @@ class _GoalStatsCard extends StatelessWidget {
           }),
         ],
       ),
+    );
+  }
+}
+
+// 최다 경고/퇴장 카드
+class _TopCardsCard extends StatelessWidget {
+  final AsyncValue<List<ApiFootballTopScorer>> topYellowAsync;
+  final AsyncValue<List<ApiFootballTopScorer>> topRedAsync;
+
+  static const _warning = Color(0xFFF59E0B);
+  static const _error = Color(0xFFEF4444);
+  static const _textPrimary = Color(0xFF111827);
+  static const _textSecondary = Color(0xFF6B7280);
+  static const _border = Color(0xFFE5E7EB);
+
+  const _TopCardsCard({
+    required this.topYellowAsync,
+    required this.topRedAsync,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: _warning.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(Icons.style, color: _warning, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                '카드 순위',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: _textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // 최다 경고
+          _buildCardSection(
+            context: context,
+            title: '최다 경고',
+            icon: Icons.square,
+            color: _warning,
+            asyncData: topYellowAsync,
+            isYellow: true,
+          ),
+          const SizedBox(height: 16),
+          // 최다 퇴장
+          _buildCardSection(
+            context: context,
+            title: '최다 퇴장',
+            icon: Icons.square,
+            color: _error,
+            asyncData: topRedAsync,
+            isYellow: false,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCardSection({
+    required BuildContext context,
+    required String title,
+    required IconData icon,
+    required Color color,
+    required AsyncValue<List<ApiFootballTopScorer>> asyncData,
+    required bool isYellow,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, color: color, size: 16),
+            const SizedBox(width: 6),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: _textPrimary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        asyncData.when(
+          data: (players) {
+            if (players.isEmpty) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  '데이터가 없습니다',
+                  style: TextStyle(fontSize: 12, color: _textSecondary),
+                ),
+              );
+            }
+            final top5 = players.take(5).toList();
+            return Column(
+              children: top5.asMap().entries.map((entry) {
+                final index = entry.key;
+                final player = entry.value;
+                final cardCount = isYellow
+                    ? (player.yellowCards ?? 0)
+                    : (player.redCards ?? 0);
+
+                return InkWell(
+                  onTap: () => context.push('/player/${player.playerId}'),
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 20,
+                          child: Text(
+                            '${index + 1}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: index == 0 ? color : _textSecondary,
+                            ),
+                          ),
+                        ),
+                        if (player.playerPhoto != null)
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: CachedNetworkImage(
+                              imageUrl: player.playerPhoto!,
+                              width: 24,
+                              height: 24,
+                              fit: BoxFit.cover,
+                              placeholder: (_, __) => Container(
+                                width: 24,
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade200,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              errorWidget: (_, __, ___) => Container(
+                                width: 24,
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade200,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(Icons.person, size: 14, color: Colors.grey),
+                              ),
+                            ),
+                          )
+                        else
+                          Container(
+                            width: 24,
+                            height: 24,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade200,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(Icons.person, size: 14, color: Colors.grey),
+                          ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                player.playerName,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Row(
+                                children: [
+                                  if (player.teamLogo != null) ...[
+                                    CachedNetworkImage(
+                                      imageUrl: player.teamLogo!,
+                                      width: 12,
+                                      height: 12,
+                                      errorWidget: (_, __, ___) =>
+                                          const Icon(Icons.shield, size: 12),
+                                    ),
+                                    const SizedBox(width: 4),
+                                  ],
+                                  Expanded(
+                                    child: Text(
+                                      player.teamName,
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: _textSecondary,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            '$cardCount',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: color,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            );
+          },
+          loading: () => const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          ),
+          error: (e, _) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Text(
+              '불러오기 실패',
+              style: TextStyle(fontSize: 12, color: _textSecondary),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

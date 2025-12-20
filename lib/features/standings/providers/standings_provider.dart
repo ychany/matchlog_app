@@ -142,3 +142,15 @@ final topAssistsProvider = FutureProvider.family<List<ApiFootballTopScorer>, Sta
   final service = ref.watch(_apiFootballServiceProvider);
   return service.getTopAssists(key.leagueId, key.season);
 });
+
+/// 최다 경고 선수 Provider
+final topYellowCardsProvider = FutureProvider.family<List<ApiFootballTopScorer>, StandingsKey>((ref, key) async {
+  final service = ref.watch(_apiFootballServiceProvider);
+  return service.getTopYellowCards(key.leagueId, key.season);
+});
+
+/// 최다 퇴장 선수 Provider
+final topRedCardsProvider = FutureProvider.family<List<ApiFootballTopScorer>, StandingsKey>((ref, key) async {
+  final service = ref.watch(_apiFootballServiceProvider);
+  return service.getTopRedCards(key.leagueId, key.season);
+});

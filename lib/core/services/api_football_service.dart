@@ -467,6 +467,26 @@ class ApiFootballService {
         .toList();
   }
 
+  /// 리그 최다 경고 선수
+  Future<List<ApiFootballTopScorer>> getTopYellowCards(int leagueId, int season) async {
+    final data = await _get('players/topyellowcards?league=$leagueId&season=$season');
+    if (data == null || data['response'] == null) return [];
+
+    return (data['response'] as List)
+        .map((json) => ApiFootballTopScorer.fromJson(json))
+        .toList();
+  }
+
+  /// 리그 최다 퇴장 선수
+  Future<List<ApiFootballTopScorer>> getTopRedCards(int leagueId, int season) async {
+    final data = await _get('players/topredcards?league=$leagueId&season=$season');
+    if (data == null || data['response'] == null) return [];
+
+    return (data['response'] as List)
+        .map((json) => ApiFootballTopScorer.fromJson(json))
+        .toList();
+  }
+
   // ============ 감독 ============
 
   /// 팀 감독 조회
@@ -2518,7 +2538,7 @@ class ApiFootballStanding {
   }
 }
 
-/// 득점왕/어시스트왕 모델
+/// 득점왕/어시스트왕/카드 순위 모델
 class ApiFootballTopScorer {
   final int rank;
   final int playerId;
@@ -2533,6 +2553,8 @@ class ApiFootballTopScorer {
   final int? minutes;
   final int? penalties;
   final String? nationality;
+  final int? yellowCards;
+  final int? redCards;
 
   ApiFootballTopScorer({
     required this.rank,
@@ -2548,6 +2570,8 @@ class ApiFootballTopScorer {
     this.minutes,
     this.penalties,
     this.nationality,
+    this.yellowCards,
+    this.redCards,
   });
 
   factory ApiFootballTopScorer.fromJson(Map<String, dynamic> json) {
@@ -2559,6 +2583,7 @@ class ApiFootballTopScorer {
     final goals = statistics['goals'] ?? {};
     final games = statistics['games'] ?? {};
     final penalty = statistics['penalty'] ?? {};
+    final cards = statistics['cards'] ?? {};
 
     return ApiFootballTopScorer(
       rank: 0, // API에서 순위 제공 안 함, 리스트 인덱스로 설정
@@ -2574,6 +2599,8 @@ class ApiFootballTopScorer {
       minutes: games['minutes'],
       penalties: penalty['scored'],
       nationality: player['nationality'],
+      yellowCards: cards['yellow'],
+      redCards: cards['red'],
     );
   }
 }
