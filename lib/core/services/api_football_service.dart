@@ -2441,6 +2441,17 @@ class ApiFootballStanding {
   final int lose;
   final int goalsFor;
   final int goalsAgainst;
+  // 홈/어웨이 세부 통계
+  final int? homeWin;
+  final int? homeDraw;
+  final int? homeLose;
+  final int? homeGoalsFor;
+  final int? homeGoalsAgainst;
+  final int? awayWin;
+  final int? awayDraw;
+  final int? awayLose;
+  final int? awayGoalsFor;
+  final int? awayGoalsAgainst;
 
   ApiFootballStanding({
     required this.rank,
@@ -2457,12 +2468,26 @@ class ApiFootballStanding {
     required this.lose,
     required this.goalsFor,
     required this.goalsAgainst,
+    this.homeWin,
+    this.homeDraw,
+    this.homeLose,
+    this.homeGoalsFor,
+    this.homeGoalsAgainst,
+    this.awayWin,
+    this.awayDraw,
+    this.awayLose,
+    this.awayGoalsFor,
+    this.awayGoalsAgainst,
   });
 
   factory ApiFootballStanding.fromJson(Map<String, dynamic> json) {
     final team = json['team'] ?? {};
     final all = json['all'] ?? {};
     final goals = all['goals'] ?? {};
+    final home = json['home'] ?? {};
+    final homeGoals = home['goals'] ?? {};
+    final away = json['away'] ?? {};
+    final awayGoals = away['goals'] ?? {};
 
     return ApiFootballStanding(
       rank: json['rank'] ?? 0,
@@ -2479,6 +2504,16 @@ class ApiFootballStanding {
       lose: all['lose'] ?? 0,
       goalsFor: goals['for'] ?? 0,
       goalsAgainst: goals['against'] ?? 0,
+      homeWin: home['win'],
+      homeDraw: home['draw'],
+      homeLose: home['lose'],
+      homeGoalsFor: homeGoals['for'],
+      homeGoalsAgainst: homeGoals['against'],
+      awayWin: away['win'],
+      awayDraw: away['draw'],
+      awayLose: away['lose'],
+      awayGoalsFor: awayGoals['for'],
+      awayGoalsAgainst: awayGoals['against'],
     );
   }
 }
