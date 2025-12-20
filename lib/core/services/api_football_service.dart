@@ -402,6 +402,25 @@ class ApiFootballService {
     return bookmakers.map((b) => ApiFootballOdds.fromJson(b)).toList();
   }
 
+  /// 실시간 배당률 조회 (라이브 경기)
+  Future<ApiFootballLiveOdds?> getLiveOdds(int fixtureId) async {
+    final data = await _get('odds/live?fixture=$fixtureId');
+    if (data == null || data['response'] == null || (data['response'] as List).isEmpty) {
+      return null;
+    }
+    return ApiFootballLiveOdds.fromJson((data['response'] as List).first);
+  }
+
+  /// 배팅 종류 목록 조회
+  Future<List<ApiFootballBetType>> getBetTypes() async {
+    final data = await _get('odds/bets');
+    if (data == null || data['response'] == null) return [];
+
+    return (data['response'] as List)
+        .map((json) => ApiFootballBetType.fromJson(json))
+        .toList();
+  }
+
   // ============ 순위 ============
 
   /// 팀 시즌 통계 조회
@@ -2701,5 +2720,225 @@ class ApiFootballCountry {
       code: json['code'],
       flag: json['flag'],
     );
+  }
+}
+
+/// 실시간 배당률 모델
+class ApiFootballLiveOdds {
+  final int fixtureId;
+  final DateTime updateAt;
+  final List<ApiFootballLiveOddsBookmaker> bookmakers;
+  // 실시간 배당은 bookmaker 없이 직접 odds 배열로 올 수 있음
+  final List<ApiFootballLiveOddsBet> directOdds;
+
+  ApiFootballLiveOdds({
+    required this.fixtureId,
+    required this.updateAt,
+    required this.bookmakers,
+    this.directOdds = const [],
+  });
+
+  factory ApiFootballLiveOdds.fromJson(Map<String, dynamic> json) {
+    final fixture = json['fixture'] ?? {};
+    final oddsRaw = json['odds'];
+    final List<dynamic> oddsData = oddsRaw is List ? oddsRaw : [];
+
+    // /odds/live API는 bookmaker 없이 직접 odds 배열로 옴
+    // 첫 번째 요소에 'bets' 키가 있으면 bookmaker 구조, 없으면 직접 bet 구조
+    final hasBetsKey = oddsData.isNotEmpty &&
+        oddsData.first is Map &&
+        (oddsData.first as Map).containsKey('bets');
+
+    List<ApiFootballLiveOddsBookmaker> bookmakers = [];
+    List<ApiFootballLiveOddsBet> directOdds = [];
+
+    if (hasBetsKey) {
+      bookmakers = oddsData
+          .whereType<Map<String, dynamic>>()
+          .map((b) => ApiFootballLiveOddsBookmaker.fromJson(b))
+          .toList();
+    } else {
+      directOdds = oddsData
+          .whereType<Map<String, dynamic>>()
+          .map((b) => ApiFootballLiveOddsBet.fromJson(b))
+          .toList();
+    }
+
+    return ApiFootballLiveOdds(
+      fixtureId: fixture['id'] ?? 0,
+      updateAt: DateTime.tryParse(json['update'] ?? '') ?? DateTime.now(),
+      bookmakers: bookmakers,
+      directOdds: directOdds,
+    );
+  }
+
+  /// 승무패 배당 찾기 (bookmaker 구조 또는 직접 구조 모두 지원)
+  ApiFootballLiveOddsBet? findMatchWinnerBet() {
+    // 직접 odds 배열에서 찾기
+    for (final bet in directOdds) {
+      final nameLower = bet.name.toLowerCase();
+      if (nameLower.contains('winner') ||
+          nameLower == '1x2' ||
+          nameLower == 'match winner' ||
+          nameLower == 'fulltime result' ||
+          nameLower == 'full time result') {
+        return bet;
+      }
+    }
+
+    // bookmaker 구조에서 찾기
+    for (final bookmaker in bookmakers) {
+      for (final bet in bookmaker.bets) {
+        final nameLower = bet.name.toLowerCase();
+        if (nameLower.contains('winner') ||
+            nameLower == '1x2' ||
+            nameLower == 'match winner' ||
+            nameLower == 'fulltime result' ||
+            nameLower == 'full time result') {
+          return bet;
+        }
+      }
+    }
+    return null;
+  }
+}
+
+/// 실시간 배당률 북메이커
+class ApiFootballLiveOddsBookmaker {
+  final int id;
+  final String name;
+  final List<ApiFootballLiveOddsBet> bets;
+
+  ApiFootballLiveOddsBookmaker({
+    required this.id,
+    required this.name,
+    required this.bets,
+  });
+
+  factory ApiFootballLiveOddsBookmaker.fromJson(Map<String, dynamic> json) {
+    return ApiFootballLiveOddsBookmaker(
+      id: json['id'] ?? 0,
+      name: json['name'] ?? '',
+      bets: (json['bets'] as List? ?? [])
+          .map((b) => ApiFootballLiveOddsBet.fromJson(b))
+          .toList(),
+    );
+  }
+}
+
+/// 실시간 배팅 정보
+class ApiFootballLiveOddsBet {
+  final int id;
+  final String name;
+  final List<ApiFootballLiveOddsValue> values;
+
+  ApiFootballLiveOddsBet({
+    required this.id,
+    required this.name,
+    required this.values,
+  });
+
+  factory ApiFootballLiveOddsBet.fromJson(Map<String, dynamic> json) {
+    return ApiFootballLiveOddsBet(
+      id: json['id'] ?? 0,
+      name: json['name'] ?? '',
+      values: (json['values'] as List? ?? [])
+          .map((v) => ApiFootballLiveOddsValue.fromJson(v))
+          .toList(),
+    );
+  }
+}
+
+/// 실시간 배당률 값
+class ApiFootballLiveOddsValue {
+  final String value; // "Home", "Draw", "Away" 등
+  final String odd;
+  final String? handicap;
+  final bool? main;
+  final bool suspended;
+
+  ApiFootballLiveOddsValue({
+    required this.value,
+    required this.odd,
+    this.handicap,
+    this.main,
+    this.suspended = false,
+  });
+
+  factory ApiFootballLiveOddsValue.fromJson(Map<String, dynamic> json) {
+    return ApiFootballLiveOddsValue(
+      value: json['value']?.toString() ?? '',
+      odd: json['odd']?.toString() ?? '',
+      handicap: json['handicap']?.toString(),
+      main: json['main'],
+      suspended: json['suspended'] ?? false,
+    );
+  }
+
+  /// 배당률 숫자 변환
+  double? get oddValue => double.tryParse(odd);
+}
+
+/// 배팅 종류 모델
+class ApiFootballBetType {
+  final int id;
+  final String name;
+
+  ApiFootballBetType({
+    required this.id,
+    required this.name,
+  });
+
+  factory ApiFootballBetType.fromJson(Map<String, dynamic> json) {
+    return ApiFootballBetType(
+      id: json['id'] ?? 0,
+      name: json['name'] ?? '',
+    );
+  }
+
+  /// 한국어 배팅 종류명
+  String get koreanName {
+    switch (name.toLowerCase()) {
+      case 'match winner':
+        return '승무패';
+      case 'home/away':
+        return '홈/원정';
+      case 'asian handicap':
+        return '핸디캡';
+      case 'goals over/under':
+        return '오버/언더';
+      case 'goals over/under first half':
+        return '전반 오버/언더';
+      case 'goals over/under second half':
+        return '후반 오버/언더';
+      case 'ht/ft double':
+        return '전반/풀타임';
+      case 'both teams score':
+        return '양팀 득점';
+      case 'exact score':
+        return '정확한 스코어';
+      case 'double chance':
+        return '더블찬스';
+      case 'first half winner':
+        return '전반 승패';
+      case 'second half winner':
+        return '후반 승패';
+      case 'odd/even':
+        return '홀/짝';
+      case 'total - home':
+        return '홈팀 골';
+      case 'total - away':
+        return '원정팀 골';
+      case 'draw no bet':
+        return '무승부 제외';
+      case 'results/both teams score':
+        return '결과+양팀득점';
+      case 'correct score - first half':
+        return '전반 정확한 스코어';
+      case 'winning margin':
+        return '골 차이';
+      default:
+        return name;
+    }
   }
 }

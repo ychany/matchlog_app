@@ -80,6 +80,15 @@ final matchOddsProvider =
   return service.getFixtureOdds(id);
 });
 
+// Provider for live odds (API-Football)
+final liveOddsProvider =
+    FutureProvider.family<ApiFootballLiveOdds?, String>((ref, fixtureId) async {
+  final service = ApiFootballService();
+  final id = int.tryParse(fixtureId);
+  if (id == null) return null;
+  return service.getLiveOdds(id);
+});
+
 // Provider for player statistics (API-Football)
 final matchPlayerStatsProvider =
     FutureProvider.family<List<FixturePlayerStats>, String>((ref, fixtureId) async {
@@ -702,10 +711,73 @@ class _PredictionTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final predictionAsync = ref.watch(matchPredictionProvider(fixtureId));
     final oddsAsync = ref.watch(matchOddsProvider(fixtureId));
+    final isLive = match.status.short == '1H' ||
+                   match.status.short == '2H' ||
+                   match.status.short == 'HT' ||
+                   match.status.short == 'ET' ||
+                   match.status.short == 'P' ||
+                   match.status.short == 'BT' ||
+                   match.status.short == 'LIVE';
+    final isFinished = match.status.short == 'FT' ||
+                       match.status.short == 'AET' ||
+                       match.status.short == 'PEN';
+    final liveOddsAsync = isLive ? ref.watch(liveOddsProvider(fixtureId)) : null;
 
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        // 라이브 경기일 때 실시간 배당률 섹션 (초기 배당값 포함)
+        if (isLive && liveOddsAsync != null) ...[
+          liveOddsAsync.when(
+            data: (liveOdds) {
+              // bookmakers 또는 directOdds가 있으면 실시간 배당률 사용
+              final hasLiveOdds = liveOdds != null &&
+                  (liveOdds.bookmakers.isNotEmpty || liveOdds.directOdds.isNotEmpty);
+
+              if (!hasLiveOdds) {
+                // 실시간 배당이 없으면 일반 배당률을 LIVE 뱃지와 함께 표시
+                return oddsAsync.when(
+                  data: (oddsList) {
+                    if (oddsList.isEmpty) return const SizedBox.shrink();
+                    return _buildQuickOddsCard(oddsList, isLive: true);
+                  },
+                  loading: () => const SizedBox.shrink(),
+                  error: (e, _) => const SizedBox.shrink(),
+                );
+              }
+              // 초기 배당값도 함께 전달
+              return oddsAsync.when(
+                data: (oddsList) => _buildLiveOddsCard(liveOdds, initialOdds: oddsList),
+                loading: () => _buildLiveOddsCard(liveOdds),
+                error: (_, __) => _buildLiveOddsCard(liveOdds),
+              );
+            },
+            loading: () => _buildLoadingCard(),
+            error: (e, _) => oddsAsync.when(
+              data: (oddsList) {
+                if (oddsList.isEmpty) return const SizedBox.shrink();
+                return _buildQuickOddsCard(oddsList, isLive: true);
+              },
+              loading: () => const SizedBox.shrink(),
+              error: (e, _) => const SizedBox.shrink(),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+
+        // 경기 전/종료 후: 배당률 요약 카드
+        if (!isLive) ...[
+          oddsAsync.when(
+            data: (oddsList) {
+              if (oddsList.isEmpty) return const SizedBox.shrink();
+              return _buildQuickOddsCard(oddsList, isFinished: isFinished);
+            },
+            loading: () => const SizedBox.shrink(),
+            error: (e, _) => const SizedBox.shrink(),
+          ),
+          const SizedBox(height: 16),
+        ],
+
         // 승부 예측 섹션
         predictionAsync.when(
           data: (prediction) {
@@ -723,27 +795,408 @@ class _PredictionTab extends ConsumerWidget {
             message: '예측 정보를 불러올 수 없습니다',
           ),
         ),
-
-        const SizedBox(height: 16),
-
-        // 배당률 섹션
-        oddsAsync.when(
-          data: (oddsList) {
-            if (oddsList.isEmpty) {
-              return _buildEmptyCard(
-                icon: Icons.money_outlined,
-                message: '배당률 정보가 없습니다',
-              );
-            }
-            return _buildOddsCard(oddsList);
-          },
-          loading: () => _buildLoadingCard(),
-          error: (e, _) => _buildEmptyCard(
-            icon: Icons.error_outline,
-            message: '배당률 정보를 불러올 수 없습니다',
-          ),
-        ),
       ],
+    );
+  }
+
+  /// 경기 전/종료 후 배당률 요약 카드
+  Widget _buildQuickOddsCard(List<ApiFootballOdds> oddsList, {bool isFinished = false, bool isLive = false}) {
+    // 첫 번째 북메이커에서 1X2 배당 찾기
+    String? homeOdd, drawOdd, awayOdd;
+    String? bookmakerName;
+
+    for (final bookmaker in oddsList) {
+      for (final bet in bookmaker.bets) {
+        if (bet.name.toLowerCase() == 'match winner' ||
+            bet.name.toLowerCase() == '1x2' ||
+            bet.name.toLowerCase().contains('winner')) {
+          bookmakerName = bookmaker.bookmakerName;
+          for (final value in bet.values) {
+            if (value.value.toLowerCase() == 'home') {
+              homeOdd = value.odd;
+            } else if (value.value.toLowerCase() == 'draw') {
+              drawOdd = value.odd;
+            } else if (value.value.toLowerCase() == 'away') {
+              awayOdd = value.odd;
+            }
+          }
+          break;
+        }
+      }
+      if (homeOdd != null) break;
+    }
+
+    if (homeOdd == null && drawOdd == null && awayOdd == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 헤더
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: isLive ? _error.withValues(alpha: 0.1) : _primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.monetization_on_outlined,
+                  color: isLive ? _error : _primary,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                isLive ? '배당률' : (isFinished ? '경기 전 배당률' : '배당률'),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: _textPrimary,
+                ),
+              ),
+              if (isLive) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: _error,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: const Text(
+                    'LIVE',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+              const Spacer(),
+              if (bookmakerName != null)
+                Text(
+                  bookmakerName,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: _textSecondary,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // 배당률 표시
+          Row(
+            children: [
+              // 홈팀 배당
+              Expanded(
+                child: _buildQuickOddBox(
+                  label: match.homeTeam.name,
+                  odd: homeOdd ?? '-',
+                  color: _primary,
+                ),
+              ),
+              const SizedBox(width: 8),
+              // 무승부 배당
+              Expanded(
+                child: _buildQuickOddBox(
+                  label: '무승부',
+                  odd: drawOdd ?? '-',
+                  color: _textSecondary,
+                ),
+              ),
+              const SizedBox(width: 8),
+              // 원정팀 배당
+              Expanded(
+                child: _buildQuickOddBox(
+                  label: match.awayTeam.name,
+                  odd: awayOdd ?? '-',
+                  color: _success,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickOddBox({
+    required String label,
+    required String odd,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: _textSecondary,
+              fontWeight: FontWeight.w500,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            odd,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLiveOddsCard(ApiFootballLiveOdds liveOdds, {List<ApiFootballOdds>? initialOdds}) {
+    // 승무패 배당 찾기
+    final matchWinnerBet = liveOdds.findMatchWinnerBet();
+
+    if (matchWinnerBet == null) {
+      return const SizedBox.shrink();
+    }
+
+    String? homeOdd, drawOdd, awayOdd;
+    for (final value in matchWinnerBet.values) {
+      if (value.value.toLowerCase() == 'home' || value.value == '1') {
+        homeOdd = value.odd;
+      } else if (value.value.toLowerCase() == 'draw' || value.value == 'x' || value.value == 'X') {
+        drawOdd = value.odd;
+      } else if (value.value.toLowerCase() == 'away' || value.value == '2') {
+        awayOdd = value.odd;
+      }
+    }
+
+    // 초기 배당값 추출
+    String? initHomeOdd, initDrawOdd, initAwayOdd;
+    if (initialOdds != null && initialOdds.isNotEmpty) {
+      for (final bookmaker in initialOdds) {
+        for (final bet in bookmaker.bets) {
+          if (bet.name.toLowerCase() == 'match winner' ||
+              bet.name.toLowerCase() == '1x2' ||
+              bet.name.toLowerCase().contains('winner')) {
+            for (final value in bet.values) {
+              if (value.value.toLowerCase() == 'home') {
+                initHomeOdd = value.odd;
+              } else if (value.value.toLowerCase() == 'draw') {
+                initDrawOdd = value.odd;
+              } else if (value.value.toLowerCase() == 'away') {
+                initAwayOdd = value.odd;
+              }
+            }
+            break;
+          }
+        }
+        if (initHomeOdd != null) break;
+      }
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _error.withValues(alpha: 0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: _error.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 헤더 - 라이브 배지
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: _error,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Text(
+                      'LIVE',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                '실시간 배당률',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: _textPrimary,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                DateFormat('HH:mm:ss').format(liveOdds.updateAt.toLocal()),
+                style: TextStyle(
+                  fontSize: 11,
+                  color: _textSecondary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // 배당률 표시
+          Row(
+            children: [
+              // 홈팀 배당
+              Expanded(
+                child: _buildLiveOddBox(
+                  label: match.homeTeam.name,
+                  odd: homeOdd ?? '-',
+                  initialOdd: initHomeOdd,
+                  color: _primary,
+                ),
+              ),
+              const SizedBox(width: 8),
+              // 무승부 배당
+              Expanded(
+                child: _buildLiveOddBox(
+                  label: '무승부',
+                  odd: drawOdd ?? '-',
+                  initialOdd: initDrawOdd,
+                  color: _textSecondary,
+                ),
+              ),
+              const SizedBox(width: 8),
+              // 원정팀 배당
+              Expanded(
+                child: _buildLiveOddBox(
+                  label: match.awayTeam.name,
+                  odd: awayOdd ?? '-',
+                  initialOdd: initAwayOdd,
+                  color: _success,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLiveOddBox({
+    required String label,
+    required String odd,
+    String? initialOdd,
+    required Color color,
+  }) {
+    // 배당 변화 계산
+    double? currentOddValue = double.tryParse(odd);
+    double? initialOddValue = initialOdd != null ? double.tryParse(initialOdd) : null;
+    int? direction; // 1: 상승, -1: 하락, 0: 동일
+    if (currentOddValue != null && initialOddValue != null) {
+      if (currentOddValue > initialOddValue) {
+        direction = 1;
+      } else if (currentOddValue < initialOddValue) {
+        direction = -1;
+      } else {
+        direction = 0;
+      }
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: _textSecondary,
+              fontWeight: FontWeight.w500,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 6),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                odd,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: color,
+                ),
+              ),
+              if (direction != null && direction != 0) ...[
+                const SizedBox(width: 4),
+                Icon(
+                  direction == 1 ? Icons.arrow_drop_up : Icons.arrow_drop_down,
+                  color: direction == 1 ? _success : _error,
+                  size: 20,
+                ),
+              ],
+            ],
+          ),
+          // 초기 배당값 표시
+          if (initialOdd != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              '초기 $initialOdd',
+              style: TextStyle(
+                fontSize: 10,
+                color: _textSecondary.withValues(alpha: 0.7),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 
@@ -1076,174 +1529,6 @@ class _PredictionTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildOddsCard(List<ApiFootballOdds> oddsList) {
-    // 첫 번째 북메이커의 1X2 배당만 표시
-    ApiFootballBet? matchWinner;
-    String? bookmakerName;
-
-    for (final odds in oddsList) {
-      if (odds.matchWinner != null) {
-        matchWinner = odds.matchWinner;
-        bookmakerName = odds.bookmakerName;
-        break;
-      }
-    }
-
-    if (matchWinner == null) {
-      return _buildEmptyCard(
-        icon: Icons.money_outlined,
-        message: '승무패 배당 정보가 없습니다',
-      );
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 헤더
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: _warning.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(Icons.monetization_on_outlined, color: _warning, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    '배당률',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: _textPrimary,
-                    ),
-                  ),
-                  if (bookmakerName != null)
-                    Text(
-                      bookmakerName,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: _textSecondary,
-                      ),
-                    ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          // 배당률 표시
-          Row(
-            children: [
-              // 홈팀 배당
-              Expanded(
-                child: _buildOddBox(
-                  label: match.homeTeam.name,
-                  odd: matchWinner.homeOdd ?? '-',
-                  color: _primary,
-                ),
-              ),
-              const SizedBox(width: 12),
-
-              // 무승부 배당
-              Expanded(
-                child: _buildOddBox(
-                  label: '무승부',
-                  odd: matchWinner.drawOdd ?? '-',
-                  color: _warning,
-                ),
-              ),
-              const SizedBox(width: 12),
-
-              // 원정팀 배당
-              Expanded(
-                child: _buildOddBox(
-                  label: match.awayTeam.name,
-                  odd: matchWinner.awayOdd ?? '-',
-                  color: _error,
-                ),
-              ),
-            ],
-          ),
-
-          // 안내 문구
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.info_outline, size: 16, color: _textSecondary),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    '배당률은 참고용이며, 실제 베팅은 공식 사이트를 이용해 주세요.',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: _textSecondary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOddBox({
-    required String label,
-    required String odd,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: _textPrimary,
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            odd,
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-              color: color,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 // ============ Lineup Tab ============
