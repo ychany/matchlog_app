@@ -2008,13 +2008,15 @@ class _ScheduleTab extends ConsumerWidget {
         final now = DateTime.now();
         final todayStart = DateTime(now.year, now.month, now.day);
 
-        // 지난 경기, 예정된 경기 분리
+        // 지난 경기, 예정된 경기 분리 (종료된 경기는 지난 경기로)
         final pastFixtures = sortedFixtures.where((f) {
-          return f.date.isBefore(todayStart);
+          // 경기 종료되었거나, 오늘 이전 날짜
+          return f.isFinished || f.date.isBefore(todayStart);
         }).toList();
 
         final upcomingFixtures = sortedFixtures.where((f) {
-          return !f.date.isBefore(todayStart);
+          // 종료되지 않았고, 오늘 이후 날짜
+          return !f.isFinished && !f.date.isBefore(todayStart);
         }).toList()
           ..sort((a, b) {
             // 예정된 경기는 가까운 순서로
@@ -2384,8 +2386,6 @@ class _PlayersTab extends ConsumerWidget {
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            // 부상/결장 선수 섹션 (상단에 표시)
-            _buildInjuriesSection(injuriesAsync),
             // 포지션별 선수 목록
             ...sortedKeys.map((position) {
               final positionPlayers = grouped[position]!;
@@ -2469,6 +2469,8 @@ class _PlayersTab extends ConsumerWidget {
                 ),
               );
             }),
+            // 부상/결장 선수 섹션 (맨 아래에 표시)
+            _buildInjuriesSection(injuriesAsync),
           ],
         );
       },

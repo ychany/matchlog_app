@@ -1058,7 +1058,7 @@ class _PredictionTab extends ConsumerWidget {
               ),
               const SizedBox(width: 12),
               Text(
-                isLive ? '배당률' : (isFinished ? '경기 전 배당률' : '배당률'),
+                '배당률',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
