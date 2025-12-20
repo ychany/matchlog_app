@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/services/api_football_service.dart';
 import '../../../core/constants/api_football_ids.dart';
+import '../../profile/providers/timezone_provider.dart';
 
 /// API-Football 서비스 Provider (재사용)
 final _apiFootballServiceProvider = Provider<ApiFootballService>((ref) {
@@ -21,6 +22,8 @@ final teamInfoProvider = FutureProvider.family<ApiFootballTeam?, String>((ref, t
 /// 팀의 다음 경기 목록 Provider
 final teamNextEventsProvider = FutureProvider.family<List<ApiFootballFixture>, String>((ref, teamId) async {
   final service = ref.watch(_apiFootballServiceProvider);
+  // 타임존 변경 시 자동 갱신
+  ref.watch(timezoneProvider);
 
   // API-Football ID로 변환 시도
   final apiTeamId = ApiFootballIds.convertTeamId(teamId) ?? int.tryParse(teamId);
@@ -32,6 +35,8 @@ final teamNextEventsProvider = FutureProvider.family<List<ApiFootballFixture>, S
 /// 팀의 지난 경기 목록 Provider
 final teamPastEventsProvider = FutureProvider.family<List<ApiFootballFixture>, String>((ref, teamId) async {
   final service = ref.watch(_apiFootballServiceProvider);
+  // 타임존 변경 시 자동 갱신
+  ref.watch(timezoneProvider);
 
   // API-Football ID로 변환 시도
   final apiTeamId = ApiFootballIds.convertTeamId(teamId) ?? int.tryParse(teamId);
@@ -54,6 +59,8 @@ final teamPlayersProvider = FutureProvider.family<List<ApiFootballSquadPlayer>, 
 /// 팀의 전체 시즌 일정 Provider
 final teamFullScheduleProvider = FutureProvider.family<List<ApiFootballFixture>, String>((ref, teamId) async {
   final service = ref.watch(_apiFootballServiceProvider);
+  // 타임존 변경 시 자동 갱신
+  ref.watch(timezoneProvider);
 
   // API-Football ID로 변환 시도
   final apiTeamId = ApiFootballIds.convertTeamId(teamId) ?? int.tryParse(teamId);
@@ -74,6 +81,8 @@ final teamSearchProvider = FutureProvider.family<List<ApiFootballTeam>, String>(
 /// 상대전적 Provider
 final headToHeadProvider = FutureProvider.family<List<ApiFootballFixture>, (int, int)>((ref, teams) async {
   final service = ref.watch(_apiFootballServiceProvider);
+  // 타임존 변경 시 자동 갱신
+  ref.watch(timezoneProvider);
   return service.getHeadToHead(teams.$1, teams.$2);
 });
 

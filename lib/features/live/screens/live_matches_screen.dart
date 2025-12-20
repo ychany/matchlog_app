@@ -6,10 +6,13 @@ import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/services/api_football_service.dart';
 import '../../../shared/widgets/loading_indicator.dart';
+import '../../profile/providers/timezone_provider.dart';
 
 /// 라이브 경기 Provider (30초마다 자동 갱신)
 final liveMatchesProvider = StreamProvider<List<ApiFootballFixture>>((ref) async* {
   final service = ApiFootballService();
+  // 타임존 변경 시 자동 갱신
+  ref.watch(timezoneProvider);
 
   // 초기 데이터 로드
   yield await service.getLiveFixtures();
@@ -23,6 +26,8 @@ final liveMatchesProvider = StreamProvider<List<ApiFootballFixture>>((ref) async
 /// 수동 새로고침용 FutureProvider
 final liveMatchesRefreshProvider = FutureProvider<List<ApiFootballFixture>>((ref) async {
   final service = ApiFootballService();
+  // 타임존 변경 시 자동 갱신
+  ref.watch(timezoneProvider);
   return service.getLiveFixtures();
 });
 

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// API-Football 서비스
 /// 문서: https://www.api-football.com/documentation-v3
@@ -13,6 +14,12 @@ class ApiFootballService {
   static final ApiFootballService _instance = ApiFootballService._internal();
   factory ApiFootballService() => _instance;
   ApiFootballService._internal();
+
+  // 저장된 타임존 가져오기
+  Future<String> getSelectedTimezone() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('selected_timezone') ?? 'Asia/Seoul';
+  }
 
   /// API 호출 헬퍼
   Future<Map<String, dynamic>?> _get(String endpoint) async {
@@ -256,10 +263,12 @@ class ApiFootballService {
 
   // ============ 경기 (Fixtures) ============
 
-  /// 날짜별 경기 조회
+  /// 날짜별 경기 조회 (설정된 타임존 기준)
   Future<List<ApiFootballFixture>> getFixturesByDate(DateTime date) async {
     final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-    final data = await _get('fixtures?date=$dateStr');
+    // 사용자가 설정한 타임존으로 날짜 필터링
+    final timezone = await getSelectedTimezone();
+    final data = await _get('fixtures?date=$dateStr&timezone=$timezone');
     if (data == null || data['response'] == null) return [];
 
     return (data['response'] as List)
@@ -269,7 +278,8 @@ class ApiFootballService {
 
   /// 리그/시즌별 경기 조회
   Future<List<ApiFootballFixture>> getFixturesByLeague(int leagueId, int season) async {
-    final data = await _get('fixtures?league=$leagueId&season=$season');
+    final timezone = await getSelectedTimezone();
+    final data = await _get('fixtures?league=$leagueId&season=$season&timezone=$timezone');
     if (data == null || data['response'] == null) return [];
 
     return (data['response'] as List)
@@ -279,7 +289,8 @@ class ApiFootballService {
 
   /// 팀의 다음 경기들
   Future<List<ApiFootballFixture>> getTeamNextFixtures(int teamId, {int count = 5}) async {
-    final data = await _get('fixtures?team=$teamId&next=$count');
+    final timezone = await getSelectedTimezone();
+    final data = await _get('fixtures?team=$teamId&next=$count&timezone=$timezone');
     if (data == null || data['response'] == null) return [];
 
     return (data['response'] as List)
@@ -289,7 +300,8 @@ class ApiFootballService {
 
   /// 팀의 지난 경기들
   Future<List<ApiFootballFixture>> getTeamLastFixtures(int teamId, {int count = 5}) async {
-    final data = await _get('fixtures?team=$teamId&last=$count');
+    final timezone = await getSelectedTimezone();
+    final data = await _get('fixtures?team=$teamId&last=$count&timezone=$timezone');
     if (data == null || data['response'] == null) return [];
 
     return (data['response'] as List)
@@ -299,7 +311,8 @@ class ApiFootballService {
 
   /// 경기 ID로 조회
   Future<ApiFootballFixture?> getFixtureById(int fixtureId) async {
-    final data = await _get('fixtures?id=$fixtureId');
+    final timezone = await getSelectedTimezone();
+    final data = await _get('fixtures?id=$fixtureId&timezone=$timezone');
     if (data == null || data['response'] == null || (data['response'] as List).isEmpty) {
       return null;
     }
@@ -308,7 +321,8 @@ class ApiFootballService {
 
   /// 라이브 경기 조회
   Future<List<ApiFootballFixture>> getLiveFixtures() async {
-    final data = await _get('fixtures?live=all');
+    final timezone = await getSelectedTimezone();
+    final data = await _get('fixtures?live=all&timezone=$timezone');
     if (data == null || data['response'] == null) return [];
 
     return (data['response'] as List)
@@ -318,7 +332,8 @@ class ApiFootballService {
 
   /// 팀의 시즌 전체 경기
   Future<List<ApiFootballFixture>> getTeamSeasonFixtures(int teamId, int season) async {
-    final data = await _get('fixtures?team=$teamId&season=$season');
+    final timezone = await getSelectedTimezone();
+    final data = await _get('fixtures?team=$teamId&season=$season&timezone=$timezone');
     if (data == null || data['response'] == null) return [];
 
     return (data['response'] as List)
@@ -963,11 +978,25 @@ class ApiFootballFixture {
     final teams = json['teams'] ?? {};
     final goals = json['goals'] ?? {};
 
+    // API에서 timezone 파라미터 사용 시, date 문자열은 해당 타임존 기준
+    // 예: "2024-12-21T21:30:00+09:00" (서울 시간)
+    // DateTime.parse는 이를 UTC로 변환하므로, 타임존 오프셋 부분을 제거하고 로컬 시간으로 파싱
+    final dateStr = fixture['date'] ?? DateTime.now().toIso8601String();
+    DateTime parsedDate;
+    try {
+      // ISO8601 형식에서 타임존 오프셋 제거 (예: +09:00, -05:00 등)
+      // "2024-12-21T21:30:00+09:00" -> "2024-12-21T21:30:00"
+      final cleanDateStr = dateStr.replaceAll(RegExp(r'[+-]\d{2}:\d{2}$'), '');
+      parsedDate = DateTime.parse(cleanDateStr);
+    } catch (e) {
+      parsedDate = DateTime.now();
+    }
+
     return ApiFootballFixture(
       id: fixture['id'] ?? 0,
       referee: fixture['referee'],
       timezone: fixture['timezone'] ?? 'UTC',
-      date: DateTime.parse(fixture['date'] ?? DateTime.now().toIso8601String()),
+      date: parsedDate,
       timestamp: fixture['timestamp'] ?? 0,
       venue: fixture['venue'] != null ? ApiFootballVenue.fromJson(fixture['venue']) : null,
       status: ApiFootballFixtureStatus.fromJson(fixture['status'] ?? {}),
@@ -980,8 +1009,9 @@ class ApiFootballFixture {
     );
   }
 
-  /// 한국 시간으로 변환
-  DateTime get dateKST => date.add(const Duration(hours: 9));
+  /// 설정된 타임존 기준 시간 (API timezone 파라미터로 이미 변환됨)
+  /// 기존 코드 호환성을 위해 dateKST 이름 유지
+  DateTime get dateKST => date;
 
   /// 경기 완료 여부
   bool get isFinished => status.short == 'FT' || status.short == 'AET' || status.short == 'PEN';

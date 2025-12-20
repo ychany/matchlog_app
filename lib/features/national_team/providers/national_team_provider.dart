@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/services/api_football_service.dart';
 import '../../../core/constants/api_football_ids.dart';
+import '../../profile/providers/timezone_provider.dart';
 
 // 대한민국 국가대표 팀 ID (API-Football)
 const int koreaTeamId = TeamIds.southKorea; // 17
@@ -68,12 +69,16 @@ final koreaTeamProvider = FutureProvider<ApiFootballTeam?>((ref) async {
 /// 국가대표 다음 경기 Provider
 final koreaNextMatchesProvider = FutureProvider<List<ApiFootballFixture>>((ref) async {
   final service = ref.watch(apiFootballServiceProvider);
+  // 타임존 변경 시 자동 갱신
+  ref.watch(timezoneProvider);
   return service.getTeamNextFixtures(koreaTeamId, count: 10);
 });
 
 /// 국가대표 지난 경기 Provider
 final koreaPastMatchesProvider = FutureProvider<List<ApiFootballFixture>>((ref) async {
   final service = ref.watch(apiFootballServiceProvider);
+  // 타임존 변경 시 자동 갱신
+  ref.watch(timezoneProvider);
   return service.getTeamLastFixtures(koreaTeamId, count: 10);
 });
 
@@ -202,6 +207,8 @@ final competitionMatchesProvider = FutureProvider.family<List<ApiFootballFixture
 /// 특정 시즌 월드컵 경기 Provider
 final worldCupSeasonMatchesProvider = FutureProvider.family<List<ApiFootballFixture>, int>((ref, season) async {
   final service = ref.watch(apiFootballServiceProvider);
+  // 타임존 변경 시 자동 갱신
+  ref.watch(timezoneProvider);
   final fixtures = await service.getFixturesByLeague(NationalTeamLeagues.worldCup, season);
 
   // 한국 경기만 필터링

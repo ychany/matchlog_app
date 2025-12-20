@@ -22,6 +22,7 @@ import 'features/profile/screens/profile_screen.dart';
 import 'features/profile/screens/profile_edit_screen.dart';
 import 'features/profile/screens/notification_settings_screen.dart';
 import 'features/profile/screens/help_support_screen.dart';
+import 'features/profile/screens/timezone_settings_screen.dart';
 import 'features/community/screens/community_screen.dart';
 import 'features/community/screens/post_write_screen.dart';
 import 'features/community/screens/post_detail_screen.dart';
@@ -209,6 +210,10 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'help',
                 builder: (context, state) => const HelpSupportScreen(),
+              ),
+              GoRoute(
+                path: 'timezone',
+                builder: (context, state) => const TimezoneSettingsScreen(),
               ),
               GoRoute(
                 path: 'community',

@@ -9,11 +9,14 @@ import '../../../shared/widgets/loading_indicator.dart';
 import '../providers/schedule_provider.dart';
 import '../models/match_comment.dart';
 import '../services/match_comment_service.dart';
+import '../../profile/providers/timezone_provider.dart';
 
 // Provider for match detail (API-Football)
 final matchDetailProvider =
     FutureProvider.family<ApiFootballFixture?, String>((ref, fixtureId) async {
   final service = ApiFootballService();
+  // 타임존 변경 시 자동 갱신
+  ref.watch(timezoneProvider);
   final id = int.tryParse(fixtureId);
   if (id == null) return null;
   return service.getFixtureById(id);
@@ -50,6 +53,8 @@ final matchTimelineProvider =
 final matchH2HProvider =
     FutureProvider.family<List<ApiFootballFixture>, ({int homeTeamId, int awayTeamId})>((ref, params) async {
   final service = ApiFootballService();
+  // 타임존 변경 시 자동 갱신
+  ref.watch(timezoneProvider);
   return service.getHeadToHead(params.homeTeamId, params.awayTeamId);
 });
 

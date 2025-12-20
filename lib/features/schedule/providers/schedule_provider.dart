@@ -5,6 +5,7 @@ import '../models/notification_setting.dart';
 import '../services/schedule_service.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../favorites/providers/favorites_provider.dart';
+import '../../profile/providers/timezone_provider.dart';
 
 // Schedule Service Provider
 final scheduleServiceProvider = Provider<ScheduleService>((ref) {
@@ -21,6 +22,8 @@ final schedulesByDateProvider = FutureProvider<List<Match>>((ref) async {
   final service = ref.watch(scheduleServiceProvider);
   final selectedDate = ref.watch(selectedDateProvider);
   final favoriteTeamIds = ref.watch(favoriteTeamIdsProvider).value ?? [];
+  // 타임존 변경 시 자동 갱신
+  ref.watch(timezoneProvider);
 
   return service.getSchedulesByDate(
     selectedDate,
@@ -59,6 +62,8 @@ final upcomingFavoriteMatchesProvider =
     FutureProvider<List<Match>>((ref) async {
   final service = ref.watch(scheduleServiceProvider);
   final favoriteTeamIds = ref.watch(favoriteTeamIdsProvider).value ?? [];
+  // 타임존 변경 시 자동 갱신
+  ref.watch(timezoneProvider);
 
   if (favoriteTeamIds.isEmpty) return [];
   return service.getUpcomingMatchesForTeams(favoriteTeamIds, limit: 10);
@@ -68,6 +73,8 @@ final upcomingFavoriteMatchesProvider =
 final matchByIdProvider =
     FutureProvider.family<Match?, String>((ref, matchId) async {
   final service = ref.watch(scheduleServiceProvider);
+  // 타임존 변경 시 자동 갱신
+  ref.watch(timezoneProvider);
   return service.getMatch(matchId);
 });
 
@@ -75,6 +82,8 @@ final matchByIdProvider =
 final matchesByLeagueProvider =
     FutureProvider.family<List<Match>, String>((ref, league) async {
   final service = ref.watch(scheduleServiceProvider);
+  // 타임존 변경 시 자동 갱신
+  ref.watch(timezoneProvider);
   final now = DateTime.now();
   return service.getMatchesByLeague(
     league,
@@ -204,6 +213,8 @@ final filteredSchedulesProvider = FutureProvider<List<Match>>((ref) async {
   final selectedDate = ref.watch(selectedDateProvider);
   final selectedLeague = ref.watch(selectedLeagueProvider);
   final favoriteTeamIds = ref.watch(favoriteTeamIdsProvider).value ?? [];
+  // 타임존 변경 시 자동 갱신
+  ref.watch(timezoneProvider);
 
   var matches = await service.getSchedulesByDate(
     selectedDate,

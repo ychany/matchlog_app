@@ -781,6 +781,14 @@ class _MenuSection extends StatelessWidget {
           ),
           Container(height: 1, margin: const EdgeInsets.only(left: 72), color: const Color(0xFFE5E7EB)),
           _MenuItem(
+            icon: Icons.schedule_rounded,
+            iconColor: const Color(0xFF0EA5E9),
+            title: '타임존 설정',
+            subtitle: '경기 시간 표시 기준',
+            onTap: () => context.push('/profile/timezone'),
+          ),
+          Container(height: 1, margin: const EdgeInsets.only(left: 72), color: const Color(0xFFE5E7EB)),
+          _MenuItem(
             icon: Icons.forum_outlined,
             iconColor: const Color(0xFF8B5CF6),
             title: '커뮤니티',

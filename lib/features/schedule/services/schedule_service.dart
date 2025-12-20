@@ -61,36 +61,11 @@ class ScheduleService {
     List<String>? favoriteTeamIds,
   }) async {
     try {
-      // 한국시간 00:00~23:59 경기를 찾기 위해 UTC 기준 전날~당일 데이터 조회
-      // 한국시간 22일 00:00 = UTC 21일 15:00 이므로 전날 데이터도 필요
-      final prevDate = date.subtract(const Duration(days: 1));
-
-      final results = await Future.wait([
-        _apiService.getFixturesByDate(prevDate),
-        _apiService.getFixturesByDate(date),
-      ]);
-
-      final allFixtures = [...results[0], ...results[1]];
-
-      // 한국시간(dateKST) 기준으로 해당 날짜에 속하는 경기만 필터링
-      // 날짜만 비교 (년, 월, 일이 같은지 확인)
-      final targetYear = date.year;
-      final targetMonth = date.month;
-      final targetDay = date.day;
-
-      final filteredFixtures = allFixtures.where((fixture) {
-        final kstTime = fixture.dateKST;
-        return kstTime.year == targetYear &&
-               kstTime.month == targetMonth &&
-               kstTime.day == targetDay;
-      }).toList();
-
-      // 중복 제거 (같은 경기가 두 날짜에 걸쳐 조회될 수 있음)
-      final seen = <int>{};
-      final uniqueFixtures = filteredFixtures.where((f) => seen.add(f.id)).toList();
+      // API에서 timezone=Asia/Seoul 파라미터로 한국 시간 기준 경기 조회
+      final fixtures = await _apiService.getFixturesByDate(date);
 
       // ApiFootballFixture를 Match로 변환
-      final matches = uniqueFixtures.map((fixture) => _convertFixtureToMatch(fixture)).toList();
+      final matches = fixtures.map((fixture) => _convertFixtureToMatch(fixture)).toList();
 
       if (favoriteTeamIds != null && favoriteTeamIds.isNotEmpty) {
         matches.sort((a, b) {
@@ -147,6 +122,7 @@ class ScheduleService {
   }
 
   // ApiFootballFixture를 Match로 변환
+  // API에서 timezone 파라미터로 이미 변환된 시간을 받으므로 date를 그대로 사용
   Match _convertFixtureToMatch(ApiFootballFixture fixture) {
     return Match(
       id: fixture.id.toString(),
@@ -159,7 +135,7 @@ class ScheduleService {
       awayTeamId: fixture.awayTeam.id.toString(),
       awayTeamName: fixture.awayTeam.name,
       awayTeamLogo: fixture.awayTeam.logo,
-      kickoff: fixture.dateKST, // 한국 시간으로 변환
+      kickoff: fixture.date, // API timezone 파라미터로 변환된 시간
       stadium: fixture.venue?.name ?? '',
       homeScore: fixture.homeGoals,
       awayScore: fixture.awayGoals,
