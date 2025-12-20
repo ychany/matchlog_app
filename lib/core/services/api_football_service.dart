@@ -78,7 +78,8 @@ class ApiFootballService {
 
   /// 팀 검색
   Future<List<ApiFootballTeam>> searchTeams(String query) async {
-    final data = await _get('teams?search=${Uri.encodeComponent(query)}');
+    final endpoint = 'teams?search=${Uri.encodeComponent(query)}';
+    final data = await _get(endpoint);
     if (data == null || data['response'] == null) return [];
 
     return (data['response'] as List)
@@ -97,7 +98,8 @@ class ApiFootballService {
 
   /// 리그별 팀 목록
   Future<List<ApiFootballTeam>> getTeamsByLeague(int leagueId, int season) async {
-    final data = await _get('teams?league=$leagueId&season=$season');
+    final endpoint = 'teams?league=$leagueId&season=$season';
+    final data = await _get(endpoint);
     if (data == null || data['response'] == null) return [];
 
     return (data['response'] as List)

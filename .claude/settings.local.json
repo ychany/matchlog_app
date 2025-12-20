@@ -32,7 +32,12 @@
       "Skill(frontend-design:frontend-design)",
       "Bash(firebase deploy:*)",
       "Bash(python3:*)",
-      "Bash(npx firebase deploy:*)"
+      "Bash(npx firebase deploy:*)",
+      "Bash(uniq echo \"\" echo \"=== 실제 사용되는 API-Football 메서드 ===\")",
+      "Bash(then)",
+      "Bash(echo:*)",
+      "Bash(fi)",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []

@@ -298,12 +298,7 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
             const SizedBox(height: 16),
             _buildSupportedTeamSelector(),
             const SizedBox(height: 16),
-            _buildTextField(
-              controller: _stadiumController,
-              label: '경기장',
-              icon: Icons.stadium,
-              hintText: '경기장 이름',
-            ),
+            _buildStadiumField(),
             const SizedBox(height: 16),
             _buildTextField(
               controller: _seatController,
@@ -1045,6 +1040,69 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildStadiumField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle('경기장'),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: () => _showVenueSearchSheet(),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: _border),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.stadium, color: _textSecondary),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    _stadiumController.text.isNotEmpty
+                        ? _stadiumController.text
+                        : '경기장 검색 또는 직접 입력',
+                    style: TextStyle(
+                      color: _stadiumController.text.isNotEmpty
+                          ? _textPrimary
+                          : _textSecondary.withValues(alpha: 0.6),
+                    ),
+                  ),
+                ),
+                Icon(Icons.search, color: _textSecondary, size: 20),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showVenueSearchSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _VenueSearchSheet(
+        apiFootballService: _apiFootballService,
+        onVenueSelected: (venue) {
+          setState(() {
+            _stadiumController.text = venue.name ?? '';
+          });
+          Navigator.pop(context);
+        },
+        onManualEntry: (venueName) {
+          setState(() {
+            _stadiumController.text = venueName;
+          });
+          Navigator.pop(context);
+        },
+      ),
     );
   }
 
@@ -2537,27 +2595,36 @@ class _TeamSearchSheetState extends State<_TeamSearchSheet> {
       if (mounted) {
         setState(() => _searchResults = filteredTeams);
       }
+    } catch (e) {
+      // 검색 오류 무시
     } finally {
       if (mounted) setState(() => _isSearching = false);
     }
   }
 
-  Future<void> _loadLeagueTeams(String leagueId) async {
+  Future<void> _loadLeagueTeams(String leagueName) async {
     setState(() {
       _isLoadingLeagueTeams = true;
       _leagueTeams = [];
     });
 
     try {
-      // API-Football에서는 리그 ID와 시즌으로 팀 목록을 조회
-      final leagueIdInt = int.tryParse(leagueId);
-      if (leagueIdInt != null) {
-        final currentYear = DateTime.now().year;
-        final teams = await widget.apiFootballService.getTeamsByLeague(leagueIdInt, currentYear);
+      // 리그 이름으로 API-Football 리그 ID 가져오기
+      final leagueId = AppConstants.getLeagueIdByName(leagueName);
+
+      if (leagueId != null) {
+        // 현재 시즌 계산 (8월 이후면 현재년도, 아니면 전년도)
+        final now = DateTime.now();
+        final season = now.month >= 8 ? now.year : now.year - 1;
+
+        final teams = await widget.apiFootballService.getTeamsByLeague(leagueId, season);
+
         if (mounted) {
           setState(() => _leagueTeams = teams);
         }
       }
+    } catch (e) {
+      // 로드 오류 무시
     } finally {
       if (mounted) setState(() => _isLoadingLeagueTeams = false);
     }
@@ -2832,6 +2899,411 @@ class _TeamSearchSheetState extends State<_TeamSearchSheet> {
         style: TextStyle(color: _textSecondary, fontSize: 12),
       ),
       onTap: () => widget.onTeamSelected(team),
+    );
+  }
+}
+
+/// 경기장 검색 시트
+class _VenueSearchSheet extends StatefulWidget {
+  final ApiFootballService apiFootballService;
+  final Function(ApiFootballVenue) onVenueSelected;
+  final Function(String) onManualEntry;
+
+  const _VenueSearchSheet({
+    required this.apiFootballService,
+    required this.onVenueSelected,
+    required this.onManualEntry,
+  });
+
+  @override
+  State<_VenueSearchSheet> createState() => _VenueSearchSheetState();
+}
+
+class _VenueSearchSheetState extends State<_VenueSearchSheet> {
+  final _searchController = TextEditingController();
+  final _manualVenueController = TextEditingController();
+  String? _selectedCountry;
+  List<ApiFootballVenue> _searchResults = [];
+  List<ApiFootballVenue> _countryVenues = [];
+  bool _isSearching = false;
+  bool _isLoadingCountryVenues = false;
+  bool _showManualEntry = false;
+
+  static const _primary = Color(0xFF2563EB);
+  static const _textPrimary = Color(0xFF111827);
+  static const _textSecondary = Color(0xFF6B7280);
+  static const _background = Color(0xFFF9FAFB);
+
+  // 주요 국가 목록 (API-Football 국가명 기준)
+  static const List<Map<String, String>> _countries = [
+    {'code': 'South-Korea', 'name': '대한민국', 'flag': '🇰🇷'},
+    {'code': 'England', 'name': '잉글랜드', 'flag': '🏴󠁧󠁢󠁥󠁮󠁧󠁿'},
+    {'code': 'Spain', 'name': '스페인', 'flag': '🇪🇸'},
+    {'code': 'Germany', 'name': '독일', 'flag': '🇩🇪'},
+    {'code': 'Italy', 'name': '이탈리아', 'flag': '🇮🇹'},
+    {'code': 'France', 'name': '프랑스', 'flag': '🇫🇷'},
+    {'code': 'Japan', 'name': '일본', 'flag': '🇯🇵'},
+  ];
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _manualVenueController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _searchVenues(String query) async {
+    if (query.length < 2) return;
+
+    setState(() => _isSearching = true);
+    try {
+      final venues = await widget.apiFootballService.searchVenues(query);
+      if (mounted) {
+        setState(() => _searchResults = venues);
+      }
+    } catch (e) {
+      // 검색 오류 무시
+    } finally {
+      if (mounted) setState(() => _isSearching = false);
+    }
+  }
+
+  Future<void> _loadCountryVenues(String country) async {
+    setState(() {
+      _isLoadingCountryVenues = true;
+      _countryVenues = [];
+    });
+
+    try {
+      final venues = await widget.apiFootballService.getVenuesByCountry(country);
+      if (mounted) {
+        setState(() => _countryVenues = venues);
+      }
+    } catch (e) {
+      // 로드 오류 무시
+    } finally {
+      if (mounted) setState(() => _isLoadingCountryVenues = false);
+    }
+  }
+
+  void _submitManualEntry() {
+    final venueName = _manualVenueController.text.trim();
+    if (venueName.isEmpty) return;
+    widget.onManualEntry(venueName);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.85,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      expand: false,
+      builder: (context, scrollController) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  '경기장 검색',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: _textPrimary,
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: () =>
+                      setState(() => _showManualEntry = !_showManualEntry),
+                  icon: Icon(
+                    _showManualEntry ? Icons.search : Icons.edit,
+                    size: 18,
+                    color: _primary,
+                  ),
+                  label: Text(
+                    _showManualEntry ? '검색으로' : '직접 입력',
+                    style: const TextStyle(color: _primary),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            if (_showManualEntry) ...[
+              Text(
+                '경기장 이름을 직접 입력하세요',
+                style: TextStyle(fontSize: 12, color: _textSecondary),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                decoration: BoxDecoration(
+                  color: _background,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: TextField(
+                  controller: _manualVenueController,
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    hintText: '경기장 이름',
+                    hintStyle: TextStyle(color: _textSecondary.withValues(alpha: 0.6)),
+                    prefixIcon: const Icon(Icons.stadium, color: _textSecondary),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  onChanged: (_) => setState(() {}),
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _manualVenueController.text.trim().isNotEmpty
+                      ? _submitManualEntry
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text('이 경기장으로 선택'),
+                ),
+              ),
+            ] else ...[
+              Text(
+                '국가 선택',
+                style: TextStyle(fontSize: 12, color: _textSecondary),
+              ),
+              const SizedBox(height: 8),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: _countries.map((country) => Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: _CountryFilterChip(
+                      flag: country['flag']!,
+                      name: country['name']!,
+                      isSelected: _selectedCountry == country['code'],
+                      onTap: () {
+                        setState(() {
+                          _selectedCountry = country['code'];
+                          _searchController.clear();
+                          _searchResults = [];
+                        });
+                        _loadCountryVenues(country['code']!);
+                      },
+                    ),
+                  )).toList(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                decoration: BoxDecoration(
+                  color: _background,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: '경기장 이름으로 검색',
+                    hintStyle: TextStyle(color: _textSecondary.withValues(alpha: 0.6)),
+                    prefixIcon: const Icon(Icons.search, color: _textSecondary),
+                    suffixIcon: _isSearching
+                        ? const Padding(
+                            padding: EdgeInsets.all(12),
+                            child: SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2)),
+                          )
+                        : null,
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  onChanged: (value) {
+                    if (value.length >= 2) {
+                      _searchVenues(value);
+                    } else {
+                      setState(() => _searchResults = []);
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: _buildVenueList(scrollController),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVenueList(ScrollController scrollController) {
+    if (_searchResults.isNotEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '검색 결과',
+            style: TextStyle(fontSize: 12, color: _primary, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: ListView.builder(
+              controller: scrollController,
+              itemCount: _searchResults.length,
+              itemBuilder: (context, index) =>
+                  _buildVenueTile(_searchResults[index]),
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (_isLoadingCountryVenues) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_countryVenues.isNotEmpty) {
+      final countryInfo = _countries.firstWhere(
+        (c) => c['code'] == _selectedCountry,
+        orElse: () => {'name': _selectedCountry ?? ''},
+      );
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${countryInfo['name']} 경기장 목록',
+            style: TextStyle(fontSize: 12, color: _primary, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: ListView.builder(
+              controller: scrollController,
+              itemCount: _countryVenues.length,
+              itemBuilder: (context, index) =>
+                  _buildVenueTile(_countryVenues[index]),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.stadium, size: 48, color: _textSecondary.withValues(alpha: 0.5)),
+          const SizedBox(height: 16),
+          Text(
+            '국가를 선택하거나\n경기장 이름을 검색하세요',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: _textSecondary),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVenueTile(ApiFootballVenue venue) {
+    return ListTile(
+      leading: venue.image != null
+          ? CachedNetworkImage(
+              imageUrl: venue.image!,
+              width: 50,
+              height: 40,
+              fit: BoxFit.cover,
+              errorWidget: (_, __, ___) =>
+                  const Icon(Icons.stadium, size: 40, color: _textSecondary),
+            )
+          : const Icon(Icons.stadium, size: 40, color: _textSecondary),
+      title: Text(
+        venue.name ?? '이름 없음',
+        style: const TextStyle(color: _textPrimary),
+      ),
+      subtitle: venue.city != null
+          ? Text(
+              venue.city!,
+              style: TextStyle(color: _textSecondary, fontSize: 12),
+            )
+          : null,
+      trailing: venue.capacity != null
+          ? Text(
+              '${venue.capacity}석',
+              style: TextStyle(color: _textSecondary, fontSize: 12),
+            )
+          : null,
+      onTap: () => widget.onVenueSelected(venue),
+    );
+  }
+}
+
+class _CountryFilterChip extends StatelessWidget {
+  final String flag;
+  final String name;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _CountryFilterChip({
+    required this.flag,
+    required this.name,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  static const _primary = Color(0xFF2563EB);
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? _primary : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? _primary : Colors.grey.shade300,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(flag, style: const TextStyle(fontSize: 16)),
+            const SizedBox(width: 4),
+            Text(
+              name,
+              style: TextStyle(
+                color: isSelected ? Colors.white : Colors.grey.shade700,
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
