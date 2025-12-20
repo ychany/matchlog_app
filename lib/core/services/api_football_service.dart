@@ -578,6 +578,28 @@ class ApiFootballService {
         .map((json) => ApiFootballLeague.fromJson(json))
         .toList();
   }
+
+  // ============ 부상/출전정지 (Sidelined) ============
+
+  /// 선수별 부상/출전정지 이력 조회
+  Future<List<ApiFootballSidelined>> getPlayerSidelined(int playerId) async {
+    final data = await _get('sidelined?player=$playerId');
+    if (data == null || data['response'] == null) return [];
+
+    return (data['response'] as List)
+        .map((json) => ApiFootballSidelined.fromJson(json))
+        .toList();
+  }
+
+  /// 감독별 출전정지 이력 조회
+  Future<List<ApiFootballSidelined>> getCoachSidelined(int coachId) async {
+    final data = await _get('sidelined?coach=$coachId');
+    if (data == null || data['response'] == null) return [];
+
+    return (data['response'] as List)
+        .map((json) => ApiFootballSidelined.fromJson(json))
+        .toList();
+  }
 }
 
 // ============ 모델 클래스들 ============
@@ -2939,6 +2961,138 @@ class ApiFootballBetType {
         return '골 차이';
       default:
         return name;
+    }
+  }
+}
+
+/// 부상/출전정지 이력 모델
+class ApiFootballSidelined {
+  final String type; // "Missing Fixture", "Injury" 등
+  final String start; // 시작일 (YYYY-MM-DD)
+  final String? end; // 종료일 (null이면 진행 중)
+
+  ApiFootballSidelined({
+    required this.type,
+    required this.start,
+    this.end,
+  });
+
+  factory ApiFootballSidelined.fromJson(Map<String, dynamic> json) {
+    return ApiFootballSidelined(
+      type: json['type'] ?? '',
+      start: json['start'] ?? '',
+      end: json['end'],
+    );
+  }
+
+  /// 현재 진행 중인지 여부
+  bool get isOngoing => end == null || end!.isEmpty;
+
+  /// 부상인지 확인
+  bool get isInjury {
+    final typeLower = type.toLowerCase();
+    return typeLower.contains('injury') ||
+        typeLower.contains('knee') ||
+        typeLower.contains('muscle') ||
+        typeLower.contains('ankle') ||
+        typeLower.contains('hamstring') ||
+        typeLower.contains('groin') ||
+        typeLower.contains('back') ||
+        typeLower.contains('shoulder') ||
+        typeLower.contains('achilles') ||
+        typeLower.contains('calf') ||
+        typeLower.contains('thigh') ||
+        typeLower.contains('hip') ||
+        typeLower.contains('broken') ||
+        typeLower.contains('sprain') ||
+        typeLower.contains('strain') ||
+        typeLower.contains('fracture') ||
+        typeLower.contains('surgery') ||
+        typeLower.contains('concussion') ||
+        typeLower.contains('ligament') ||
+        typeLower.contains('acl') ||
+        typeLower.contains('mcl');
+  }
+
+  /// 출전정지인지 확인
+  bool get isSuspension {
+    final typeLower = type.toLowerCase();
+    return typeLower.contains('suspension') ||
+        typeLower.contains('suspended') ||
+        typeLower.contains('red card') ||
+        typeLower.contains('yellow card') ||
+        typeLower.contains('ban') ||
+        typeLower.contains('disciplinary');
+  }
+
+  /// 기타 결장인지 확인
+  bool get isOther => !isInjury && !isSuspension;
+
+  /// 한국어 타입명
+  String get typeKorean {
+    final typeLower = type.toLowerCase();
+
+    // 구체적인 부상 부위
+    if (typeLower.contains('knee')) return '무릎 부상';
+    if (typeLower.contains('hamstring')) return '햄스트링 부상';
+    if (typeLower.contains('muscle')) return '근육 부상';
+    if (typeLower.contains('ankle')) return '발목 부상';
+    if (typeLower.contains('groin')) return '사타구니 부상';
+    if (typeLower.contains('back')) return '허리 부상';
+    if (typeLower.contains('shoulder')) return '어깨 부상';
+    if (typeLower.contains('achilles')) return '아킬레스 부상';
+    if (typeLower.contains('calf')) return '종아리 부상';
+    if (typeLower.contains('thigh')) return '허벅지 부상';
+    if (typeLower.contains('hip')) return '엉덩이 부상';
+    if (typeLower.contains('broken') || typeLower.contains('fracture')) return '골절';
+    if (typeLower.contains('concussion')) return '뇌진탕';
+    if (typeLower.contains('ligament') || typeLower.contains('acl') || typeLower.contains('mcl')) return '인대 부상';
+    if (typeLower.contains('surgery')) return '수술';
+    if (typeLower.contains('illness')) return '질병';
+
+    // 일반 부상
+    if (typeLower.contains('injury')) return '부상';
+
+    // 출전정지
+    if (typeLower.contains('suspension') || typeLower.contains('suspended')) return '출전정지';
+    if (typeLower.contains('red card')) return '레드카드 징계';
+    if (typeLower.contains('yellow card')) return '옐로카드 누적';
+    if (typeLower.contains('ban')) return '출전금지';
+    if (typeLower.contains('disciplinary')) return '징계';
+
+    // 기타
+    if (typeLower.contains('missing')) return '결장';
+    if (typeLower.contains('personal')) return '개인 사유';
+    if (typeLower.contains('international')) return '국가대표 차출';
+    if (typeLower.contains('rest')) return '휴식';
+    if (typeLower.contains('fitness')) return '컨디션 조절';
+
+    return type; // 원본 반환
+  }
+
+  /// 시작일 DateTime
+  DateTime? get startDate => DateTime.tryParse(start);
+
+  /// 종료일 DateTime
+  DateTime? get endDate => end != null ? DateTime.tryParse(end!) : null;
+
+  /// 기간 표시 (예: "2024.01.15 ~ 2024.02.20" 또는 "2024.01.15 ~ 진행 중")
+  String get periodDisplay {
+    final startStr = _formatDate(start);
+    if (isOngoing) {
+      return '$startStr ~ 진행 중';
+    }
+    final endStr = _formatDate(end!);
+    return '$startStr ~ $endStr';
+  }
+
+  /// 날짜 포맷팅 (YYYY-MM-DD -> YYYY.MM.DD)
+  String _formatDate(String date) {
+    try {
+      final dt = DateTime.parse(date);
+      return '${dt.year}.${dt.month.toString().padLeft(2, '0')}.${dt.day.toString().padLeft(2, '0')}';
+    } catch (_) {
+      return date;
     }
   }
 }

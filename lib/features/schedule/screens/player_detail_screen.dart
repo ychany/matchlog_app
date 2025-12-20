@@ -72,6 +72,15 @@ final playerTrophiesProvider =
   return service.getPlayerTrophies(id);
 });
 
+// 부상/출전정지 이력 Provider
+final playerSidelinedProvider =
+    FutureProvider.family<List<ApiFootballSidelined>, String>((ref, playerId) async {
+  final service = ApiFootballService();
+  final id = int.tryParse(playerId);
+  if (id == null) return [];
+  return service.getPlayerSidelined(id);
+});
+
 class PlayerDetailScreen extends ConsumerWidget {
   final String playerId;
 
@@ -276,14 +285,14 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
 }
 
 // 프로필 탭
-class _ProfileTab extends StatelessWidget {
+class _ProfileTab extends ConsumerWidget {
   final ApiFootballPlayer player;
   final String playerId;
 
   const _ProfileTab({required this.player, required this.playerId});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -293,6 +302,9 @@ class _ProfileTab extends StatelessWidget {
           // 현재 시즌 통계 요약
           if (player.statistics.isNotEmpty)
             _CurrentSeasonSummary(player: player),
+          const SizedBox(height: 12),
+          // 부상/출전정지 이력
+          _SidelinedSection(playerId: playerId),
           const SizedBox(height: 32),
         ],
       ),
@@ -1570,6 +1582,256 @@ class _PlayerFavoriteButton extends ConsumerWidget {
               .read(favoritesNotifierProvider.notifier)
               .togglePlayerFollow(playerId);
         },
+      ),
+    );
+  }
+}
+
+// 부상/출전정지 이력 섹션
+class _SidelinedSection extends ConsumerWidget {
+  final String playerId;
+
+  static const _error = Color(0xFFEF4444);
+  static const _textPrimary = Color(0xFF111827);
+  static const _textSecondary = Color(0xFF6B7280);
+  static const _border = Color(0xFFE5E7EB);
+
+  const _SidelinedSection({required this.playerId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sidelinedAsync = ref.watch(playerSidelinedProvider(playerId));
+
+    return sidelinedAsync.when(
+      data: (records) {
+        if (records.isEmpty) return const SizedBox.shrink();
+
+        // 현재 진행 중인 부상/출전정지
+        final ongoingRecords = records.where((r) => r.isOngoing).toList();
+        // 과거 기록 (최근 5개)
+        final pastRecords = records.where((r) => !r.isOngoing).take(5).toList();
+
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: _border),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: _error.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(Icons.healing, color: _error, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    '부상/출전정지 이력',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: _textPrimary,
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: _textSecondary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${records.length}건',
+                      style: TextStyle(
+                        color: _textSecondary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // 현재 진행 중인 부상/출전정지
+              if (ongoingRecords.isNotEmpty) ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: _error.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: _error.withValues(alpha: 0.3)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _error,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.warning_amber_rounded,
+                                    size: 12, color: Colors.white),
+                                SizedBox(width: 4),
+                                Text(
+                                  '현재 결장 중',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      ...ongoingRecords.map((record) => _SidelinedItem(
+                            record: record,
+                            isOngoing: true,
+                          )),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+
+              // 과거 기록
+              if (pastRecords.isNotEmpty) ...[
+                const Text(
+                  '최근 이력',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: _textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ...pastRecords.map((record) => _SidelinedItem(
+                      record: record,
+                      isOngoing: false,
+                    )),
+              ],
+            ],
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+}
+
+// 부상/출전정지 개별 항목
+class _SidelinedItem extends StatelessWidget {
+  final ApiFootballSidelined record;
+  final bool isOngoing;
+
+  static const _error = Color(0xFFEF4444);
+  static const _warning = Color(0xFFF59E0B);
+  static const _textPrimary = Color(0xFF111827);
+  static const _textSecondary = Color(0xFF6B7280);
+  static const _border = Color(0xFFE5E7EB);
+
+  const _SidelinedItem({
+    required this.record,
+    required this.isOngoing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = record.isInjury
+        ? _error
+        : record.isSuspension
+            ? _warning
+            : _textSecondary;
+    final icon = record.isInjury
+        ? Icons.personal_injury
+        : record.isSuspension
+            ? Icons.gavel
+            : Icons.event_busy;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isOngoing ? Colors.white : Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: _border),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  record.typeKorean,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: _textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  record.periodDisplay,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: _textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // 타입 뱃지
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              record.isInjury
+                  ? '부상'
+                  : record.isSuspension
+                      ? '정지'
+                      : '기타',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
