@@ -18,6 +18,12 @@ final coachTrophiesProvider = FutureProvider.family<List<CoachTrophy>, int>((ref
   return service.getCoachTrophies(coachId);
 });
 
+// Coach sidelined provider (출전정지 이력)
+final coachSidelinedProvider = FutureProvider.family<List<ApiFootballSidelined>, int>((ref, coachId) async {
+  final service = ApiFootballService();
+  return service.getCoachSidelined(coachId);
+});
+
 class CoachDetailScreen extends ConsumerWidget {
   final String coachId;
 
@@ -146,6 +152,7 @@ class _CoachDetailContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final trophiesAsync = ref.watch(coachTrophiesProvider(coach.id));
+    final sidelinedAsync = ref.watch(coachSidelinedProvider(coach.id));
 
     return SafeArea(
       child: Column(
@@ -162,6 +169,9 @@ class _CoachDetailContent extends ConsumerWidget {
                 _buildBasicInfoCard(),
 
                 const SizedBox(height: 16),
+
+                // 출전정지 이력 카드
+                _CoachSidelinedSection(sidelinedAsync: sidelinedAsync),
 
                 // 트로피 카드
                 trophiesAsync.when(
@@ -863,6 +873,243 @@ class _TrophyTile extends StatelessWidget {
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
                 color: isWinner ? Colors.amber.shade800 : _textSecondary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// 출전정지 이력 섹션
+class _CoachSidelinedSection extends StatelessWidget {
+  final AsyncValue<List<ApiFootballSidelined>> sidelinedAsync;
+
+  static const _error = Color(0xFFEF4444);
+  static const _warning = Color(0xFFF59E0B);
+  static const _textPrimary = Color(0xFF111827);
+  static const _textSecondary = Color(0xFF6B7280);
+  static const _border = Color(0xFFE5E7EB);
+
+  const _CoachSidelinedSection({required this.sidelinedAsync});
+
+  @override
+  Widget build(BuildContext context) {
+    return sidelinedAsync.when(
+      data: (records) {
+        if (records.isEmpty) return const SizedBox.shrink();
+
+        // 현재 진행 중인 출전정지
+        final ongoingRecords = records.where((r) => r.isOngoing).toList();
+        // 과거 기록 (최근 5개)
+        final pastRecords = records.where((r) => !r.isOngoing).take(5).toList();
+
+        return Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _border),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: _warning.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(Icons.gavel, color: _warning, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      const Text(
+                        '출전정지 이력',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: _textPrimary,
+                        ),
+                      ),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: _textSecondary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '${records.length}건',
+                          style: TextStyle(
+                            color: _textSecondary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // 현재 진행 중인 출전정지
+                  if (ongoingRecords.isNotEmpty) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: _error.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: _error.withValues(alpha: 0.3)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _error,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.warning_amber_rounded,
+                                        size: 12, color: Colors.white),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      '현재 출전정지 중',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          ...ongoingRecords.map((record) => _CoachSidelinedItem(
+                                record: record,
+                                isOngoing: true,
+                              )),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+
+                  // 과거 기록
+                  if (pastRecords.isNotEmpty) ...[
+                    const Text(
+                      '최근 이력',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: _textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ...pastRecords.map((record) => _CoachSidelinedItem(
+                          record: record,
+                          isOngoing: false,
+                        )),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+}
+
+// 출전정지 개별 항목
+class _CoachSidelinedItem extends StatelessWidget {
+  final ApiFootballSidelined record;
+  final bool isOngoing;
+
+  static const _warning = Color(0xFFF59E0B);
+  static const _textPrimary = Color(0xFF111827);
+  static const _textSecondary = Color(0xFF6B7280);
+  static const _border = Color(0xFFE5E7EB);
+
+  const _CoachSidelinedItem({
+    required this.record,
+    required this.isOngoing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isOngoing ? Colors.white : Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: _border),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: _warning.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.gavel, color: _warning, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  record.typeKorean,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: _textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  record.periodDisplay,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: _textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: _warning.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              '정지',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: _warning,
               ),
             ),
           ),
