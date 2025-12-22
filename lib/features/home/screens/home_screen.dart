@@ -11,11 +11,37 @@ import '../../auth/providers/auth_provider.dart';
 import '../../favorites/providers/favorites_provider.dart';
 import '../../national_team/providers/national_team_provider.dart';
 
-/// 축구 라이브스코어 Provider (API-Football)
+/// 축구 라이브스코어 Provider (API-Football) - 리그 우선순위 정렬
 final soccerLivescoresProvider =
     FutureProvider<List<ApiFootballFixture>>((ref) async {
   final service = ApiFootballService();
-  return service.getLiveFixtures();
+  final fixtures = await service.getLiveFixtures();
+
+  // 리그 우선순위 정의
+  int getLeaguePriority(int leagueId) {
+    // 1순위: 5대 리그
+    const tier1 = {39, 140, 135, 78, 61}; // EPL, 라리가, 세리에A, 분데스, 리그앙
+    // 2순위: 유럽 클럽 대회
+    const tier2 = {2, 3, 848}; // UCL, UEL, UECL
+    // 3순위: K리그, 국가대항전
+    const tier3 = {292, 1, 4, 6, 9, 17}; // K리그1, 월드컵, 유로, AFCON, 코파, AFC
+
+    if (tier1.contains(leagueId)) return 1;
+    if (tier2.contains(leagueId)) return 2;
+    if (tier3.contains(leagueId)) return 3;
+    return 4; // 기타 리그
+  }
+
+  // 우선순위로 정렬
+  fixtures.sort((a, b) {
+    final priorityA = getLeaguePriority(a.league.id);
+    final priorityB = getLeaguePriority(b.league.id);
+    if (priorityA != priorityB) return priorityA.compareTo(priorityB);
+    // 같은 우선순위 내에서는 리그 ID로 그룹화
+    return a.league.id.compareTo(b.league.id);
+  });
+
+  return fixtures;
 });
 
 class HomeScreen extends ConsumerWidget {
@@ -509,7 +535,7 @@ class _LiveScoresSection extends ConsumerWidget {
               ),
               const SizedBox(height: 10),
               SizedBox(
-                height: 100,
+                height: 110,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: liveFixtures.length,
@@ -532,6 +558,9 @@ class _LiveScoresSection extends ConsumerWidget {
 class _LiveMatchCard extends StatelessWidget {
   final ApiFootballFixture fixture;
 
+  static const _primary = Color(0xFF2563EB);
+  static const _error = Color(0xFFEF4444);
+
   const _LiveMatchCard({required this.fixture});
 
   @override
@@ -539,88 +568,94 @@ class _LiveMatchCard extends StatelessWidget {
     return GestureDetector(
       onTap: () => context.push('/match/${fixture.id}'),
       child: Container(
-        width: 220,
-        padding: const EdgeInsets.all(14),
+        width: 200,
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.2)),
+          border: Border.all(color: _error.withValues(alpha: 0.2)),
         ),
         child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  fixture.league.name,
-                  style: TextStyle(
-                    color: Colors.grey.shade500,
-                    fontSize: 10,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEF4444),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  _getStatusDisplay(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 9,
-                    fontWeight: FontWeight.w600,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 리그명 + 시간
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    fixture.league.name,
+                    style: TextStyle(color: Colors.grey.shade500, fontSize: 10),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-              ),
-            ],
-          ),
-          const Spacer(),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  fixture.homeTeam.name,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: _error,
+                    borderRadius: BorderRadius.circular(4),
                   ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFDBEAFE),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  fixture.scoreDisplay,
-                  style: const TextStyle(
-                    color: Color(0xFF2563EB),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
+                  child: Text(
+                    _getStatusDisplay(),
+                    style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w600),
                   ),
                 ),
-              ),
-              Expanded(
-                child: Text(
-                  fixture.awayTeam.name,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+              ],
+            ),
+            const SizedBox(height: 10),
+            // 홈팀
+            Row(
+              children: [
+                if (fixture.homeTeam.logo != null)
+                  CachedNetworkImage(
+                    imageUrl: fixture.homeTeam.logo!,
+                    width: 22,
+                    height: 22,
+                    errorWidget: (_, __, ___) => const Icon(Icons.shield, size: 22, color: Colors.grey),
+                  )
+                else
+                  const Icon(Icons.shield, size: 22, color: Colors.grey),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    fixture.homeTeam.name,
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  textAlign: TextAlign.right,
-                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-            ],
-          ),
-          const Spacer(),
-        ],
+                Text(
+                  '${fixture.homeGoals ?? 0}',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _primary),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            // 원정팀
+            Row(
+              children: [
+                if (fixture.awayTeam.logo != null)
+                  CachedNetworkImage(
+                    imageUrl: fixture.awayTeam.logo!,
+                    width: 22,
+                    height: 22,
+                    errorWidget: (_, __, ___) => const Icon(Icons.shield, size: 22, color: Colors.grey),
+                  )
+                else
+                  const Icon(Icons.shield, size: 22, color: Colors.grey),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    fixture.awayTeam.name,
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Text(
+                  '${fixture.awayGoals ?? 0}',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _primary),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );

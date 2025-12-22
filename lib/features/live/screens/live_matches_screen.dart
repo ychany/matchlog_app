@@ -8,27 +8,57 @@ import '../../../core/services/api_football_service.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../profile/providers/timezone_provider.dart';
 
-/// 라이브 경기 Provider (30초마다 자동 갱신)
+/// 리그 우선순위 정의
+int _getLeaguePriority(int leagueId) {
+  // 1순위: 5대 리그
+  const tier1 = {39, 140, 135, 78, 61}; // EPL, 라리가, 세리에A, 분데스, 리그앙
+  // 2순위: 유럽 클럽 대회
+  const tier2 = {2, 3, 848}; // UCL, UEL, UECL
+  // 3순위: K리그, 국가대항전
+  const tier3 = {292, 1, 4, 6, 9, 17}; // K리그1, 월드컵, 유로, AFCON, 코파, AFC
+
+  if (tier1.contains(leagueId)) return 1;
+  if (tier2.contains(leagueId)) return 2;
+  if (tier3.contains(leagueId)) return 3;
+  return 4; // 기타 리그
+}
+
+/// 리그 우선순위로 경기 정렬
+List<ApiFootballFixture> _sortByLeaguePriority(List<ApiFootballFixture> fixtures) {
+  fixtures.sort((a, b) {
+    final priorityA = _getLeaguePriority(a.league.id);
+    final priorityB = _getLeaguePriority(b.league.id);
+    if (priorityA != priorityB) return priorityA.compareTo(priorityB);
+    // 같은 우선순위 내에서는 리그 ID로 그룹화
+    return a.league.id.compareTo(b.league.id);
+  });
+  return fixtures;
+}
+
+/// 라이브 경기 Provider (30초마다 자동 갱신) - 리그 우선순위 정렬
 final liveMatchesProvider = StreamProvider<List<ApiFootballFixture>>((ref) async* {
   final service = ApiFootballService();
   // 타임존 변경 시 자동 갱신
   ref.watch(timezoneProvider);
 
   // 초기 데이터 로드
-  yield await service.getLiveFixtures();
+  final initialFixtures = await service.getLiveFixtures();
+  yield _sortByLeaguePriority(initialFixtures);
 
   // 30초마다 자동 갱신
   await for (final _ in Stream.periodic(const Duration(seconds: 30))) {
-    yield await service.getLiveFixtures();
+    final fixtures = await service.getLiveFixtures();
+    yield _sortByLeaguePriority(fixtures);
   }
 });
 
-/// 수동 새로고침용 FutureProvider
+/// 수동 새로고침용 FutureProvider - 리그 우선순위 정렬
 final liveMatchesRefreshProvider = FutureProvider<List<ApiFootballFixture>>((ref) async {
   final service = ApiFootballService();
   // 타임존 변경 시 자동 갱신
   ref.watch(timezoneProvider);
-  return service.getLiveFixtures();
+  final fixtures = await service.getLiveFixtures();
+  return _sortByLeaguePriority(fixtures);
 });
 
 class LiveMatchesScreen extends ConsumerStatefulWidget {
@@ -455,15 +485,15 @@ class _LiveMatchCard extends StatelessWidget {
     return GestureDetector(
       onTap: () => context.push('/match/${fixture.id}'),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
+        margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(color: _border),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 8,
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 6,
               offset: const Offset(0, 2),
             ),
           ],
@@ -472,41 +502,31 @@ class _LiveMatchCard extends StatelessWidget {
           children: [
             // 리그 정보 헤더
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: _primary.withValues(alpha: 0.03),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
               ),
               child: Row(
                 children: [
-                  // 리그 로고
                   if (fixture.league.logo != null)
                     CachedNetworkImage(
                       imageUrl: fixture.league.logo!,
-                      width: 20,
-                      height: 20,
+                      width: 16,
+                      height: 16,
                       fit: BoxFit.contain,
-                      errorWidget: (_, __, ___) => Icon(
-                        Icons.emoji_events,
-                        size: 18,
-                        color: _textSecondary,
-                      ),
+                      errorWidget: (_, __, ___) => Icon(Icons.emoji_events, size: 14, color: _textSecondary),
                     )
                   else
-                    Icon(Icons.emoji_events, size: 18, color: _textSecondary),
-                  const SizedBox(width: 8),
+                    Icon(Icons.emoji_events, size: 14, color: _textSecondary),
+                  const SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       fixture.league.name,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: _textSecondary,
-                      ),
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _textSecondary),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  // 라이브 표시
                   _LiveBadge(status: fixture.status),
                 ],
               ),
@@ -514,7 +534,7 @@ class _LiveMatchCard extends StatelessWidget {
 
             // 경기 정보
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(12),
               child: Row(
                 children: [
                   // 홈팀
@@ -540,32 +560,11 @@ class _LiveMatchCard extends StatelessWidget {
                       name: fixture.awayTeam.name,
                       logo: fixture.awayTeam.logo,
                       isWinning: (fixture.awayGoals ?? 0) > (fixture.homeGoals ?? 0),
-                      isAway: true,
                     ),
                   ),
                 ],
               ),
             ),
-
-            // 경기장 정보
-            if (fixture.venue?.name != null)
-              Container(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.location_on_outlined, size: 14, color: _textSecondary),
-                    const SizedBox(width: 4),
-                    Text(
-                      fixture.venue!.name!,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: _textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
           ],
         ),
       ),
@@ -585,34 +584,25 @@ class _LiveBadge extends StatelessWidget {
     final isHalftime = status.short == 'HT';
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: isHalftime
-            ? const Color(0xFFF59E0B)
-            : const Color(0xFFEF4444),
-        borderRadius: BorderRadius.circular(12),
+        color: isHalftime ? const Color(0xFFF59E0B) : const Color(0xFFEF4444),
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (!isHalftime) ...[
             Container(
-              width: 6,
-              height: 6,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
+              width: 5,
+              height: 5,
+              decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 4),
           ],
           Text(
             displayText,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-            ),
+            style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700),
           ),
         ],
       ),
@@ -644,7 +634,6 @@ class _TeamColumn extends StatelessWidget {
   final String name;
   final String? logo;
   final bool isWinning;
-  final bool isAway;
 
   static const _textPrimary = Color(0xFF111827);
   static const _textSecondary = Color(0xFF6B7280);
@@ -653,23 +642,19 @@ class _TeamColumn extends StatelessWidget {
     required this.name,
     this.logo,
     this.isWinning = false,
-    this.isAway = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // 팀 로고
         Container(
-          width: 52,
-          height: 52,
+          width: 40,
+          height: 40,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             border: Border.all(
-              color: isWinning
-                  ? const Color(0xFF10B981)
-                  : const Color(0xFFE5E7EB),
+              color: isWinning ? const Color(0xFF10B981) : const Color(0xFFE5E7EB),
               width: isWinning ? 2 : 1,
             ),
             color: Colors.grey.shade50,
@@ -685,12 +670,11 @@ class _TeamColumn extends StatelessWidget {
                 : _buildPlaceholder(),
           ),
         ),
-        const SizedBox(height: 8),
-        // 팀 이름
+        const SizedBox(height: 6),
         Text(
           name,
           style: TextStyle(
-            fontSize: 13,
+            fontSize: 11,
             fontWeight: isWinning ? FontWeight.w700 : FontWeight.w500,
             color: isWinning ? _textPrimary : _textSecondary,
           ),
@@ -705,11 +689,7 @@ class _TeamColumn extends StatelessWidget {
   Widget _buildPlaceholder() {
     return Container(
       color: Colors.grey.shade100,
-      child: Icon(
-        Icons.shield_outlined,
-        color: Colors.grey.shade400,
-        size: 28,
-      ),
+      child: Icon(Icons.shield_outlined, color: Colors.grey.shade400, size: 22),
     );
   }
 }
@@ -735,12 +715,11 @@ class _ScoreDisplay extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // 스코어
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           decoration: BoxDecoration(
             color: _primary.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -748,26 +727,19 @@ class _ScoreDisplay extends StatelessWidget {
               Text(
                 '$homeGoals',
                 style: TextStyle(
-                  fontSize: 28,
+                  fontSize: 22,
                   fontWeight: FontWeight.w800,
                   color: homeGoals > awayGoals ? _primary : Colors.grey.shade700,
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Text(
-                  '-',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w300,
-                    color: _textSecondary,
-                  ),
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: Text('-', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w300, color: _textSecondary)),
               ),
               Text(
                 '$awayGoals',
                 style: TextStyle(
-                  fontSize: 28,
+                  fontSize: 22,
                   fontWeight: FontWeight.w800,
                   color: awayGoals > homeGoals ? _primary : Colors.grey.shade700,
                 ),
@@ -775,8 +747,7 @@ class _ScoreDisplay extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 6),
-        // 경기 시간 진행 바
+        const SizedBox(height: 4),
         if (elapsed != null && (statusShort == '1H' || statusShort == '2H'))
           _ProgressBar(elapsed: elapsed!, is2ndHalf: statusShort == '2H'),
       ],
@@ -793,44 +764,33 @@ class _ProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 전반전: 0-45분, 후반전: 45-90분
     final progress = is2ndHalf
         ? ((elapsed - 45).clamp(0, 45) / 45)
         : (elapsed.clamp(0, 45) / 45);
 
     return SizedBox(
-      width: 80,
+      width: 60,
       child: Column(
         children: [
-          // 진행 바
           Container(
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade200,
-              borderRadius: BorderRadius.circular(2),
-            ),
+            height: 3,
+            decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(2)),
             child: FractionallySizedBox(
               alignment: Alignment.centerLeft,
               widthFactor: progress.clamp(0.0, 1.0),
               child: Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xFF10B981),
-                  borderRadius: BorderRadius.circular(2),
-                ),
+                decoration: BoxDecoration(color: const Color(0xFF10B981), borderRadius: BorderRadius.circular(2)),
               ),
             ),
           ),
-          const SizedBox(height: 4),
-          // 시간 표시
+          const SizedBox(height: 3),
           Text(
             is2ndHalf ? '후반 ${elapsed - 45}분' : '전반 $elapsed분',
-            style: TextStyle(
-              fontSize: 10,
-              color: Colors.grey.shade500,
-            ),
+            style: TextStyle(fontSize: 9, color: Colors.grey.shade500),
           ),
         ],
       ),
     );
   }
 }
+
