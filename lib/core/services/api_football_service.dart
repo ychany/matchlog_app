@@ -707,6 +707,7 @@ class ApiFootballLeague {
   final String? countryName;
   final String? countryCode;
   final String? countryFlag;
+  final List<int> seasons; // 사용 가능한 시즌 목록
 
   ApiFootballLeague({
     required this.id,
@@ -716,11 +717,16 @@ class ApiFootballLeague {
     this.countryName,
     this.countryCode,
     this.countryFlag,
+    this.seasons = const [],
   });
+
+  /// 가장 최신 시즌 반환
+  int? get latestSeason => seasons.isNotEmpty ? seasons.last : null;
 
   factory ApiFootballLeague.fromJson(Map<String, dynamic> json) {
     final league = json['league'] ?? json;
     final country = json['country'];
+    final seasonsJson = json['seasons'] as List? ?? [];
 
     return ApiFootballLeague(
       id: league['id'] ?? 0,
@@ -730,6 +736,7 @@ class ApiFootballLeague {
       countryName: country?['name'],
       countryCode: country?['code'],
       countryFlag: country?['flag'],
+      seasons: seasonsJson.map((s) => s['year'] as int).toList()..sort(),
     );
   }
 }

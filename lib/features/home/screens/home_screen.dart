@@ -10,6 +10,7 @@ import '../../attendance/providers/attendance_provider.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../favorites/providers/favorites_provider.dart';
 import '../../national_team/providers/national_team_provider.dart';
+import '../../national_team/providers/selected_national_team_provider.dart';
 
 /// 축구 라이브스코어 Provider (API-Football) - 리그 우선순위 정렬
 final soccerLivescoresProvider =
@@ -76,6 +77,9 @@ class HomeScreen extends ConsumerWidget {
               ref.invalidate(soccerLivescoresProvider);
               ref.invalidate(koreaNextMatchesProvider);
               ref.invalidate(koreaPastMatchesProvider);
+              ref.invalidate(selectedTeamNextMatchesProvider);
+              ref.invalidate(selectedTeamPastMatchesProvider);
+              ref.invalidate(selectedTeamFormProvider);
             },
             child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
@@ -1228,7 +1232,7 @@ class _EmptyCard extends StatelessWidget {
 }
 
 // ============================================================================
-// 대한민국 국가대표 섹션
+// 국가대표 섹션 (동적 선택 지원)
 // ============================================================================
 class _NationalTeamSection extends ConsumerWidget {
   static const _primary = Color(0xFF2563EB);
@@ -1236,50 +1240,66 @@ class _NationalTeamSection extends ConsumerWidget {
   static const _textSecondary = Color(0xFF6B7280);
   static const _border = Color(0xFFE5E7EB);
 
-  // 태극기 색상
-  static const _koreaRed = Color(0xFFCD2E3A);
-  static const _koreaBlue = Color(0xFF0047A0);
+  // 월드컵 트로피 테마 - 황금색 그라데이션
+  static const _gradientStart = Color(0xFFE6B422);  // 밝은 골드
+  static const _gradientMid = Color(0xFFD4A537);    // 골드
+  static const _gradientEnd = Color(0xFFC9922E);    // 약간 어두운 골드
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final countdown = ref.watch(worldCupCountdownProvider);
-    final nextMatchesAsync = ref.watch(koreaNextMatchesProvider);
-    final formAsync = ref.watch(koreaFormProvider);
+    final selectedTeam = ref.watch(selectedNationalTeamProvider);
+    final nextMatchesAsync = ref.watch(selectedTeamNextMatchesProvider);
+    final formAsync = ref.watch(selectedTeamFormProvider);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 섹션 헤더
+          // 섹션 헤더 (탭하면 국가 선택)
           Row(
             children: [
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: _border),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(5),
-                  child: Image.network(
-                    'https://r2.thesportsdb.com/images/media/team/badge/a8nqfs1589564916.png',
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      color: _koreaRed,
-                      child: const Icon(Icons.flag, color: Colors.white, size: 16),
+              GestureDetector(
+                onTap: () => _showCountryPicker(context, ref),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: _border),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(5),
+                        child: selectedTeam.countryFlag != null
+                            ? Image.network(
+                                selectedTeam.countryFlag!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Container(
+                                  color: _gradientStart,
+                                  child: const Icon(Icons.flag, color: Colors.white, size: 16),
+                                ),
+                              )
+                            : Container(
+                                color: _gradientStart,
+                                child: const Icon(Icons.flag, color: Colors.white, size: 16),
+                              ),
+                      ),
                     ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              const Text(
-                '대한민국 국가대표',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: _textPrimary,
+                    const SizedBox(width: 10),
+                    Text(
+                      selectedTeam.teamName,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: _textPrimary,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(Icons.keyboard_arrow_down, color: _textSecondary, size: 20),
+                  ],
                 ),
               ),
               const Spacer(),
@@ -1308,18 +1328,19 @@ class _NationalTeamSection extends ConsumerWidget {
             child: Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  begin: Alignment.topLeft,
+                  begin: Alignment.topCenter,
                   end: Alignment.bottomRight,
                   colors: [
-                    _koreaRed,
-                    _koreaRed.withValues(alpha: 0.9),
-                    _koreaBlue.withValues(alpha: 0.8),
+                    _gradientStart,
+                    _gradientMid,
+                    _gradientEnd,
                   ],
+                  stops: const [0.0, 0.4, 1.0],
                 ),
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: _koreaRed.withValues(alpha: 0.3),
+                    color: _gradientStart.withValues(alpha: 0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -1367,7 +1388,7 @@ class _NationalTeamSection extends ConsumerWidget {
                               Text(
                                 'D-${countdown.daysRemaining}',
                                 style: TextStyle(
-                                  color: _koreaRed,
+                                  color: _gradientStart,
                                   fontSize: 16,
                                   fontWeight: FontWeight.w800,
                                 ),
@@ -1403,9 +1424,9 @@ class _NationalTeamSection extends ConsumerWidget {
 
                         final nextMatch = matches.first;
                         final matchDate = nextMatch.dateKST;
-                        final isHome = nextMatch.homeTeam.name.toLowerCase().contains('korea');
-                        final opponent = isHome ? nextMatch.awayTeam.name : nextMatch.homeTeam.name;
-                        final opponentBadge = isHome ? nextMatch.awayTeam.logo : nextMatch.homeTeam.logo;
+                        final isHome = nextMatch.homeTeam.id == selectedTeam.teamId;
+                        final myTeam = isHome ? nextMatch.homeTeam : nextMatch.awayTeam;
+                        final opponent = isHome ? nextMatch.awayTeam : nextMatch.homeTeam;
 
                         return Column(
                           children: [
@@ -1440,7 +1461,7 @@ class _NationalTeamSection extends ConsumerWidget {
                             const SizedBox(height: 10),
                             Row(
                               children: [
-                                // 대한민국
+                                // 선택한 팀
                                 Expanded(
                                   child: Row(
                                     children: [
@@ -1452,20 +1473,22 @@ class _NationalTeamSection extends ConsumerWidget {
                                           border: Border.all(color: _border),
                                         ),
                                         child: ClipOval(
-                                          child: Image.network(
-                                            'https://r2.thesportsdb.com/images/media/team/badge/a8nqfs1589564916.png',
-                                            fit: BoxFit.cover,
-                                            errorBuilder: (_, __, ___) => Container(
-                                              color: _koreaRed,
-                                            ),
-                                          ),
+                                          child: myTeam.logo != null
+                                              ? Image.network(
+                                                  myTeam.logo!,
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder: (_, __, ___) => Container(
+                                                    color: _gradientStart,
+                                                  ),
+                                                )
+                                              : Container(color: _gradientStart),
                                         ),
                                       ),
                                       const SizedBox(width: 8),
-                                      const Flexible(
+                                      Flexible(
                                         child: Text(
-                                          '대한민국',
-                                          style: TextStyle(
+                                          myTeam.name,
+                                          style: const TextStyle(
                                             fontSize: 14,
                                             fontWeight: FontWeight.w700,
                                             color: _textPrimary,
@@ -1506,7 +1529,7 @@ class _NationalTeamSection extends ConsumerWidget {
                                     children: [
                                       Flexible(
                                         child: Text(
-                                          opponent,
+                                          opponent.name,
                                           style: const TextStyle(
                                             fontSize: 14,
                                             fontWeight: FontWeight.w700,
@@ -1525,10 +1548,10 @@ class _NationalTeamSection extends ConsumerWidget {
                                           border: Border.all(color: _border),
                                           color: Colors.grey.shade100,
                                         ),
-                                        child: opponentBadge != null
+                                        child: opponent.logo != null
                                             ? ClipOval(
                                                 child: Image.network(
-                                                  opponentBadge,
+                                                  opponent.logo!,
                                                   fit: BoxFit.cover,
                                                   errorBuilder: (_, __, ___) => Icon(
                                                     Icons.shield_outlined,
@@ -1634,6 +1657,188 @@ class _NationalTeamSection extends ConsumerWidget {
                     ),
                   ),
                 ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCountryPicker(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _CountryPickerSheet(),
+    );
+  }
+}
+
+/// 국가 선택 바텀시트
+class _CountryPickerSheet extends ConsumerStatefulWidget {
+  @override
+  ConsumerState<_CountryPickerSheet> createState() => _CountryPickerSheetState();
+}
+
+class _CountryPickerSheetState extends ConsumerState<_CountryPickerSheet> {
+  String _searchQuery = '';
+
+  @override
+  Widget build(BuildContext context) {
+    final teamsAsync = ref.watch(worldCupTeamsProvider);
+    final selectedTeam = ref.watch(selectedNationalTeamProvider);
+
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.7,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        children: [
+          // 핸들
+          Container(
+            margin: const EdgeInsets.only(top: 12),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          // 헤더
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                const Text(
+                  '국가대표팀 선택',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '2026 월드컵 참가국',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // 검색
+                TextField(
+                  onChanged: (value) => setState(() => _searchQuery = value),
+                  decoration: InputDecoration(
+                    hintText: '국가명 검색',
+                    hintStyle: TextStyle(color: Colors.grey.shade400),
+                    prefixIcon: Icon(Icons.search, color: Colors.grey.shade400),
+                    filled: true,
+                    fillColor: Colors.grey.shade100,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // 팀 목록
+          Expanded(
+            child: teamsAsync.when(
+              data: (teams) {
+                final filtered = _searchQuery.isEmpty
+                    ? teams
+                    : teams.where((t) =>
+                        t.name.toLowerCase().contains(_searchQuery.toLowerCase())).toList();
+
+                return ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: filtered.length,
+                  itemBuilder: (context, index) {
+                    final team = filtered[index];
+                    final isSelected = team.id == selectedTeam.teamId;
+
+                    return ListTile(
+                      onTap: () {
+                        ref.read(selectedNationalTeamProvider.notifier).selectTeam(
+                          SelectedNationalTeam(
+                            teamId: team.id,
+                            teamName: team.name,
+                            teamLogo: team.logo,
+                            countryCode: team.code,
+                            countryFlag: team.logo,
+                          ),
+                        );
+                        // 선택 후 관련 providers 새로고침
+                        ref.invalidate(selectedTeamNextMatchesProvider);
+                        ref.invalidate(selectedTeamPastMatchesProvider);
+                        ref.invalidate(selectedTeamFormProvider);
+                        Navigator.pop(context);
+                      },
+                      leading: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isSelected
+                                ? const Color(0xFF2563EB)
+                                : Colors.grey.shade200,
+                            width: isSelected ? 2 : 1,
+                          ),
+                        ),
+                        child: ClipOval(
+                          child: team.logo != null
+                              ? Image.network(
+                                  team.logo!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => Icon(
+                                    Icons.flag,
+                                    color: Colors.grey.shade400,
+                                  ),
+                                )
+                              : Icon(Icons.flag, color: Colors.grey.shade400),
+                        ),
+                      ),
+                      title: Text(
+                        team.name,
+                        style: TextStyle(
+                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                          color: isSelected
+                              ? const Color(0xFF2563EB)
+                              : const Color(0xFF111827),
+                        ),
+                      ),
+                      trailing: isSelected
+                          ? const Icon(
+                              Icons.check_circle,
+                              color: Color(0xFF2563EB),
+                            )
+                          : null,
+                    );
+                  },
+                );
+              },
+              loading: () => const Center(
+                child: CircularProgressIndicator(),
+              ),
+              error: (error, _) => Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_outline, size: 48, color: Colors.grey.shade400),
+                    const SizedBox(height: 16),
+                    Text(
+                      '팀 목록을 불러올 수 없습니다',
+                      style: TextStyle(color: Colors.grey.shade600),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

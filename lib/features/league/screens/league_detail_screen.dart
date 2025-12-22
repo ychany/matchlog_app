@@ -12,60 +12,168 @@ final leagueInfoProvider = FutureProvider.family<ApiFootballLeague?, int>((ref, 
   return service.getLeagueById(leagueId);
 });
 
+/// 선택된 시즌 Provider (사용자가 선택한 시즌 저장)
+final selectedSeasonProvider = StateProvider.family<int?, int>((ref, leagueId) => null);
+
+/// 리그 시즌 Provider (선택된 시즌 또는 최신 시즌 반환)
+final leagueSeasonProvider = FutureProvider.family<int, int>((ref, leagueId) async {
+  final selectedSeason = ref.watch(selectedSeasonProvider(leagueId));
+  if (selectedSeason != null) return selectedSeason;
+
+  final leagueInfo = await ref.watch(leagueInfoProvider(leagueId).future);
+  // 리그 정보에서 최신 시즌 사용, 없으면 현재 연도 사용
+  return leagueInfo?.latestSeason ?? LeagueIds.getCurrentSeason();
+});
+
 /// 리그 순위 Provider
 final leagueStandingsProvider = FutureProvider.family<List<ApiFootballStanding>, int>((ref, leagueId) async {
   final service = ApiFootballService();
-  final season = LeagueIds.getCurrentSeason();
+  final season = await ref.watch(leagueSeasonProvider(leagueId).future);
   return service.getStandings(leagueId, season);
 });
 
 /// 조별 리그 순위 Provider (그룹별로 반환)
 final leagueStandingsGroupedProvider = FutureProvider.family<Map<String, List<ApiFootballStanding>>, int>((ref, leagueId) async {
   final service = ApiFootballService();
-  final season = LeagueIds.getCurrentSeason();
+  final season = await ref.watch(leagueSeasonProvider(leagueId).future);
   return service.getStandingsGrouped(leagueId, season);
 });
 
 /// 조별 리그 여부 확인 Provider
 final isGroupStageLeagueProvider = FutureProvider.family<bool, int>((ref, leagueId) async {
   final service = ApiFootballService();
-  final season = LeagueIds.getCurrentSeason();
+  final season = await ref.watch(leagueSeasonProvider(leagueId).future);
   return service.isGroupStageLeague(leagueId, season);
 });
 
 /// 리그 경기 일정 Provider
 final leagueFixturesDetailProvider = FutureProvider.family<List<ApiFootballFixture>, int>((ref, leagueId) async {
   final service = ApiFootballService();
-  final season = LeagueIds.getCurrentSeason();
+  final season = await ref.watch(leagueSeasonProvider(leagueId).future);
   return service.getFixturesByLeague(leagueId, season);
 });
 
 /// 리그 득점 순위 Provider
 final leagueTopScorersProvider = FutureProvider.family<List<ApiFootballTopScorer>, int>((ref, leagueId) async {
   final service = ApiFootballService();
-  final season = LeagueIds.getCurrentSeason();
+  final season = await ref.watch(leagueSeasonProvider(leagueId).future);
   return service.getTopScorers(leagueId, season);
 });
 
 /// 리그 도움 순위 Provider
 final leagueTopAssistsProvider = FutureProvider.family<List<ApiFootballTopScorer>, int>((ref, leagueId) async {
   final service = ApiFootballService();
-  final season = LeagueIds.getCurrentSeason();
+  final season = await ref.watch(leagueSeasonProvider(leagueId).future);
   return service.getTopAssists(leagueId, season);
 });
 
 /// 최다 경고 Provider
 final leagueTopYellowCardsProvider = FutureProvider.family<List<ApiFootballTopScorer>, int>((ref, leagueId) async {
   final service = ApiFootballService();
-  final season = LeagueIds.getCurrentSeason();
+  final season = await ref.watch(leagueSeasonProvider(leagueId).future);
   return service.getTopYellowCards(leagueId, season);
 });
 
 /// 최다 퇴장 Provider
 final leagueTopRedCardsProvider = FutureProvider.family<List<ApiFootballTopScorer>, int>((ref, leagueId) async {
   final service = ApiFootballService();
-  final season = LeagueIds.getCurrentSeason();
+  final season = await ref.watch(leagueSeasonProvider(leagueId).future);
   return service.getTopRedCards(leagueId, season);
+});
+
+/// 우승팀/준우승팀 정보 클래스
+class LeagueChampionInfo {
+  // 리그용 (순위표 기반)
+  final ApiFootballStanding? champion;
+  final ApiFootballStanding? runnerUp;
+  // 컵 대회용 (결승전 기반)
+  final ApiFootballFixtureTeam? cupWinner;
+  final ApiFootballFixtureTeam? cupRunnerUp;
+  final ApiFootballFixture? finalMatch;
+  final bool isSeasonComplete;
+  final bool isCupCompetition;
+
+  LeagueChampionInfo({
+    this.champion,
+    this.runnerUp,
+    this.cupWinner,
+    this.cupRunnerUp,
+    this.finalMatch,
+    this.isSeasonComplete = false,
+    this.isCupCompetition = false,
+  });
+
+  bool get hasChampion => champion != null || cupWinner != null;
+}
+
+/// 리그 우승팀 Provider (리그: 순위표, 컵: 결승전)
+final leagueChampionProvider = FutureProvider.family<LeagueChampionInfo, int>((ref, leagueId) async {
+  final leagueInfo = await ref.watch(leagueInfoProvider(leagueId).future);
+  final fixtures = await ref.watch(leagueFixturesDetailProvider(leagueId).future);
+
+  // 컵 대회 여부 확인
+  final isCup = leagueInfo?.type == 'Cup';
+
+  if (isCup) {
+    // 컵 대회: 결승전에서 우승팀 찾기
+    final finalMatch = fixtures.where((f) {
+      final round = f.league.round?.toLowerCase() ?? '';
+      return round.contains('final') && !round.contains('semi') && !round.contains('quarter');
+    }).toList();
+
+    if (finalMatch.isNotEmpty) {
+      // 가장 최근(마지막) 결승전
+      finalMatch.sort((a, b) => b.date.compareTo(a.date));
+      final theFinal = finalMatch.first;
+
+      // 결승전이 끝났는지 확인
+      if (theFinal.status.short == 'FT' || theFinal.status.short == 'AET' || theFinal.status.short == 'PEN') {
+        final homeWinner = theFinal.homeTeam.winner == true;
+        final awayWinner = theFinal.awayTeam.winner == true;
+
+        if (homeWinner || awayWinner) {
+          return LeagueChampionInfo(
+            cupWinner: homeWinner ? theFinal.homeTeam : theFinal.awayTeam,
+            cupRunnerUp: homeWinner ? theFinal.awayTeam : theFinal.homeTeam,
+            finalMatch: theFinal,
+            isSeasonComplete: true,
+            isCupCompetition: true,
+          );
+        }
+      }
+    }
+
+    // 결승전이 아직 없거나 안 끝남 - 빈 결과 반환
+    return LeagueChampionInfo(isCupCompetition: true);
+  }
+
+  // 리그: 순위표에서 1, 2위 추출
+  final standings = await ref.watch(leagueStandingsProvider(leagueId).future);
+
+  if (standings.isEmpty) {
+    return LeagueChampionInfo();
+  }
+
+  final champion = standings.firstWhere((s) => s.rank == 1, orElse: () => standings.first);
+  final runnerUp = standings.length > 1
+      ? standings.firstWhere((s) => s.rank == 2, orElse: () => standings[1])
+      : null;
+
+  // 시즌 완료 여부 판단
+  final now = DateTime.now();
+  final allMatchesFinished = fixtures.isNotEmpty &&
+      fixtures.every((f) => f.date.isBefore(now) && f.status.short == 'FT');
+
+  final totalMatches = standings.isNotEmpty ? standings.first.played : 0;
+  final expectedMatches = (standings.length - 1) * 2;
+  final isSeasonComplete = allMatchesFinished ||
+      (expectedMatches > 0 && totalMatches >= expectedMatches * 0.95);
+
+  return LeagueChampionInfo(
+    champion: champion,
+    runnerUp: runnerUp,
+    isSeasonComplete: isSeasonComplete,
+  );
 });
 
 class LeagueDetailScreen extends ConsumerStatefulWidget {
@@ -113,6 +221,8 @@ class _LeagueDetailScreenState extends ConsumerState<LeagueDetailScreen> with Si
   }
 
   Widget _buildContent(ApiFootballLeague? league, int leagueId) {
+    final seasonAsync = ref.watch(leagueSeasonProvider(leagueId));
+
     return Column(
       children: [
         // 고정 헤더 영역
@@ -188,6 +298,16 @@ class _LeagueDetailScreenState extends ConsumerState<LeagueDetailScreen> with Si
                           ],
                         ),
                       ),
+                      // 시즌 선택 드롭다운
+                      if (league != null && league.seasons.isNotEmpty)
+                        _SeasonDropdown(
+                          seasons: league.seasons,
+                          currentSeason: seasonAsync.valueOrNull ?? league.latestSeason ?? LeagueIds.getCurrentSeason(),
+                          leagueType: league.type,
+                          onSeasonChanged: (season) {
+                            ref.read(selectedSeasonProvider(leagueId).notifier).state = season;
+                          },
+                        ),
                     ],
                   ),
                 ),
@@ -1516,6 +1636,7 @@ class _StatsTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final standingsAsync = ref.watch(leagueStandingsProvider(leagueId));
+    final championAsync = ref.watch(leagueChampionProvider(leagueId));
     final topYellowAsync = ref.watch(leagueTopYellowCardsProvider(leagueId));
     final topRedAsync = ref.watch(leagueTopRedCardsProvider(leagueId));
 
@@ -1538,6 +1659,17 @@ class _StatsTab extends ConsumerWidget {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
+              // 우승팀/현재 순위 카드 (상단에 배치)
+              championAsync.when(
+                data: (championInfo) => championInfo.hasChampion
+                    ? Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _ChampionCard(championInfo: championInfo),
+                      )
+                    : const SizedBox.shrink(),
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+              ),
               _LeagueOverviewCard(standings: standings),
               const SizedBox(height: 12),
               _RecentFormCard(standings: standings),
@@ -1725,7 +1857,308 @@ class _RecentFormCard extends StatelessWidget {
   }
 }
 
-// 리그 개요 카드
+// 우승팀/준우승팀 카드
+class _ChampionCard extends StatelessWidget {
+  final LeagueChampionInfo championInfo;
+
+  static const _gold = Color(0xFFFFD700);
+  static const _silver = Color(0xFFC0C0C0);
+  static const _textPrimary = Color(0xFF111827);
+  static const _textSecondary = Color(0xFF6B7280);
+  static const _border = Color(0xFFE5E7EB);
+
+  const _ChampionCard({required this.championInfo});
+
+  @override
+  Widget build(BuildContext context) {
+    // 컵 대회인 경우
+    if (championInfo.isCupCompetition) {
+      return _buildCupCard(context);
+    }
+
+    // 리그인 경우
+    return _buildLeagueCard(context);
+  }
+
+  /// 컵 대회 우승팀 카드
+  Widget _buildCupCard(BuildContext context) {
+    final winner = championInfo.cupWinner;
+    final runnerUp = championInfo.cupRunnerUp;
+    final finalMatch = championInfo.finalMatch;
+
+    if (winner == null) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            _gold.withValues(alpha: 0.12),
+            _gold.withValues(alpha: 0.04),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: _gold.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.emoji_events, color: _gold, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                '우승',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _textPrimary),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: _gold.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '결승전',
+                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: Colors.amber[800]),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          // 우승팀
+          _buildCupTeamRow(context: context, rank: 1, team: winner),
+          if (runnerUp != null) ...[
+            const SizedBox(height: 6),
+            _buildCupTeamRow(context: context, rank: 2, team: runnerUp),
+          ],
+          // 결승전 스코어 표시
+          if (finalMatch != null) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Flexible(
+                    child: Text(
+                      finalMatch.homeTeam.name,
+                      style: TextStyle(fontSize: 11, color: _textSecondary),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    child: Text(
+                      '${finalMatch.homeGoals ?? 0} - ${finalMatch.awayGoals ?? 0}',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: _textPrimary),
+                    ),
+                  ),
+                  Flexible(
+                    child: Text(
+                      finalMatch.awayTeam.name,
+                      style: TextStyle(fontSize: 11, color: _textSecondary),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// 컵 대회 팀 행
+  Widget _buildCupTeamRow({
+    required BuildContext context,
+    required int rank,
+    required ApiFootballFixtureTeam team,
+  }) {
+    final medalColor = rank == 1 ? _gold : _silver;
+
+    return InkWell(
+      onTap: () => context.push('/team/${team.id}'),
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: medalColor.withValues(alpha: 0.25)),
+        ),
+        child: Row(
+          children: [
+            Text(rank == 1 ? '🥇' : '🥈', style: const TextStyle(fontSize: 16)),
+            const SizedBox(width: 8),
+            if (team.logo != null)
+              CachedNetworkImage(
+                imageUrl: team.logo!,
+                width: 24,
+                height: 24,
+                errorWidget: (_, __, ___) => const Icon(Icons.shield, size: 24),
+              ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                team.name,
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _textPrimary),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              decoration: BoxDecoration(
+                color: medalColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                rank == 1 ? '우승' : '준우승',
+                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: rank == 1 ? Colors.amber[800] : Colors.grey[600]),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 리그 우승팀 카드
+  Widget _buildLeagueCard(BuildContext context) {
+    final champion = championInfo.champion;
+    final runnerUp = championInfo.runnerUp;
+
+    if (champion == null) return const SizedBox.shrink();
+
+    final isComplete = championInfo.isSeasonComplete;
+    final title = isComplete ? '우승' : '현재 순위';
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        gradient: isComplete
+            ? LinearGradient(
+                colors: [
+                  _gold.withValues(alpha: 0.12),
+                  _gold.withValues(alpha: 0.04),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : null,
+        color: isComplete ? null : Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: isComplete ? _gold.withValues(alpha: 0.25) : _border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                isComplete ? Icons.emoji_events : Icons.leaderboard,
+                color: isComplete ? _gold : Colors.amber[700],
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _textPrimary),
+              ),
+              if (isComplete) ...[
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: _gold.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '시즌 종료',
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: Colors.amber[800]),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 10),
+          // 우승팀 (또는 현재 1위)
+          _buildLeagueTeamRow(context: context, rank: 1, team: champion),
+          if (runnerUp != null) ...[
+            const SizedBox(height: 6),
+            _buildLeagueTeamRow(context: context, rank: 2, team: runnerUp),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLeagueTeamRow({
+    required BuildContext context,
+    required int rank,
+    required ApiFootballStanding team,
+  }) {
+    final medalColor = rank == 1 ? _gold : _silver;
+
+    return InkWell(
+      onTap: () => context.push('/team/${team.teamId}'),
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: medalColor.withValues(alpha: 0.25)),
+        ),
+        child: Row(
+          children: [
+            Text(rank == 1 ? '🥇' : '🥈', style: const TextStyle(fontSize: 16)),
+            const SizedBox(width: 8),
+            if (team.teamLogo != null)
+              CachedNetworkImage(
+                imageUrl: team.teamLogo!,
+                width: 24,
+                height: 24,
+                errorWidget: (_, __, ___) => const Icon(Icons.shield, size: 24),
+              ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                team.teamName,
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _textPrimary),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            Text(
+              '${team.points}점',
+              style: TextStyle(fontSize: 11, color: _textSecondary),
+            ),
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              decoration: BoxDecoration(
+                color: medalColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                '${team.goalsFor}골',
+                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: rank == 1 ? Colors.amber[800] : Colors.grey[600]),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _LeagueOverviewCard extends StatelessWidget {
   final List<ApiFootballStanding> standings;
 
@@ -2671,6 +3104,146 @@ class _BottomTeamsCard extends StatelessWidget {
                 style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: _error),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 시즌 선택 드롭다운
+class _SeasonDropdown extends StatelessWidget {
+  final List<int> seasons;
+  final int currentSeason;
+  final ValueChanged<int> onSeasonChanged;
+  final String? leagueType; // "League" or "Cup"
+
+  static const _primary = Color(0xFF2563EB);
+  static const _textPrimary = Color(0xFF111827);
+  static const _textSecondary = Color(0xFF6B7280);
+
+  const _SeasonDropdown({
+    required this.seasons,
+    required this.currentSeason,
+    required this.onSeasonChanged,
+    this.leagueType,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // 시즌을 최신순으로 정렬
+    final sortedSeasons = seasons.toList()..sort((a, b) => b.compareTo(a));
+
+    return GestureDetector(
+      onTap: () => _showSeasonPicker(context, sortedSeasons),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: _primary.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: _primary.withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              _formatSeason(currentSeason),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: _primary,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(Icons.keyboard_arrow_down, size: 18, color: _primary),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatSeason(int season) {
+    // 컵 대회(월드컵, 아시안컵 등)는 단일 연도로 표시
+    // 리그(EPL, 라리가 등)는 시즌 형식(2024-25)으로 표시
+    if (leagueType == 'Cup') {
+      return '$season';
+    }
+    return '$season-${(season + 1) % 100}';
+  }
+
+  void _showSeasonPicker(BuildContext context, List<int> sortedSeasons) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 핸들
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            // 헤더
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                '시즌 선택',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: _textPrimary,
+                ),
+              ),
+            ),
+            // 시즌 목록
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                itemCount: sortedSeasons.length,
+                itemBuilder: (context, index) {
+                  final season = sortedSeasons[index];
+                  final isSelected = season == currentSeason;
+
+                  return ListTile(
+                    onTap: () {
+                      Navigator.pop(context);
+                      onSeasonChanged(season);
+                    },
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    tileColor: isSelected ? _primary.withValues(alpha: 0.08) : null,
+                    leading: Icon(
+                      Icons.calendar_today,
+                      size: 20,
+                      color: isSelected ? _primary : _textSecondary,
+                    ),
+                    title: Text(
+                      _formatSeason(season),
+                      style: TextStyle(
+                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                        color: isSelected ? _primary : _textPrimary,
+                      ),
+                    ),
+                    trailing: isSelected
+                        ? Icon(Icons.check_circle, color: _primary)
+                        : null,
+                  );
+                },
+              ),
+            ),
+            SizedBox(height: MediaQuery.of(context).padding.bottom),
           ],
         ),
       ),
