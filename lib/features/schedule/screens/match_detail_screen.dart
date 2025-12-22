@@ -416,14 +416,42 @@ class _MatchDetailContentState extends ConsumerState<_MatchDetailContent>
                   onPressed: () => context.pop(),
                 ),
                 Expanded(
-                  child: Text(
-                    match.league.name,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: _textPrimary,
+                  child: GestureDetector(
+                    onTap: () => context.push('/league/${match.league.id}'),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (match.league.logo != null && match.league.logo!.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: CachedNetworkImage(
+                              imageUrl: match.league.logo!,
+                              width: 24,
+                              height: 24,
+                              placeholder: (context, url) => const SizedBox(width: 24, height: 24),
+                              errorWidget: (context, url, error) => const Icon(Icons.sports_soccer, size: 24),
+                            ),
+                          ),
+                        Flexible(
+                          child: Text(
+                            match.league.name,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: _textPrimary,
+                            ),
+                            textAlign: TextAlign.center,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.chevron_right,
+                          size: 18,
+                          color: _textSecondary,
+                        ),
+                      ],
                     ),
-                    textAlign: TextAlign.center,
                   ),
                 ),
                 IconButton(
