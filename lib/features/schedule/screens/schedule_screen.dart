@@ -794,54 +794,6 @@ class _ScheduleMatchCard extends ConsumerWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 10),
-
-            // 경기장 & 중계
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: _border.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.stadium_outlined,
-                    size: 12,
-                    color: _textSecondary,
-                  ),
-                  const SizedBox(width: 4),
-                  Flexible(
-                    child: Text(
-                      match.stadium,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: _textSecondary,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  if (match.broadcast != null) ...[
-                    Container(
-                      width: 1,
-                      height: 10,
-                      margin: const EdgeInsets.symmetric(horizontal: 8),
-                      color: _textSecondary.withValues(alpha: 0.3),
-                    ),
-                    Icon(Icons.tv, size: 12, color: _textSecondary),
-                    const SizedBox(width: 4),
-                    Text(
-                      match.broadcast!,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: _textSecondary,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
 
             // 직관 완료 표시
             hasDiaryAsync.when(
