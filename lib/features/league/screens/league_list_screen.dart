@@ -28,14 +28,17 @@ final popularLeaguesProvider = FutureProvider<List<ApiFootballLeague>>((ref) asy
     17,   // AFC Asian Cup
   ];
 
+  // 병렬로 모든 리그 정보 조회
+  final results = await Future.wait(
+    popularLeagueIds.map((id) => service.getLeagueById(id).catchError((_) => null)),
+  );
+
+  // null이 아닌 결과만 필터링하고 원래 순서 유지
   final leagues = <ApiFootballLeague>[];
-  for (final id in popularLeagueIds) {
-    try {
-      final league = await service.getLeagueById(id);
-      if (league != null) {
-        leagues.add(league);
-      }
-    } catch (_) {}
+  for (int i = 0; i < popularLeagueIds.length; i++) {
+    if (results[i] != null) {
+      leagues.add(results[i]!);
+    }
   }
 
   return leagues;
