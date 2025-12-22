@@ -407,11 +407,11 @@ class _LeagueMatchGroup extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 리그 헤더 (탭하면 리그 경기 목록으로 이동)
+          // 리그 헤더 (탭하면 리그 상세로 이동)
           GestureDetector(
             onTap: () {
               if (_leagueId != null) {
-                context.push('/league/$_leagueId/fixtures');
+                context.push('/league/$_leagueId');
               }
             },
             child: Container(

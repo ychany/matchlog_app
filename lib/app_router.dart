@@ -12,7 +12,6 @@ import 'features/attendance/screens/attendance_edit_screen.dart';
 import 'features/schedule/screens/schedule_screen.dart';
 import 'features/schedule/screens/match_detail_screen.dart';
 import 'features/schedule/screens/player_detail_screen.dart';
-import 'features/schedule/screens/league_fixtures_screen.dart';
 import 'features/favorites/screens/favorites_screen.dart';
 import 'features/standings/screens/standings_screen.dart';
 import 'features/standings/screens/leagues_by_country_screen.dart';
@@ -121,15 +120,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final leagueId = state.pathParameters['leagueId']!;
           return LeagueStandingsScreen(leagueId: leagueId);
-        },
-      ),
-
-      // League Fixtures (outside shell - league match list)
-      GoRoute(
-        path: '/league/:leagueId/fixtures',
-        builder: (context, state) {
-          final leagueId = state.pathParameters['leagueId']!;
-          return LeagueFixturesScreen(leagueId: leagueId);
         },
       ),
 
