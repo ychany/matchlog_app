@@ -529,6 +529,22 @@ class _SeasonStatsTab extends ConsumerWidget {
 
     return multiSeasonAsync.when(
       data: (seasons) {
+        // 디버깅: 시즌 통계 전체 출력
+        debugPrint('=== 시즌 통계 디버깅 ===');
+        debugPrint('총 시즌 수: ${seasons.length}');
+        for (final seasonPlayer in seasons) {
+          debugPrint('--- 시즌 데이터 ---');
+          debugPrint('선수명: ${seasonPlayer.name}');
+          debugPrint('통계 개수: ${seasonPlayer.statistics.length}');
+          for (final stats in seasonPlayer.statistics) {
+            debugPrint('  [리그 ID: ${stats.leagueId}] ${stats.leagueName}');
+            debugPrint('    팀 ID: ${stats.teamId}, 팀명: ${stats.teamName}');
+            debugPrint('    팀 로고: ${stats.teamLogo}');
+            debugPrint('    시즌: ${stats.season}, 경기: ${stats.appearances}, 골: ${stats.goals}, 도움: ${stats.assists}');
+          }
+        }
+        debugPrint('=== 디버깅 끝 ===');
+
         if (seasons.isEmpty) {
           return Center(
             child: Column(
@@ -576,7 +592,7 @@ class _SeasonStatsTab extends ConsumerWidget {
   }
 }
 
-// 시즌별 통계 테이블
+// 시즌별 통계 테이블 (소속팀 / 국가대표팀 분리)
 class _SeasonStatsTable extends StatelessWidget {
   final List<ApiFootballPlayer> seasons;
 
@@ -585,10 +601,39 @@ class _SeasonStatsTable extends StatelessWidget {
   static const _textSecondary = Color(0xFF6B7280);
   static const _border = Color(0xFFE5E7EB);
 
+  // 국가대표 관련 리그 ID (클럽 유럽대회 제외: 2=UCL, 3=UEL, 848=UECL)
+  static const _nationalTeamLeagues = {
+    1,  // World Cup
+    4, 5, 6, 7, 8, 9, 10,  // Euro, Nations League, Asian Cup, Friendlies 등
+    11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+    21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34,  // World Cup 예선 등
+  };
+
   const _SeasonStatsTable({required this.seasons});
 
   @override
   Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // 소속팀 통계
+        _buildSectionTable(context, '소속팀', isClub: true),
+        const SizedBox(height: 16),
+        // 국가대표팀 통계
+        _buildSectionTable(context, '국가대표팀', isClub: false),
+      ],
+    );
+  }
+
+  Widget _buildSectionTable(BuildContext context, String title, {required bool isClub}) {
+    // 해당 섹션의 데이터가 있는지 확인
+    final hasData = seasons.any((player) => player.statistics.any((stats) {
+      final isNational = _nationalTeamLeagues.contains(stats.leagueId);
+      final hasAppearance = (stats.appearances ?? 0) > 0;
+      return hasAppearance && (isClub ? !isNational : isNational);
+    }));
+
+    if (!hasData) return const SizedBox.shrink();
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -597,16 +642,43 @@ class _SeasonStatsTable extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // 헤더
+          // 섹션 타이틀
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
-              color: _primary.withValues(alpha: 0.05),
+              color: isClub ? _primary.withValues(alpha: 0.08) : const Color(0xFFEF4444).withValues(alpha: 0.08),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
             ),
             child: Row(
               children: [
+                Icon(
+                  isClub ? Icons.sports_soccer : Icons.flag,
+                  size: 16,
+                  color: isClub ? _primary : const Color(0xFFEF4444),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: isClub ? _primary : const Color(0xFFEF4444),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // 헤더
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              border: Border(top: BorderSide(color: _border)),
+            ),
+            child: Row(
+              children: [
                 const Expanded(flex: 2, child: Text('시즌', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12))),
+                const Expanded(flex: 2, child: Text('팀', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12))),
                 const Expanded(child: Text('경기', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12), textAlign: TextAlign.center)),
                 const Expanded(child: Text('골', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12), textAlign: TextAlign.center)),
                 const Expanded(child: Text('도움', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12), textAlign: TextAlign.center)),
@@ -619,6 +691,15 @@ class _SeasonStatsTable extends StatelessWidget {
             final index = entry.key;
             final player = entry.value;
 
+            // 해당 섹션의 통계만 필터링
+            final filteredStats = player.statistics.where((stats) {
+              final isNational = _nationalTeamLeagues.contains(stats.leagueId);
+              final hasAppearance = (stats.appearances ?? 0) > 0;
+              return hasAppearance && (isClub ? !isNational : isNational);
+            }).toList();
+
+            if (filteredStats.isEmpty) return const SizedBox.shrink();
+
             // 해당 시즌 통계 합산
             int totalAppearances = 0;
             int totalGoals = 0;
@@ -626,7 +707,9 @@ class _SeasonStatsTable extends StatelessWidget {
             double avgRating = 0;
             int ratingCount = 0;
 
-            for (final stats in player.statistics) {
+            // 팀 정보
+            final teamInfos = <int, String>{}; // teamId -> teamLogo
+            for (final stats in filteredStats) {
               totalAppearances += stats.appearances ?? 0;
               totalGoals += stats.goals ?? 0;
               totalAssists += stats.assists ?? 0;
@@ -637,12 +720,18 @@ class _SeasonStatsTable extends StatelessWidget {
                   ratingCount++;
                 }
               }
+              if (stats.teamId != null && stats.teamLogo != null) {
+                teamInfos[stats.teamId!] = stats.teamLogo!;
+              }
             }
 
             if (ratingCount > 0) avgRating /= ratingCount;
 
-            final season = player.statistics.first.season;
-            final seasonText = season != null ? '${season.toString().substring(2)}/${(season + 1).toString().substring(2)}' : '-';
+            final season = filteredStats.first.season;
+            // 소속팀은 시즌제 (24/25), 국가대표는 연도 (2024)
+            final seasonText = season != null
+                ? (isClub ? '${season.toString().substring(2)}/${(season + 1).toString().substring(2)}' : '$season')
+                : '-';
 
             return Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -662,6 +751,25 @@ class _SeasonStatsTable extends StatelessWidget {
                         color: _textPrimary,
                       ),
                     ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: teamInfos.isNotEmpty
+                        ? Row(
+                            children: teamInfos.entries.take(3).map((teamEntry) => Padding(
+                              padding: const EdgeInsets.only(right: 4),
+                              child: GestureDetector(
+                                onTap: () => context.push('/team/${teamEntry.key}'),
+                                child: CachedNetworkImage(
+                                  imageUrl: teamEntry.value,
+                                  width: 20,
+                                  height: 20,
+                                  errorWidget: (_, __, ___) => Icon(Icons.shield, size: 20, color: _textSecondary),
+                                ),
+                              ),
+                            )).toList(),
+                          )
+                        : Icon(Icons.shield, size: 20, color: _textSecondary),
                   ),
                   Expanded(child: Text('$totalAppearances', style: const TextStyle(fontSize: 13), textAlign: TextAlign.center)),
                   Expanded(child: Text('$totalGoals', style: TextStyle(fontSize: 13, fontWeight: totalGoals > 0 ? FontWeight.w600 : FontWeight.normal, color: totalGoals > 0 ? const Color(0xFF10B981) : _textPrimary), textAlign: TextAlign.center)),
@@ -699,9 +807,18 @@ class _SeasonStatsTable extends StatelessWidget {
 class _SeasonDetailCard extends StatelessWidget {
   final ApiFootballPlayer player;
 
+  static const _primary = Color(0xFF2563EB);
   static const _textPrimary = Color(0xFF111827);
   static const _textSecondary = Color(0xFF6B7280);
   static const _border = Color(0xFFE5E7EB);
+
+  // 국가대표 관련 리그 ID (클럽 유럽대회 제외: 2=UCL, 3=UEL, 848=UECL)
+  static const _nationalTeamLeagues = {
+    1,  // World Cup
+    4, 5, 6, 7, 8, 9, 10,  // Euro, Nations League, Asian Cup, Friendlies 등
+    11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+    21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34,  // World Cup 예선 등
+  };
 
   const _SeasonDetailCard({required this.player});
 
@@ -709,6 +826,17 @@ class _SeasonDetailCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final season = player.statistics.isNotEmpty ? player.statistics.first.season : null;
     final seasonText = season != null ? '$season/${season + 1} 시즌' : '시즌 정보 없음';
+
+    // 출전 기록 있는 것만 필터링
+    final allStats = player.statistics.where((stats) {
+      return (stats.appearances ?? 0) > 0;
+    }).toList();
+
+    if (allStats.isEmpty) return const SizedBox.shrink();
+
+    // 소속팀 / 국가대표팀 분리
+    final clubStats = allStats.where((s) => !_nationalTeamLeagues.contains(s.leagueId)).toList();
+    final nationalStats = allStats.where((s) => _nationalTeamLeagues.contains(s.leagueId)).toList();
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -731,14 +859,43 @@ class _SeasonDetailCard extends StatelessWidget {
             ),
           ),
           subtitle: Text(
-            '${player.statistics.length}개 대회 참가',
+            '${allStats.length}개 대회 참가',
             style: TextStyle(fontSize: 12, color: _textSecondary),
           ),
-          children: player.statistics.map((stats) {
-            if ((stats.appearances ?? 0) == 0) return const SizedBox.shrink();
-            return _LeagueStatsRow(stats: stats);
-          }).toList(),
+          children: [
+            // 소속팀 섹션
+            if (clubStats.isNotEmpty) ...[
+              _buildSectionHeader('소속팀', Icons.sports_soccer, _primary),
+              ...clubStats.map((stats) => _LeagueStatsRow(stats: stats)),
+            ],
+            // 국가대표팀 섹션
+            if (nationalStats.isNotEmpty) ...[
+              if (clubStats.isNotEmpty) const SizedBox(height: 12),
+              _buildSectionHeader('국가대표팀', Icons.flag, const Color(0xFFEF4444)),
+              ...nationalStats.map((stats) => _LeagueStatsRow(stats: stats)),
+            ],
+          ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, IconData icon, Color color) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 6),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -775,11 +932,14 @@ class _LeagueStatsRow extends StatelessWidget {
           Row(
             children: [
               if (stats.teamLogo != null)
-                CachedNetworkImage(
-                  imageUrl: stats.teamLogo!,
-                  width: 20,
-                  height: 20,
-                  errorWidget: (_, __, ___) => Icon(Icons.shield, size: 20, color: _textSecondary),
+                GestureDetector(
+                  onTap: stats.teamId != null ? () => context.push('/team/${stats.teamId}') : null,
+                  child: CachedNetworkImage(
+                    imageUrl: stats.teamLogo!,
+                    width: 20,
+                    height: 20,
+                    errorWidget: (_, __, ___) => Icon(Icons.shield, size: 20, color: _textSecondary),
+                  ),
                 ),
               const SizedBox(width: 8),
               Expanded(
@@ -1344,26 +1504,29 @@ class _TransferItem extends StatelessWidget {
         children: [
           // From Team
           Expanded(
-            child: Row(
-              children: [
-                if (transfer.teamOutLogo != null)
-                  CachedNetworkImage(
-                    imageUrl: transfer.teamOutLogo!,
-                    width: 24,
-                    height: 24,
-                    errorWidget: (_, __, ___) => const Icon(Icons.shield, size: 24),
-                  )
-                else
-                  const Icon(Icons.shield, size: 24, color: Colors.grey),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    transfer.teamOutName ?? '-',
-                    style: const TextStyle(fontSize: 11, color: _textPrimary),
-                    overflow: TextOverflow.ellipsis,
+            child: GestureDetector(
+              onTap: transfer.teamOutId != null ? () => context.push('/team/${transfer.teamOutId}') : null,
+              child: Row(
+                children: [
+                  if (transfer.teamOutLogo != null)
+                    CachedNetworkImage(
+                      imageUrl: transfer.teamOutLogo!,
+                      width: 24,
+                      height: 24,
+                      errorWidget: (_, __, ___) => const Icon(Icons.shield, size: 24),
+                    )
+                  else
+                    const Icon(Icons.shield, size: 24, color: Colors.grey),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      transfer.teamOutName ?? '-',
+                      style: const TextStyle(fontSize: 11, color: _textPrimary),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           // Arrow
@@ -1373,26 +1536,29 @@ class _TransferItem extends StatelessWidget {
           ),
           // To Team
           Expanded(
-            child: Row(
-              children: [
-                if (transfer.teamInLogo != null)
-                  CachedNetworkImage(
-                    imageUrl: transfer.teamInLogo!,
-                    width: 24,
-                    height: 24,
-                    errorWidget: (_, __, ___) => const Icon(Icons.shield, size: 24),
-                  )
-                else
-                  const Icon(Icons.shield, size: 24, color: Colors.grey),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    transfer.teamInName ?? '-',
-                    style: const TextStyle(fontSize: 11, color: _textPrimary),
-                    overflow: TextOverflow.ellipsis,
+            child: GestureDetector(
+              onTap: transfer.teamInId != null ? () => context.push('/team/${transfer.teamInId}') : null,
+              child: Row(
+                children: [
+                  if (transfer.teamInLogo != null)
+                    CachedNetworkImage(
+                      imageUrl: transfer.teamInLogo!,
+                      width: 24,
+                      height: 24,
+                      errorWidget: (_, __, ___) => const Icon(Icons.shield, size: 24),
+                    )
+                  else
+                    const Icon(Icons.shield, size: 24, color: Colors.grey),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      transfer.teamInName ?? '-',
+                      style: const TextStyle(fontSize: 11, color: _textPrimary),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],

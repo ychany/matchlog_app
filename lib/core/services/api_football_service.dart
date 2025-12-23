@@ -261,9 +261,19 @@ class ApiFootballService {
     final playerData = (data['response'] as List).first;
     if (playerData['transfers'] == null) return [];
 
-    return (playerData['transfers'] as List)
+    final transfers = (playerData['transfers'] as List)
         .map((json) => ApiFootballTransfer.fromJson(json))
         .toList();
+
+    // 날짜 기준 최신순 정렬
+    transfers.sort((a, b) {
+      if (a.date == null && b.date == null) return 0;
+      if (a.date == null) return 1;
+      if (b.date == null) return -1;
+      return b.date!.compareTo(a.date!);
+    });
+
+    return transfers;
   }
 
   /// 팀 이적 기록 조회
