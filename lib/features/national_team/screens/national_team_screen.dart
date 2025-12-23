@@ -45,6 +45,11 @@ class _NationalTeamScreenState extends ConsumerState<NationalTeamScreen>
     final countdown = ref.watch(worldCupCountdownProvider);
     final selectedTeam = ref.watch(selectedNationalTeamProvider);
 
+    // 팀이 선택되지 않았으면 선택 안내 화면 표시
+    if (selectedTeam == null) {
+      return _buildNoTeamSelectedScreen(context, countdown);
+    }
+
     return Scaffold(
       backgroundColor: _background,
       body: CustomScrollView(
@@ -236,6 +241,144 @@ class _NationalTeamScreenState extends ConsumerState<NationalTeamScreen>
       ),
     );
   }
+
+  Widget _buildNoTeamSelectedScreen(BuildContext context, WorldCupCountdown countdown) {
+    return Scaffold(
+      backgroundColor: _background,
+      appBar: AppBar(
+        backgroundColor: _gradientStart,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => context.pop(),
+        ),
+        title: const Text(
+          '국가대표',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        ),
+      ),
+      body: Column(
+        children: [
+          // 월드컵 카운트다운 배너
+          Container(
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFFFD700).withValues(alpha: 0.3),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                const Text('🏆', style: TextStyle(fontSize: 40)),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        countdown.tournamentName,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: _textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '개막까지',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: _textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    'D-${countdown.daysRemaining}',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: _gradientStart,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // 팀 선택 안내
+          Expanded(
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.grey.shade200,
+                    ),
+                    child: const Icon(
+                      Icons.flag_outlined,
+                      size: 50,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    '응원할 국가대표팀을 선택해주세요',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: _textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '2026 월드컵에 참가하는 국가 중에서 선택할 수 있습니다',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: _textSecondary,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 32),
+                  ElevatedButton.icon(
+                    onPressed: () => context.push('/national-team/select'),
+                    icon: const Icon(Icons.search),
+                    label: const Text('국가 선택하기'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _gradientStart,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 // 탭바 델리게이트
@@ -387,7 +530,7 @@ class _MatchCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedTeam = ref.watch(selectedNationalTeamProvider);
     final matchDate = match.dateKST;
-    final isMyTeamHome = match.homeTeam.id == selectedTeam.teamId;
+    final isMyTeamHome = match.homeTeam.id == selectedTeam?.teamId;
 
     return GestureDetector(
       onTap: () => context.push('/match/${match.id}'),
@@ -636,54 +779,59 @@ class _InfoTab extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
                   formAsync.when(
-                    data: (form) => Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: form.results.map((r) {
-                            Color bgColor;
-                            switch (r) {
-                              case 'W':
-                                bgColor = const Color(0xFF10B981);
-                                break;
-                              case 'L':
-                                bgColor = const Color(0xFFEF4444);
-                                break;
-                              default:
-                                bgColor = const Color(0xFF6B7280);
-                            }
-                            return Container(
-                              width: 40,
-                              height: 40,
-                              margin: const EdgeInsets.symmetric(horizontal: 4),
-                              decoration: BoxDecoration(
-                                color: bgColor,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  r,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w700,
+                    data: (form) {
+                      if (form == null) {
+                        return const Text('폼 정보가 없습니다');
+                      }
+                      return Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: form.results.map((r) {
+                              Color bgColor;
+                              switch (r) {
+                                case 'W':
+                                  bgColor = const Color(0xFF10B981);
+                                  break;
+                                case 'L':
+                                  bgColor = const Color(0xFFEF4444);
+                                  break;
+                                default:
+                                  bgColor = const Color(0xFF6B7280);
+                              }
+                              return Container(
+                                width: 40,
+                                height: 40,
+                                margin: const EdgeInsets.symmetric(horizontal: 4),
+                                decoration: BoxDecoration(
+                                  color: bgColor,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    r,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            _StatItem(label: '승', value: '${form.wins}', color: const Color(0xFF10B981)),
-                            _StatItem(label: '무', value: '${form.draws}', color: const Color(0xFF6B7280)),
-                            _StatItem(label: '패', value: '${form.losses}', color: const Color(0xFFEF4444)),
-                          ],
-                        ),
-                      ],
-                    ),
+                              );
+                            }).toList(),
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              _StatItem(label: '승', value: '${form.wins}', color: const Color(0xFF10B981)),
+                              _StatItem(label: '무', value: '${form.draws}', color: const Color(0xFF6B7280)),
+                              _StatItem(label: '패', value: '${form.losses}', color: const Color(0xFFEF4444)),
+                            ],
+                          ),
+                        ],
+                      );
+                    },
                     loading: () => const Center(child: CircularProgressIndicator()),
                     error: (_, __) => const Text('폼 정보를 불러올 수 없습니다'),
                   ),

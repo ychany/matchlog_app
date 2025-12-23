@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/services/api_football_service.dart';
-import '../../../core/constants/api_football_ids.dart';
+import '../../../core/constants/api_football_ids.dart'; // LeagueIds 사용
 import '../../profile/providers/timezone_provider.dart';
 
 /// 선택된 국가대표팀 정보
@@ -37,20 +37,11 @@ class SelectedNationalTeam {
       countryFlag: json['countryFlag'] as String?,
     );
   }
-
-  // 기본값: 대한민국
-  // 참고: API-Football의 국기는 SVG만 제공하므로 countryFlag는 사용하지 않음
-  static const defaultTeam = SelectedNationalTeam(
-    teamId: TeamIds.southKorea,
-    teamName: 'South Korea',
-    teamLogo: 'https://media.api-sports.io/football/teams/17.png',
-    countryCode: 'KR',
-  );
 }
 
-/// 선택된 국가대표팀 Provider (SharedPreferences 저장)
-class SelectedNationalTeamNotifier extends StateNotifier<SelectedNationalTeam> {
-  SelectedNationalTeamNotifier() : super(SelectedNationalTeam.defaultTeam) {
+/// 선택된 국가대표팀 Provider (SharedPreferences 저장, null = 미선택)
+class SelectedNationalTeamNotifier extends StateNotifier<SelectedNationalTeam?> {
+  SelectedNationalTeamNotifier() : super(null) {
     _loadSavedTeam();
   }
 
@@ -81,19 +72,39 @@ class SelectedNationalTeamNotifier extends StateNotifier<SelectedNationalTeam> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('${_prefKey}_id', team.teamId);
     await prefs.setString('${_prefKey}_name', team.teamName);
+
+    // 기존 값 정리 후 새 값 저장
     if (team.teamLogo != null) {
       await prefs.setString('${_prefKey}_logo', team.teamLogo!);
+    } else {
+      await prefs.remove('${_prefKey}_logo');
     }
     if (team.countryCode != null) {
       await prefs.setString('${_prefKey}_code', team.countryCode!);
+    } else {
+      await prefs.remove('${_prefKey}_code');
     }
     if (team.countryFlag != null) {
       await prefs.setString('${_prefKey}_flag', team.countryFlag!);
+    } else {
+      await prefs.remove('${_prefKey}_flag');
     }
+  }
+
+  /// 선택 초기화 (팀 선택 해제)
+  Future<void> clearSelection() async {
+    state = null;
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('${_prefKey}_id');
+    await prefs.remove('${_prefKey}_name');
+    await prefs.remove('${_prefKey}_logo');
+    await prefs.remove('${_prefKey}_code');
+    await prefs.remove('${_prefKey}_flag');
   }
 }
 
-final selectedNationalTeamProvider = StateNotifierProvider<SelectedNationalTeamNotifier, SelectedNationalTeam>((ref) {
+final selectedNationalTeamProvider = StateNotifierProvider<SelectedNationalTeamNotifier, SelectedNationalTeam?>((ref) {
   return SelectedNationalTeamNotifier();
 });
 
@@ -128,8 +139,10 @@ final worldCupTeamsProvider = FutureProvider<List<ApiFootballTeam>>((ref) async 
 
 /// 선택된 국가대표팀의 다음 경기 Provider
 final selectedTeamNextMatchesProvider = FutureProvider<List<ApiFootballFixture>>((ref) async {
-  final service = ApiFootballService();
   final team = ref.watch(selectedNationalTeamProvider);
+  if (team == null) return [];
+
+  final service = ApiFootballService();
   ref.watch(timezoneProvider);
 
   return service.getTeamNextFixtures(team.teamId, count: 10);
@@ -137,8 +150,10 @@ final selectedTeamNextMatchesProvider = FutureProvider<List<ApiFootballFixture>>
 
 /// 선택된 국가대표팀의 지난 경기 Provider
 final selectedTeamPastMatchesProvider = FutureProvider<List<ApiFootballFixture>>((ref) async {
-  final service = ApiFootballService();
   final team = ref.watch(selectedNationalTeamProvider);
+  if (team == null) return [];
+
+  final service = ApiFootballService();
   ref.watch(timezoneProvider);
 
   return service.getTeamLastFixtures(team.teamId, count: 10);
@@ -161,9 +176,11 @@ final selectedTeamAllMatchesProvider = FutureProvider<List<ApiFootballFixture>>(
 });
 
 /// 선택된 국가대표팀의 최근 폼 Provider
-final selectedTeamFormProvider = FutureProvider<TeamForm>((ref) async {
-  final pastMatches = await ref.watch(selectedTeamPastMatchesProvider.future);
+final selectedTeamFormProvider = FutureProvider<TeamForm?>((ref) async {
   final team = ref.watch(selectedNationalTeamProvider);
+  if (team == null) return null;
+
+  final pastMatches = await ref.watch(selectedTeamPastMatchesProvider.future);
 
   final recent = pastMatches.take(5).toList();
   final results = <String>[];
@@ -193,22 +210,28 @@ final selectedTeamFormProvider = FutureProvider<TeamForm>((ref) async {
 
 /// 선택된 국가대표팀의 선수단 Provider
 final selectedTeamSquadProvider = FutureProvider<List<ApiFootballSquadPlayer>>((ref) async {
-  final service = ApiFootballService();
   final team = ref.watch(selectedNationalTeamProvider);
+  if (team == null) return [];
+
+  final service = ApiFootballService();
   return service.getTeamSquad(team.teamId);
 });
 
 /// 선택된 국가대표팀의 상세 정보 Provider
 final selectedTeamInfoProvider = FutureProvider<ApiFootballTeam?>((ref) async {
-  final service = ApiFootballService();
   final team = ref.watch(selectedNationalTeamProvider);
+  if (team == null) return null;
+
+  final service = ApiFootballService();
   return service.getTeamById(team.teamId);
 });
 
 /// 선택된 국가대표팀이 참가하는 대회 목록 Provider (동적)
 final selectedTeamCompetitionsProvider = FutureProvider<List<ApiFootballTeamLeague>>((ref) async {
-  final service = ApiFootballService();
   final team = ref.watch(selectedNationalTeamProvider);
+  if (team == null) return [];
+
+  final service = ApiFootballService();
   final currentYear = DateTime.now().year;
 
   // 최근 3년치 시즌 조회 (국제 대회는 2~4년 주기이므로)

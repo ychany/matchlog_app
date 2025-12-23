@@ -92,14 +92,6 @@ class LeagueIds {
   }
 }
 
-/// 팀 ID 상수 (사용 중인 것만)
-class TeamIds {
-  const TeamIds();
-
-  // 국가대표
-  static const int southKorea = 17;
-}
-
 /// 리그 정보 클래스
 class LeagueInfo {
   final int id;

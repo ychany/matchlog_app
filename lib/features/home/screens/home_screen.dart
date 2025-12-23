@@ -75,8 +75,6 @@ class HomeScreen extends ConsumerWidget {
               ref.invalidate(attendanceListProvider);
               ref.invalidate(favoriteTeamIdsProvider);
               ref.invalidate(soccerLivescoresProvider);
-              ref.invalidate(koreaNextMatchesProvider);
-              ref.invalidate(koreaPastMatchesProvider);
               ref.invalidate(selectedTeamNextMatchesProvider);
               ref.invalidate(selectedTeamPastMatchesProvider);
               ref.invalidate(selectedTeamFormProvider);
@@ -1252,6 +1250,11 @@ class _NationalTeamSection extends ConsumerWidget {
     final nextMatchesAsync = ref.watch(selectedTeamNextMatchesProvider);
     final formAsync = ref.watch(selectedTeamFormProvider);
 
+    // 팀이 선택되지 않았으면 선택 안내 UI 표시
+    if (selectedTeam == null) {
+      return _buildNoTeamSelectedUI(context, ref, countdown);
+    }
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       child: Column(
@@ -1610,40 +1613,43 @@ class _NationalTeamSection extends ConsumerWidget {
                         ),
                         const SizedBox(width: 10),
                         formAsync.when(
-                          data: (form) => Row(
-                            children: form.results.map((r) {
-                              Color bgColor;
-                              switch (r) {
-                                case 'W':
-                                  bgColor = const Color(0xFF10B981);
-                                  break;
-                                case 'L':
-                                  bgColor = const Color(0xFFEF4444);
-                                  break;
-                                default:
-                                  bgColor = const Color(0xFF6B7280);
-                              }
-                              return Container(
-                                width: 24,
-                                height: 24,
-                                margin: const EdgeInsets.only(right: 4),
-                                decoration: BoxDecoration(
-                                  color: bgColor,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    r,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700,
+                          data: (form) {
+                            if (form == null) return const SizedBox.shrink();
+                            return Row(
+                              children: form.results.map((r) {
+                                Color bgColor;
+                                switch (r) {
+                                  case 'W':
+                                    bgColor = const Color(0xFF10B981);
+                                    break;
+                                  case 'L':
+                                    bgColor = const Color(0xFFEF4444);
+                                    break;
+                                  default:
+                                    bgColor = const Color(0xFF6B7280);
+                                }
+                                return Container(
+                                  width: 24,
+                                  height: 24,
+                                  margin: const EdgeInsets.only(right: 4),
+                                  decoration: BoxDecoration(
+                                    color: bgColor,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      r,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              );
-                            }).toList(),
-                          ),
+                                );
+                              }).toList(),
+                            );
+                          },
                           loading: () => const SizedBox.shrink(),
                           error: (_, __) => const SizedBox.shrink(),
                         ),
@@ -1652,6 +1658,129 @@ class _NationalTeamSection extends ConsumerWidget {
                           Icons.arrow_forward_ios,
                           color: Colors.white.withValues(alpha: 0.6),
                           size: 14,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNoTeamSelectedUI(BuildContext context, WidgetRef ref, WorldCupCountdown countdown) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 섹션 헤더
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () => _showCountryPicker(context, ref),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(6),
+                        color: Colors.grey.shade200,
+                      ),
+                      child: const Icon(Icons.flag_outlined, color: Colors.grey, size: 16),
+                    ),
+                    const SizedBox(width: 10),
+                    const Text(
+                      '국가대표팀 선택',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: _textPrimary,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(Icons.keyboard_arrow_down, color: _textSecondary, size: 20),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // 카운트다운 + 선택 안내 카드
+          GestureDetector(
+            onTap: () => _showCountryPicker(context, ref),
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [_gradientStart, _gradientMid, _gradientEnd],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: _gradientStart.withValues(alpha: 0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      const Text('🏆', style: TextStyle(fontSize: 32)),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              countdown.tournamentName,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'D-${countdown.daysRemaining}',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.9),
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.add_circle_outline, color: Colors.white, size: 20),
+                        const SizedBox(width: 8),
+                        const Text(
+                          '응원할 국가대표팀을 선택하세요',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ],
                     ),
@@ -1761,7 +1890,7 @@ class _CountryPickerSheetState extends ConsumerState<_CountryPickerSheet> {
                   itemCount: filtered.length,
                   itemBuilder: (context, index) {
                     final team = filtered[index];
-                    final isSelected = team.id == selectedTeam.teamId;
+                    final isSelected = team.id == selectedTeam?.teamId;
 
                     return ListTile(
                       onTap: () {
