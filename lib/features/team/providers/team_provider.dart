@@ -12,8 +12,7 @@ final _apiFootballServiceProvider = Provider<ApiFootballService>((ref) {
 final teamInfoProvider = FutureProvider.family<ApiFootballTeam?, String>((ref, teamId) async {
   final service = ref.watch(_apiFootballServiceProvider);
 
-  // API-Football ID로 변환 시도
-  final apiTeamId = ApiFootballIds.convertTeamId(teamId) ?? int.tryParse(teamId);
+  final apiTeamId = int.tryParse(teamId);
   if (apiTeamId == null) return null;
 
   return service.getTeamById(apiTeamId);
@@ -25,8 +24,7 @@ final teamNextEventsProvider = FutureProvider.family<List<ApiFootballFixture>, S
   // 타임존 변경 시 자동 갱신
   ref.watch(timezoneProvider);
 
-  // API-Football ID로 변환 시도
-  final apiTeamId = ApiFootballIds.convertTeamId(teamId) ?? int.tryParse(teamId);
+  final apiTeamId = int.tryParse(teamId);
   if (apiTeamId == null) return [];
 
   return service.getTeamNextFixtures(apiTeamId, count: 5);
@@ -38,8 +36,7 @@ final teamPastEventsProvider = FutureProvider.family<List<ApiFootballFixture>, S
   // 타임존 변경 시 자동 갱신
   ref.watch(timezoneProvider);
 
-  // API-Football ID로 변환 시도
-  final apiTeamId = ApiFootballIds.convertTeamId(teamId) ?? int.tryParse(teamId);
+  final apiTeamId = int.tryParse(teamId);
   if (apiTeamId == null) return [];
 
   return service.getTeamLastFixtures(apiTeamId, count: 5);
@@ -49,8 +46,7 @@ final teamPastEventsProvider = FutureProvider.family<List<ApiFootballFixture>, S
 final teamPlayersProvider = FutureProvider.family<List<ApiFootballSquadPlayer>, String>((ref, teamId) async {
   final service = ref.watch(_apiFootballServiceProvider);
 
-  // API-Football ID로 변환 시도
-  final apiTeamId = ApiFootballIds.convertTeamId(teamId) ?? int.tryParse(teamId);
+  final apiTeamId = int.tryParse(teamId);
   if (apiTeamId == null) return [];
 
   return service.getTeamSquad(apiTeamId);
@@ -62,8 +58,7 @@ final teamFullScheduleProvider = FutureProvider.family<List<ApiFootballFixture>,
   // 타임존 변경 시 자동 갱신
   ref.watch(timezoneProvider);
 
-  // API-Football ID로 변환 시도
-  final apiTeamId = ApiFootballIds.convertTeamId(teamId) ?? int.tryParse(teamId);
+  final apiTeamId = int.tryParse(teamId);
   if (apiTeamId == null) return [];
 
   final season = LeagueIds.getCurrentSeason();
@@ -90,8 +85,7 @@ final headToHeadProvider = FutureProvider.family<List<ApiFootballFixture>, (int,
 final teamTransfersProvider = FutureProvider.family<List<ApiFootballTeamTransfer>, String>((ref, teamId) async {
   final service = ref.watch(_apiFootballServiceProvider);
 
-  // API-Football ID로 변환 시도
-  final apiTeamId = ApiFootballIds.convertTeamId(teamId) ?? int.tryParse(teamId);
+  final apiTeamId = int.tryParse(teamId);
   if (apiTeamId == null) return [];
 
   return service.getTeamTransfers(apiTeamId);
@@ -101,8 +95,7 @@ final teamTransfersProvider = FutureProvider.family<List<ApiFootballTeamTransfer
 final teamInjuriesProvider = FutureProvider.family<List<ApiFootballInjury>, String>((ref, teamId) async {
   final service = ref.watch(_apiFootballServiceProvider);
 
-  // API-Football ID로 변환 시도
-  final apiTeamId = ApiFootballIds.convertTeamId(teamId) ?? int.tryParse(teamId);
+  final apiTeamId = int.tryParse(teamId);
   if (apiTeamId == null) return [];
 
   final season = LeagueIds.getCurrentSeason();
@@ -113,8 +106,7 @@ final teamInjuriesProvider = FutureProvider.family<List<ApiFootballInjury>, Stri
 final teamStatisticsProvider = FutureProvider.family<List<ApiFootballTeamSeasonStats>, String>((ref, teamId) async {
   final service = ref.watch(_apiFootballServiceProvider);
 
-  // API-Football ID로 변환 시도
-  final apiTeamId = ApiFootballIds.convertTeamId(teamId) ?? int.tryParse(teamId);
+  final apiTeamId = int.tryParse(teamId);
   if (apiTeamId == null) return [];
 
   final season = LeagueIds.getCurrentSeason();

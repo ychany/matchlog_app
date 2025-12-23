@@ -185,8 +185,7 @@ class ScheduleService {
 
     for (final teamId in teamIds) {
       try {
-        // API-Football 팀 ID로 변환
-        final apiTeamId = ApiFootballIds.convertTeamId(teamId) ?? int.tryParse(teamId);
+        final apiTeamId = int.tryParse(teamId);
         if (apiTeamId == null) continue;
 
         final fixtures = await _apiService.getTeamNextFixtures(apiTeamId, count: 3);

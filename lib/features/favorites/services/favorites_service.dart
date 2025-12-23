@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/constants/app_constants.dart';
-import '../../../core/constants/api_football_ids.dart';
 import '../../../core/services/api_football_service.dart';
+import '../../../core/constants/api_football_ids.dart';
 import '../../../shared/models/team_model.dart';
 import '../../../shared/models/player_model.dart';
 
@@ -52,7 +52,7 @@ class FavoritesService {
       } else {
         // Firestore에 없으면 API에서 가져와서 저장 후 반환
         try {
-          final apiTeamId = ApiFootballIds.convertTeamId(teamId) ?? int.tryParse(teamId);
+          final apiTeamId = int.tryParse(teamId);
           if (apiTeamId != null) {
             final apiTeam = await _apiService.getTeamById(apiTeamId);
             if (apiTeam != null) {
@@ -88,7 +88,7 @@ class FavoritesService {
       final existingDoc = await _teamsCollection.doc(teamId).get();
       if (existingDoc.exists) return; // 이미 있으면 스킵
 
-      final apiTeamId = ApiFootballIds.convertTeamId(teamId) ?? int.tryParse(teamId);
+      final apiTeamId = int.tryParse(teamId);
       if (apiTeamId == null) return;
 
       final apiTeam = await _apiService.getTeamById(apiTeamId);
@@ -374,7 +374,7 @@ class FavoritesService {
   // Get players by team using API-Football
   Future<List<Player>> getPlayersByTeam(String teamId) async {
     try {
-      final apiTeamId = ApiFootballIds.convertTeamId(teamId) ?? int.tryParse(teamId);
+      final apiTeamId = int.tryParse(teamId);
       if (apiTeamId == null) {
         return _getPlayersByTeamFromFirestore(teamId);
       }
