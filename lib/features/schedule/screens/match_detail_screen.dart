@@ -107,11 +107,23 @@ final matchPlayerStatsProvider =
 });
 
 // Provider for team standings (for comparison)
+// 조별 리그(컵대회)도 지원: 모든 그룹에서 팀을 찾음
 final teamStandingsProvider =
     FutureProvider.family<ApiFootballStanding?, ({int leagueId, int season, int teamId})>((ref, params) async {
   final service = ApiFootballService();
+
+  // 먼저 조별 리그 형태로 모든 그룹에서 팀 찾기
+  final groupedStandings = await service.getStandingsGrouped(params.leagueId, params.season);
+  for (final group in groupedStandings.values) {
+    for (final standing in group) {
+      if (standing.teamId == params.teamId) {
+        return standing;
+      }
+    }
+  }
+
+  // 조별 리그에서 못 찾으면 일반 순위에서 찾기
   final standings = await service.getStandings(params.leagueId, params.season);
-  // Find the team in standings
   for (final standing in standings) {
     if (standing.teamId == params.teamId) {
       return standing;
