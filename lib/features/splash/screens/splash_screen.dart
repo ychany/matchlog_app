@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../features/national_team/providers/selected_national_team_provider.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 import '../../../features/favorites/providers/favorites_provider.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/team_model.dart';
 import '../../../shared/models/player_model.dart';
 
@@ -151,7 +152,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     const SizedBox(height: 8),
                     // 슬로건
                     Text(
-                      '나만의 축구 직관 기록',
+                      AppLocalizations.of(context)!.myFootballRecord,
                       style: TextStyle(
                         fontSize: 16,
                         color: isDark ? Colors.white70 : Colors.black54,

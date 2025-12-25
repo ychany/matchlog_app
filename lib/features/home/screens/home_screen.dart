@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/services/api_football_service.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../attendance/models/attendance_record.dart';
 import '../../attendance/providers/attendance_provider.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -129,9 +130,11 @@ class HomeScreen extends ConsumerWidget {
   }
 
   Widget _buildHeader(BuildContext context, dynamic user) {
-    final userName = user?.displayName ?? '축구팬';
+    final l10n = AppLocalizations.of(context)!;
+    final userName = user?.displayName ?? l10n.footballFan;
     final now = DateTime.now();
-    final dateStr = DateFormat('M월 d일 EEEE', 'ko').format(now);
+    final locale = Localizations.localeOf(context);
+    final dateStr = DateFormat(l10n.dateFormatHeader, locale.toString()).format(now);
 
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
@@ -176,7 +179,7 @@ class HomeScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '안녕하세요, $userName님',
+                  l10n.hello(userName),
                   style: const TextStyle(
                     color: _textPrimary,
                     fontSize: 18,
@@ -226,6 +229,7 @@ class HomeScreen extends ConsumerWidget {
   }
 
   Widget _buildQuickActions(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
       color: Colors.white,
@@ -233,35 +237,35 @@ class HomeScreen extends ConsumerWidget {
         children: [
           _QuickActionButton(
             icon: Icons.add_rounded,
-            label: '기록하기',
+            label: l10n.record,
             color: _primary,
             onTap: () => context.push('/attendance/add'),
           ),
           const SizedBox(width: 8),
           _QuickActionButton(
             icon: Icons.calendar_today_rounded,
-            label: '일정',
+            label: l10n.schedule,
             color: _success,
             onTap: () => context.go('/schedule'),
           ),
           const SizedBox(width: 8),
           _QuickActionButton(
             icon: Icons.leaderboard_rounded,
-            label: '순위',
+            label: l10n.standings,
             color: _warning,
             onTap: () => context.go('/standings'),
           ),
           const SizedBox(width: 8),
           _QuickActionButton(
             icon: Icons.forum_rounded,
-            label: '커뮤니티',
+            label: l10n.community,
             color: const Color(0xFF8B5CF6),
             onTap: () => context.go('/community'),
           ),
           const SizedBox(width: 8),
           _QuickActionButton(
             icon: Icons.favorite_rounded,
-            label: '즐겨찾기',
+            label: l10n.favorites,
             color: _error,
             onTap: () => context.push('/favorites'),
           ),
@@ -321,6 +325,7 @@ class _QuickActionButton extends StatelessWidget {
 class _StatsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final statsAsync = ref.watch(attendanceStatsProvider);
 
     return Container(
@@ -337,9 +342,9 @@ class _StatsSection extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                '나의 직관 기록',
-                style: TextStyle(
+              Text(
+                l10n.myAttendanceRecord,
+                style: const TextStyle(
                   color: Color(0xFF111827),
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -350,7 +355,7 @@ class _StatsSection extends ConsumerWidget {
                 child: Row(
                   children: [
                     Text(
-                      '전체보기',
+                      l10n.viewAll,
                       style: TextStyle(
                         color: Colors.grey.shade500,
                         fontSize: 13,
@@ -367,30 +372,30 @@ class _StatsSection extends ConsumerWidget {
             data: (stats) => Row(
               children: [
                 _StatItem(
-                  label: '총 경기',
+                  label: l10n.totalMatches,
                   value: '${stats.totalMatches}',
-                  unit: '경기',
+                  unit: l10n.matchCount,
                   color: const Color(0xFF2563EB),
                 ),
                 _buildDivider(),
                 _StatItem(
-                  label: '승리',
+                  label: l10n.win,
                   value: '${stats.wins}',
-                  unit: '회',
+                  unit: l10n.times,
                   color: const Color(0xFF10B981),
                 ),
                 _buildDivider(),
                 _StatItem(
-                  label: '승률',
+                  label: l10n.winRate,
                   value: stats.winRate.toStringAsFixed(0),
                   unit: '%',
                   color: const Color(0xFFF59E0B),
                 ),
                 _buildDivider(),
                 _StatItem(
-                  label: '경기장',
+                  label: l10n.stadium,
                   value: '${stats.stadiumVisits.length}',
-                  unit: '곳',
+                  unit: l10n.stadiumCount,
                   color: const Color(0xFF8B5CF6),
                 ),
               ],
@@ -399,9 +404,9 @@ class _StatsSection extends ConsumerWidget {
               height: 60,
               child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
             ),
-            error: (_, __) => const SizedBox(
+            error: (_, __) => SizedBox(
               height: 60,
-              child: Center(child: Text('통계를 불러올 수 없습니다')),
+              child: Center(child: Text(l10n.cannotLoadStats)),
             ),
           ),
         ],
@@ -517,12 +522,17 @@ class _LiveScoresSection extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(width: 4),
-                    Text(
-                      '${liveFixtures.length}경기',
-                      style: TextStyle(
-                        color: Colors.grey.shade500,
-                        fontSize: 12,
-                      ),
+                    Builder(
+                      builder: (context) {
+                        final l10n = AppLocalizations.of(context)!;
+                        return Text(
+                          l10n.liveMatchCount(liveFixtures.length),
+                          style: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 12,
+                          ),
+                        );
+                      },
                     ),
                     Icon(Icons.chevron_right,
                       color: Colors.grey.shade400, size: 18),
@@ -715,6 +725,7 @@ class _TeamNextEvent {
 class _FavoriteScheduleSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final teamEventsAsync = ref.watch(favoriteTeamNextEventsProvider);
 
     return Padding(
@@ -725,9 +736,9 @@ class _FavoriteScheduleSection extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                '즐겨찾기 팀 일정',
-                style: TextStyle(
+              Text(
+                l10n.favoriteTeamSchedule,
+                style: const TextStyle(
                   color: Color(0xFF111827),
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -736,7 +747,7 @@ class _FavoriteScheduleSection extends ConsumerWidget {
               GestureDetector(
                 onTap: () => context.push('/favorites'),
                 child: Text(
-                  '관리',
+                  l10n.manage,
                   style: TextStyle(
                     color: Colors.grey.shade500,
                     fontSize: 13,
@@ -751,8 +762,8 @@ class _FavoriteScheduleSection extends ConsumerWidget {
               if (teamEvents.isEmpty) {
                 return _EmptyCard(
                   icon: Icons.favorite_border_rounded,
-                  title: '즐겨찾기 팀을 추가해보세요',
-                  subtitle: '팀을 추가하면 다가오는 경기 일정을 확인할 수 있어요',
+                  title: l10n.addFavoriteTeam,
+                  subtitle: l10n.addFavoriteTeamDesc,
                   onTap: () => context.push('/favorites'),
                 );
               }
@@ -783,9 +794,9 @@ class _FavoriteScheduleSection extends ConsumerWidget {
               height: 150,
               child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
             ),
-            error: (_, __) => const SizedBox(
+            error: (_, __) => SizedBox(
               height: 150,
-              child: Center(child: Text('일정을 불러올 수 없습니다')),
+              child: Center(child: Text(l10n.cannotLoadSchedule)),
             ),
           ),
         ],
@@ -842,7 +853,7 @@ class _ScheduleCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    _formatDate(fixture.dateKST),
+                    _formatDate(context, fixture.dateKST),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 10,
@@ -955,8 +966,9 @@ class _ScheduleCard extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime dt) {
-    return DateFormat('MM.dd (E)', 'ko').format(dt);
+  String _formatDate(BuildContext context, DateTime dt) {
+    final l10n = AppLocalizations.of(context)!;
+    return DateFormat(l10n.dateFormatShort, Localizations.localeOf(context).toString()).format(dt);
   }
 
   String _formatTime(DateTime dt) {
@@ -970,6 +982,7 @@ class _ScheduleCard extends StatelessWidget {
 class _RecentRecordsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final attendanceAsync = ref.watch(attendanceListProvider);
 
     return Padding(
@@ -980,9 +993,9 @@ class _RecentRecordsSection extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                '최근 직관 기록',
-                style: TextStyle(
+              Text(
+                l10n.recentRecords,
+                style: const TextStyle(
                   color: Color(0xFF111827),
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -991,7 +1004,7 @@ class _RecentRecordsSection extends ConsumerWidget {
               GestureDetector(
                 onTap: () => context.go('/attendance'),
                 child: Text(
-                  '전체보기',
+                  l10n.viewAll,
                   style: TextStyle(
                     color: Colors.grey.shade500,
                     fontSize: 13,
@@ -1006,8 +1019,8 @@ class _RecentRecordsSection extends ConsumerWidget {
               if (records.isEmpty) {
                 return _EmptyCard(
                   icon: Icons.sports_soccer_rounded,
-                  title: '첫 직관 기록을 남겨보세요',
-                  subtitle: '경기장에서의 특별한 순간을 기록해보세요',
+                  title: l10n.firstRecordPrompt,
+                  subtitle: l10n.firstRecordDesc,
                   onTap: () => context.push('/attendance/add'),
                 );
               }
@@ -1026,9 +1039,9 @@ class _RecentRecordsSection extends ConsumerWidget {
               height: 150,
               child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
             ),
-            error: (_, __) => const SizedBox(
+            error: (_, __) => SizedBox(
               height: 150,
-              child: Center(child: Text('기록을 불러올 수 없습니다')),
+              child: Center(child: Text(l10n.cannotLoadRecords)),
             ),
           ),
         ],
@@ -1308,17 +1321,22 @@ class _NationalTeamSection extends ConsumerWidget {
               const Spacer(),
               GestureDetector(
                 onTap: () => context.push('/national-team'),
-                child: Row(
-                  children: [
-                    Text(
-                      '더보기',
-                      style: TextStyle(
-                        color: _textSecondary,
-                        fontSize: 13,
-                      ),
-                    ),
-                    Icon(Icons.chevron_right, color: _textSecondary, size: 18),
-                  ],
+                child: Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context)!;
+                    return Row(
+                      children: [
+                        Text(
+                          l10n.more,
+                          style: TextStyle(
+                            color: _textSecondary,
+                            fontSize: 13,
+                          ),
+                        ),
+                        Icon(Icons.chevron_right, color: _textSecondary, size: 18),
+                      ],
+                    );
+                  },
                 ),
               ),
             ],
@@ -1368,7 +1386,7 @@ class _NationalTeamSection extends ConsumerWidget {
                               const Text('🏆', style: TextStyle(fontSize: 14)),
                               const SizedBox(width: 6),
                               Text(
-                                countdown.tournamentName,
+                                AppLocalizations.of(context)!.worldCup2026,
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 12,
@@ -1413,13 +1431,14 @@ class _NationalTeamSection extends ConsumerWidget {
                     ),
                     child: nextMatchesAsync.when(
                       data: (matches) {
+                        final l10n = AppLocalizations.of(context)!;
                         if (matches.isEmpty) {
-                          return const Center(
+                          return Center(
                             child: Padding(
-                              padding: EdgeInsets.all(8.0),
+                              padding: const EdgeInsets.all(8.0),
                               child: Text(
-                                '예정된 경기가 없습니다',
-                                style: TextStyle(color: _textSecondary, fontSize: 13),
+                                l10n.noScheduledMatches,
+                                style: const TextStyle(color: _textSecondary, fontSize: 13),
                               ),
                             ),
                           );
@@ -1436,7 +1455,7 @@ class _NationalTeamSection extends ConsumerWidget {
                             Row(
                               children: [
                                 Text(
-                                  '다음 경기',
+                                  l10n.nextMatch,
                                   style: TextStyle(
                                     color: _textSecondary,
                                     fontSize: 11,
@@ -1587,12 +1606,17 @@ class _NationalTeamSection extends ConsumerWidget {
                           ),
                         ),
                       ),
-                      error: (_, __) => const Center(
+                      error: (_, __) => Center(
                         child: Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: Text(
-                            '일정을 불러올 수 없습니다',
-                            style: TextStyle(color: _textSecondary, fontSize: 13),
+                          padding: const EdgeInsets.all(8.0),
+                          child: Builder(
+                            builder: (context) {
+                              final l10n = AppLocalizations.of(context)!;
+                              return Text(
+                                l10n.cannotLoadSchedule,
+                                style: const TextStyle(color: _textSecondary, fontSize: 13),
+                              );
+                            },
                           ),
                         ),
                       ),
@@ -1604,12 +1628,17 @@ class _NationalTeamSection extends ConsumerWidget {
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                     child: Row(
                       children: [
-                        Text(
-                          '최근 5경기',
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.8),
-                            fontSize: 12,
-                          ),
+                        Builder(
+                          builder: (context) {
+                            final l10n = AppLocalizations.of(context)!;
+                            return Text(
+                              l10n.recent5Matches,
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.8),
+                                fontSize: 12,
+                              ),
+                            );
+                          },
                         ),
                         const SizedBox(width: 10),
                         formAsync.when(
@@ -1694,13 +1723,18 @@ class _NationalTeamSection extends ConsumerWidget {
                       child: const Icon(Icons.flag_outlined, color: Colors.grey, size: 16),
                     ),
                     const SizedBox(width: 10),
-                    const Text(
-                      '국가대표팀 선택',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: _textPrimary,
-                      ),
+                    Builder(
+                      builder: (context) {
+                        final l10n = AppLocalizations.of(context)!;
+                        return Text(
+                          l10n.selectNationalTeam,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: _textPrimary,
+                          ),
+                        );
+                      },
                     ),
                     const SizedBox(width: 4),
                     Icon(Icons.keyboard_arrow_down, color: _textSecondary, size: 20),
@@ -1774,13 +1808,18 @@ class _NationalTeamSection extends ConsumerWidget {
                       children: [
                         const Icon(Icons.add_circle_outline, color: Colors.white, size: 20),
                         const SizedBox(width: 8),
-                        const Text(
-                          '응원할 국가대표팀을 선택하세요',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        Builder(
+                          builder: (context) {
+                            final l10n = AppLocalizations.of(context)!;
+                            return Text(
+                              l10n.selectNationalTeamPrompt,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -1815,6 +1854,7 @@ class _CountryPickerSheetState extends ConsumerState<_CountryPickerSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final teamsAsync = ref.watch(worldCupTeamsProvider);
     final selectedTeam = ref.watch(selectedNationalTeamProvider);
 
@@ -1841,16 +1881,16 @@ class _CountryPickerSheetState extends ConsumerState<_CountryPickerSheet> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                const Text(
-                  '국가대표팀 선택',
-                  style: TextStyle(
+                Text(
+                  l10n.selectNationalTeam,
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '2026 월드컵 참가국',
+                  l10n.worldCupParticipants,
                   style: TextStyle(
                     fontSize: 13,
                     color: Colors.grey.shade600,
@@ -1861,7 +1901,7 @@ class _CountryPickerSheetState extends ConsumerState<_CountryPickerSheet> {
                 TextField(
                   onChanged: (value) => setState(() => _searchQuery = value),
                   decoration: InputDecoration(
-                    hintText: '국가명 검색',
+                    hintText: l10n.searchCountry,
                     hintStyle: TextStyle(color: Colors.grey.shade400),
                     prefixIcon: Icon(Icons.search, color: Colors.grey.shade400),
                     filled: true,
@@ -1963,7 +2003,7 @@ class _CountryPickerSheetState extends ConsumerState<_CountryPickerSheet> {
                     Icon(Icons.error_outline, size: 48, color: Colors.grey.shade400),
                     const SizedBox(height: 16),
                     Text(
-                      '팀 목록을 불러올 수 없습니다',
+                      l10n.cannotLoadTeamList,
                       style: TextStyle(color: Colors.grey.shade600),
                     ),
                   ],

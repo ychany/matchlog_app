@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import '../models/post_model.dart';
 import '../providers/community_provider.dart';
+import '../../../l10n/app_localizations.dart';
 
 class PostDetailScreen extends ConsumerStatefulWidget {
   final String postId;
@@ -68,7 +69,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오류가 발생했습니다: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.errorWithMessage(e.toString()))),
         );
       }
     }
@@ -92,7 +93,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오류가 발생했습니다: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.errorWithMessage(e.toString()))),
         );
       }
     } finally {
@@ -103,19 +104,20 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   }
 
   Future<void> _deletePost(Post post) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('게시글 삭제'),
-        content: const Text('이 게시글을 삭제하시겠습니까?'),
+        title: Text(l10n.deletePost),
+        content: Text(l10n.deletePostConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('삭제', style: TextStyle(color: Colors.red)),
+            child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -128,14 +130,14 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
         ref.read(postsNotifierProvider.notifier).refresh();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('게시글이 삭제되었습니다')),
+            SnackBar(content: Text(l10n.postDeleted)),
           );
           context.pop();
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('오류가 발생했습니다: $e')),
+            SnackBar(content: Text(l10n.errorWithMessage(e.toString()))),
           );
         }
       }
@@ -161,9 +163,9 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
             icon: const Icon(Icons.arrow_back, color: _textPrimary),
             onPressed: () => context.pop(),
           ),
-          title: const Text(
-            '게시글',
-            style: TextStyle(
+          title: Text(
+            AppLocalizations.of(context)!.post,
+            style: const TextStyle(
               color: _textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -187,13 +189,13 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                       }
                     },
                     itemBuilder: (context) => [
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'edit',
-                        child: Text('수정'),
+                        child: Text(AppLocalizations.of(context)!.edit),
                       ),
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'delete',
-                        child: Text('삭제', style: TextStyle(color: Colors.red)),
+                        child: Text(AppLocalizations.of(context)!.delete, style: const TextStyle(color: Colors.red)),
                       ),
                     ],
                   );
@@ -206,7 +208,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
         body: postAsync.when(
           data: (post) {
             if (post == null) {
-              return const Center(child: Text('게시글을 찾을 수 없습니다'));
+              return Center(child: Text(AppLocalizations.of(context)!.postNotFound));
             }
             return Column(
               children: [
@@ -410,7 +412,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                '댓글 ${post.commentCount}',
+                                AppLocalizations.of(context)!.commentCount(post.commentCount),
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
@@ -421,13 +423,13 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                               commentsAsync.when(
                                 data: (comments) {
                                   if (comments.isEmpty) {
-                                    return const Center(
+                                    return Center(
                                       child: Padding(
-                                        padding: EdgeInsets.all(20),
+                                        padding: const EdgeInsets.all(20),
                                         child: Text(
-                                          '아직 댓글이 없습니다.\n첫 번째 댓글을 남겨보세요!',
+                                          AppLocalizations.of(context)!.noCommentsYet,
                                           textAlign: TextAlign.center,
-                                          style: TextStyle(color: _textSecondary),
+                                          style: const TextStyle(color: _textSecondary),
                                         ),
                                       ),
                                     );
@@ -441,7 +443,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                                   );
                                 },
                                 loading: () => const Center(child: CircularProgressIndicator()),
-                                error: (e, _) => Text('댓글을 불러오는데 실패했습니다: $e'),
+                                error: (e, _) => Text(AppLocalizations.of(context)!.loadCommentsFailed(e.toString())),
                               ),
                             ],
                           ),
@@ -470,7 +472,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                           controller: _commentController,
                           style: const TextStyle(fontSize: 14),
                           decoration: InputDecoration(
-                            hintText: '댓글을 입력하세요',
+                            hintText: AppLocalizations.of(context)!.enterComment,
                             hintStyle: const TextStyle(color: _textSecondary),
                             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                             border: OutlineInputBorder(
@@ -506,26 +508,27 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
             );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('오류가 발생했습니다: $e')),
+          error: (e, _) => Center(child: Text(AppLocalizations.of(context)!.errorWithMessage(e.toString()))),
         ),
       ),
     );
   }
 
   Future<void> _deleteComment(Comment comment) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('댓글 삭제'),
-        content: const Text('이 댓글을 삭제하시겠습니까?'),
+        title: Text(l10n.deleteComment),
+        content: Text(l10n.deleteCommentConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('삭제', style: TextStyle(color: Colors.red)),
+            child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -540,7 +543,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('오류가 발생했습니다: $e')),
+            SnackBar(content: Text(l10n.errorWithMessage(e.toString()))),
           );
         }
       }
@@ -565,14 +568,14 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
       child: Column(
         children: [
           // 상단 타이틀
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.sports_soccer, color: Colors.white, size: 18),
-              SizedBox(width: 8),
+              const Icon(Icons.sports_soccer, color: Colors.white, size: 18),
+              const SizedBox(width: 8),
               Text(
-                '나의 직관 통계',
-                style: TextStyle(
+                AppLocalizations.of(context)!.myAttendanceStats,
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -585,11 +588,11 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
           Row(
             children: [
               Expanded(
-                child: _buildStatItem('총 직관', '${post.statsTotalMatches ?? 0}경기'),
+                child: _buildStatItem(AppLocalizations.of(context)!.totalAttendance, AppLocalizations.of(context)!.attendanceCount(post.statsTotalMatches ?? 0)),
               ),
               Container(width: 1, height: 40, color: Colors.white24),
               Expanded(
-                child: _buildStatItem('승률', '${(post.statsWinRate ?? 0).toStringAsFixed(1)}%'),
+                child: _buildStatItem(AppLocalizations.of(context)!.winRate, AppLocalizations.of(context)!.winRatePercent((post.statsWinRate ?? 0).toStringAsFixed(1))),
               ),
             ],
           ),
@@ -603,9 +606,9 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildResultItem('승', post.statsWins ?? 0, const Color(0xFF3B82F6)),
-                _buildResultItem('무', post.statsDraws ?? 0, const Color(0xFF9CA3AF)),
-                _buildResultItem('패', post.statsLosses ?? 0, const Color(0xFFEF4444)),
+                _buildResultItem(AppLocalizations.of(context)!.winShort, post.statsWins ?? 0, const Color(0xFF3B82F6)),
+                _buildResultItem(AppLocalizations.of(context)!.drawShort, post.statsDraws ?? 0, const Color(0xFF9CA3AF)),
+                _buildResultItem(AppLocalizations.of(context)!.lossShort, post.statsLosses ?? 0, const Color(0xFFEF4444)),
               ],
             ),
           ),
@@ -624,7 +627,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                   const SizedBox(width: 4),
                   Flexible(
                     child: Text(
-                      '최다 방문: ${post.statsTopStadium} (${post.statsTopStadiumCount ?? 0}회)',
+                      AppLocalizations.of(context)!.mostVisited(post.statsTopStadium!, post.statsTopStadiumCount ?? 0),
                       style: const TextStyle(color: Colors.white70, fontSize: 12),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -704,9 +707,9 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
             children: [
               const Icon(Icons.stadium_rounded, color: Colors.white70, size: 14),
               const SizedBox(width: 6),
-              const Text(
-                '직관 기록',
-                style: TextStyle(
+              Text(
+                AppLocalizations.of(context)!.matchRecord,
+                style: const TextStyle(
                   fontSize: 12,
                   color: Colors.white70,
                   fontWeight: FontWeight.w500,
@@ -888,7 +891,7 @@ class _CommentItem extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      _formatTime(comment.createdAt),
+                      _formatTime(context, comment.createdAt),
                       style: const TextStyle(
                         fontSize: 11,
                         color: _textSecondary,
@@ -920,18 +923,19 @@ class _CommentItem extends StatelessWidget {
     );
   }
 
-  String _formatTime(DateTime dateTime) {
+  String _formatTime(BuildContext context, DateTime dateTime) {
     final now = DateTime.now();
     final diff = now.difference(dateTime);
+    final l10n = AppLocalizations.of(context)!;
 
     if (diff.inMinutes < 1) {
-      return '방금 전';
+      return l10n.justNow;
     } else if (diff.inMinutes < 60) {
-      return '${diff.inMinutes}분 전';
+      return l10n.minutesAgo(diff.inMinutes);
     } else if (diff.inHours < 24) {
-      return '${diff.inHours}시간 전';
+      return l10n.hoursAgo(diff.inHours);
     } else if (diff.inDays < 7) {
-      return '${diff.inDays}일 전';
+      return l10n.daysAgo(diff.inDays);
     } else {
       return '${dateTime.month}/${dateTime.day}';
     }

@@ -1,0 +1,3122 @@
+{
+  "@@locale": "ko",
+  "@@last_modified": "2025-12-25",
+
+  "appName": "MatchLog",
+  "@appName": {
+    "description": "App name"
+  },
+  "appTagline": "축구 직관 기록 앱",
+  "@appTagline": {
+    "description": "App tagline"
+  },
+
+  "home": "홈",
+  "@home": {
+    "description": "Home tab label"
+  },
+  "schedule": "일정",
+  "@schedule": {
+    "description": "Schedule tab label"
+  },
+  "standings": "순위",
+  "@standings": {
+    "description": "Standings tab label"
+  },
+  "leagues": "리그",
+  "@leagues": {
+    "description": "Leagues tab label"
+  },
+  "community": "커뮤니티",
+  "@community": {
+    "description": "Community tab label"
+  },
+  "favorites": "즐겨찾기",
+  "@favorites": {
+    "description": "Favorites tab label"
+  },
+  "profile": "내 정보",
+  "@profile": {
+    "description": "Profile tab label"
+  },
+
+  "hello": "안녕하세요, {name}님",
+  "@hello": {
+    "description": "Greeting message",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "사용자"
+      }
+    }
+  },
+  "footballFan": "축구팬",
+  "@footballFan": {
+    "description": "Default user name"
+  },
+
+  "record": "기록하기",
+  "@record": {
+    "description": "Record button"
+  },
+  "attendanceRecord": "직관 기록",
+  "@attendanceRecord": {
+    "description": "Attendance record"
+  },
+  "myAttendanceRecord": "나의 직관 기록",
+  "@myAttendanceRecord": {
+    "description": "My attendance record section title"
+  },
+  "myAttendanceDiary": "나의 직관 일기",
+  "@myAttendanceDiary": {
+    "description": "My attendance diary"
+  },
+  "attendanceDiary": "직관 일기",
+  "@attendanceDiary": {
+    "description": "Attendance diary menu"
+  },
+  "myRecords": "나의 직관 기록들",
+  "@myRecords": {
+    "description": "My attendance records"
+  },
+
+  "viewAll": "전체보기",
+  "@viewAll": {
+    "description": "View all button"
+  },
+  "manage": "관리",
+  "@manage": {
+    "description": "Manage button"
+  },
+  "edit": "편집",
+  "@edit": {
+    "description": "Edit button"
+  },
+  "delete": "삭제",
+  "@delete": {
+    "description": "Delete button"
+  },
+  "cancel": "취소",
+  "@cancel": {
+    "description": "Cancel button"
+  },
+  "save": "저장",
+  "@save": {
+    "description": "Save button"
+  },
+  "select": "선택",
+  "@select": {
+    "description": "Select button"
+  },
+  "confirm": "확인",
+  "@confirm": {
+    "description": "Confirm button"
+  },
+  "close": "닫기",
+  "@close": {
+    "description": "Close button"
+  },
+  "more": "더보기",
+  "@more": {
+    "description": "More button"
+  },
+  "refresh": "새로고침",
+  "@refresh": {
+    "description": "Refresh button"
+  },
+  "retry": "다시 시도",
+  "@retry": {
+    "description": "Retry button"
+  },
+
+  "totalMatches": "총 경기",
+  "@totalMatches": {
+    "description": "Total matches label"
+  },
+  "matchCount": "경기",
+  "@matchCount": {
+    "description": "Match count unit"
+  },
+  "win": "승리",
+  "@win": {
+    "description": "Win"
+  },
+  "winShort": "승",
+  "@winShort": {
+    "description": "Win short"
+  },
+  "draw": "무승부",
+  "@draw": {
+    "description": "Draw"
+  },
+  "drawShort": "무",
+  "@drawShort": {
+    "description": "Draw short"
+  },
+  "loss": "패배",
+  "@loss": {
+    "description": "Loss"
+  },
+  "lossShort": "패",
+  "@lossShort": {
+    "description": "Loss short"
+  },
+  "winRate": "승률",
+  "@winRate": {
+    "description": "Win rate"
+  },
+  "stadium": "경기장",
+  "@stadium": {
+    "description": "Stadium"
+  },
+  "stadiumCount": "곳",
+  "@stadiumCount": {
+    "description": "Stadium count unit"
+  },
+  "times": "회",
+  "@times": {
+    "description": "Times count unit"
+  },
+
+  "cannotLoadStats": "통계를 불러올 수 없습니다",
+  "@cannotLoadStats": {
+    "description": "Cannot load stats error"
+  },
+  "cannotLoadSchedule": "일정을 불러올 수 없습니다",
+  "@cannotLoadSchedule": {
+    "description": "Cannot load schedule error"
+  },
+  "cannotLoadRecords": "기록을 불러올 수 없습니다",
+  "@cannotLoadRecords": {
+    "description": "Cannot load records error"
+  },
+  "cannotLoadTeamList": "팀 목록을 불러올 수 없습니다",
+  "@cannotLoadTeamList": {
+    "description": "Cannot load team list error"
+  },
+  "loadFailed": "불러오기 실패",
+  "@loadFailed": {
+    "description": "Load failed"
+  },
+  "errorOccurred": "오류가 발생했습니다",
+  "@errorOccurred": {
+    "description": "Error occurred"
+  },
+
+  "live": "라이브 경기",
+  "@live": {
+    "description": "Live matches"
+  },
+  "liveMatchCount": "{count}경기",
+  "@liveMatchCount": {
+    "description": "Live match count",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "autoRefreshEvery30Sec": "30초마다 자동 갱신",
+  "@autoRefreshEvery30Sec": {
+    "description": "Auto refresh message"
+  },
+  "noLiveMatches": "진행 중인 경기가 없습니다",
+  "@noLiveMatches": {
+    "description": "No live matches"
+  },
+  "firstHalf": "전반전",
+  "@firstHalf": {
+    "description": "First half"
+  },
+  "secondHalf": "후반전",
+  "@secondHalf": {
+    "description": "Second half"
+  },
+  "halfTime": "하프타임",
+  "@halfTime": {
+    "description": "Half time"
+  },
+  "extraTime": "연장전",
+  "@extraTime": {
+    "description": "Extra time"
+  },
+  "penalties": "승부차기",
+  "@penalties": {
+    "description": "Penalties"
+  },
+  "finished": "종료",
+  "@finished": {
+    "description": "Finished"
+  },
+  "upcoming": "예정",
+  "@upcoming": {
+    "description": "Upcoming"
+  },
+
+  "favoriteTeamSchedule": "즐겨찾기 팀 일정",
+  "@favoriteTeamSchedule": {
+    "description": "Favorite team schedule section"
+  },
+  "addFavoriteTeam": "즐겨찾기 팀을 추가해보세요",
+  "@addFavoriteTeam": {
+    "description": "Add favorite team prompt"
+  },
+  "addFavoriteTeamDesc": "팀을 추가하면 다가오는 경기 일정을 확인할 수 있어요",
+  "@addFavoriteTeamDesc": {
+    "description": "Add favorite team description"
+  },
+
+  "recentRecords": "최근 직관 기록",
+  "@recentRecords": {
+    "description": "Recent records section"
+  },
+  "firstRecordPrompt": "첫 직관 기록을 남겨보세요",
+  "@firstRecordPrompt": {
+    "description": "First record prompt"
+  },
+  "firstRecordDesc": "경기장에서의 특별한 순간을 기록해보세요",
+  "@firstRecordDesc": {
+    "description": "First record description"
+  },
+
+  "nextMatch": "다음 경기",
+  "@nextMatch": {
+    "description": "Next match"
+  },
+  "noScheduledMatches": "예정된 경기가 없습니다",
+  "@noScheduledMatches": {
+    "description": "No scheduled matches"
+  },
+  "recent5Matches": "최근 5경기",
+  "@recent5Matches": {
+    "description": "Recent 5 matches"
+  },
+
+  "selectNationalTeam": "국가대표팀 선택",
+  "@selectNationalTeam": {
+    "description": "Select national team"
+  },
+  "selectNationalTeamPrompt": "응원할 국가대표팀을 선택하세요",
+  "@selectNationalTeamPrompt": {
+    "description": "Select national team prompt"
+  },
+  "worldCupParticipants": "2026 월드컵 참가국",
+  "@worldCupParticipants": {
+    "description": "2026 World Cup participants"
+  },
+  "searchCountry": "국가명 검색",
+  "@searchCountry": {
+    "description": "Search country"
+  },
+
+  "matchSchedule": "경기 일정",
+  "@matchSchedule": {
+    "description": "Match schedule"
+  },
+  "today": "오늘",
+  "@today": {
+    "description": "Today"
+  },
+  "monthly": "월간",
+  "@monthly": {
+    "description": "Monthly"
+  },
+  "twoWeeks": "2주",
+  "@twoWeeks": {
+    "description": "Two weeks"
+  },
+  "weekly": "주간",
+  "@weekly": {
+    "description": "Weekly"
+  },
+
+  "major": "주요",
+  "@major": {
+    "description": "Major filter"
+  },
+  "all": "전체",
+  "@all": {
+    "description": "All filter"
+  },
+
+  "recordAttendance": "직관 기록하기",
+  "@recordAttendance": {
+    "description": "Record attendance"
+  },
+  "attendanceComplete": "직관 완료",
+  "@attendanceComplete": {
+    "description": "Attendance complete badge"
+  },
+
+  "notificationSettings": "알림 설정",
+  "@notificationSettings": {
+    "description": "Notification settings"
+  },
+  "matchNotification": "경기 알림 설정",
+  "@matchNotification": {
+    "description": "Match notification settings"
+  },
+  "kickoffNotification": "경기 시작 알림",
+  "@kickoffNotification": {
+    "description": "Kickoff notification"
+  },
+  "kickoffNotificationDesc": "킥오프 30분 전에 알림",
+  "@kickoffNotificationDesc": {
+    "description": "Kickoff notification description"
+  },
+  "lineupNotification": "라인업 발표",
+  "@lineupNotification": {
+    "description": "Lineup notification"
+  },
+  "lineupNotificationDesc": "선발 명단 공개 시 알림",
+  "@lineupNotificationDesc": {
+    "description": "Lineup notification description"
+  },
+  "resultNotification": "경기 결과",
+  "@resultNotification": {
+    "description": "Result notification"
+  },
+  "resultNotificationDesc": "경기 종료 후 결과 알림",
+  "@resultNotificationDesc": {
+    "description": "Result notification description"
+  },
+  "notificationOff": "알림 해제",
+  "@notificationOff": {
+    "description": "Turn off notification"
+  },
+  "notificationSet": "알림이 설정되었습니다",
+  "@notificationSet": {
+    "description": "Notification set message"
+  },
+  "notificationRemoved": "알림이 해제되었습니다",
+  "@notificationRemoved": {
+    "description": "Notification removed message"
+  },
+
+  "team": "팀",
+  "@team": {
+    "description": "Team"
+  },
+  "teams": "팀",
+  "@teams": {
+    "description": "Teams"
+  },
+  "player": "선수",
+  "@player": {
+    "description": "Player"
+  },
+  "players": "선수",
+  "@players": {
+    "description": "Players"
+  },
+  "addTeam": "팀 추가",
+  "@addTeam": {
+    "description": "Add team"
+  },
+  "addPlayer": "선수 추가",
+  "@addPlayer": {
+    "description": "Add player"
+  },
+  "searchTeam": "팀 검색...",
+  "@searchTeam": {
+    "description": "Search team"
+  },
+  "searchPlayer": "선수 검색...",
+  "@searchPlayer": {
+    "description": "Search player"
+  },
+  "removeFavorite": "해제",
+  "@removeFavorite": {
+    "description": "Remove favorite"
+  },
+  "unfollow": "해제",
+  "@unfollow": {
+    "description": "Unfollow"
+  },
+  "unfollowTeam": "팀 팔로우 해제",
+  "@unfollowTeam": {
+    "description": "Unfollow team title"
+  },
+  "unfollowTeamConfirm": "{name}을(를) 즐겨찾기에서 제거하시겠습니까?",
+  "@unfollowTeamConfirm": {
+    "description": "Unfollow team confirmation",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "토트넘"
+      }
+    }
+  },
+  "unfollowPlayer": "선수 팔로우 해제",
+  "@unfollowPlayer": {
+    "description": "Unfollow player title"
+  },
+  "unfollowPlayerConfirm": "{name}을(를) 즐겨찾기에서 제거하시겠습니까?",
+  "@unfollowPlayerConfirm": {
+    "description": "Unfollow player confirmation",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "손흥민"
+      }
+    }
+  },
+  "selectLeagueOrSearch": "리그를 선택하거나 팀을 검색하세요",
+  "@selectLeagueOrSearch": {
+    "description": "Select league or search team prompt"
+  },
+  "teamNotFound": "팀을 찾을 수 없습니다",
+  "@teamNotFound": {
+    "description": "Team not found"
+  },
+  "playerNotFound": "선수를 찾을 수 없습니다",
+  "@playerNotFound": {
+    "description": "Player not found"
+  },
+  "national": "국가",
+  "@national": {
+    "description": "National/Country"
+  },
+  "addFavoriteTeamPrompt": "좋아하는 팀을 추가해보세요",
+  "@addFavoriteTeamPrompt": {
+    "description": "Add favorite team prompt"
+  },
+  "addFavoritePlayerPrompt": "좋아하는 선수를 추가해보세요",
+  "@addFavoritePlayerPrompt": {
+    "description": "Add favorite player prompt"
+  },
+
+  "list": "리스트",
+  "@list": {
+    "description": "List tab"
+  },
+  "calendar": "달력",
+  "@calendar": {
+    "description": "Calendar tab"
+  },
+  "stats": "통계",
+  "@stats": {
+    "description": "Stats tab"
+  },
+
+  "deleteRecord": "기록 삭제",
+  "@deleteRecord": {
+    "description": "Delete record"
+  },
+  "deleteRecordConfirm": "이 기록을 삭제하시겠습니까?",
+  "@deleteRecordConfirm": {
+    "description": "Delete record confirmation"
+  },
+  "noRecordOnDate": "{date}에 기록이 없습니다",
+  "@noRecordOnDate": {
+    "description": "No record on date",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "1월 1일"
+      }
+    }
+  },
+  "selectDate": "날짜를 선택해주세요",
+  "@selectDate": {
+    "description": "Select date"
+  },
+  "noRecordsYet": "아직 기록이 없습니다",
+  "@noRecordsYet": {
+    "description": "No records yet"
+  },
+
+  "leagueStats": "리그별 통계",
+  "@leagueStats": {
+    "description": "League stats"
+  },
+  "stadiumVisits": "경기장 방문 현황",
+  "@stadiumVisits": {
+    "description": "Stadium visits"
+  },
+  "visitedStadiums": "방문한 경기장",
+  "@visitedStadiums": {
+    "description": "Visited stadiums"
+  },
+
+  "user": "사용자",
+  "@user": {
+    "description": "User"
+  },
+  "activeMember": "활성 회원",
+  "@activeMember": {
+    "description": "Active member badge"
+  },
+
+  "leagueStandings": "리그 순위",
+  "@leagueStandings": {
+    "description": "League standings"
+  },
+  "checkLeagueStandings": "각 리그 순위표 확인",
+  "@checkLeagueStandings": {
+    "description": "Check league standings"
+  },
+  "upcomingMatches": "다가오는 경기 확인",
+  "@upcomingMatches": {
+    "description": "Upcoming matches"
+  },
+  "matchAlertsPush": "경기 알림, 푸시 알림",
+  "@matchAlertsPush": {
+    "description": "Match alerts and push notifications"
+  },
+  "timezoneSettings": "타임존 설정",
+  "@timezoneSettings": {
+    "description": "Timezone settings"
+  },
+  "matchTimeDisplay": "경기 시간 표시 기준",
+  "@matchTimeDisplay": {
+    "description": "Match time display"
+  },
+  "communityTitle": "커뮤니티",
+  "@communityTitle": {
+    "description": "Community title"
+  },
+  "communityDesc": "직관 후기, 정보 공유",
+  "@communityDesc": {
+    "description": "Community description"
+  },
+  "helpAndSupport": "도움말 및 지원",
+  "@helpAndSupport": {
+    "description": "Help and support"
+  },
+  "faqContact": "FAQ, 문의하기",
+  "@faqContact": {
+    "description": "FAQ and contact"
+  },
+
+  "logout": "로그아웃",
+  "@logout": {
+    "description": "Logout"
+  },
+  "logoutConfirm": "정말 로그아웃하시겠습니까?",
+  "@logoutConfirm": {
+    "description": "Logout confirmation"
+  },
+
+  "languageSettings": "언어 설정",
+  "@languageSettings": {
+    "description": "Language settings"
+  },
+  "korean": "한국어",
+  "@korean": {
+    "description": "Korean"
+  },
+  "english": "English",
+  "@english": {
+    "description": "English"
+  },
+  "systemDefault": "시스템 기본",
+  "@systemDefault": {
+    "description": "System default"
+  },
+
+  "appVersion": "MatchLog v{version}",
+  "@appVersion": {
+    "description": "App version",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "1.0.0"
+      }
+    }
+  },
+
+  "liveMatches": "라이브 경기",
+  "@liveMatches": {
+    "description": "Live matches screen title"
+  },
+  "updatedSecondsAgo": "{seconds}초 전 업데이트",
+  "@updatedSecondsAgo": {
+    "description": "Updated seconds ago",
+    "placeholders": {
+      "seconds": {
+        "type": "int",
+        "example": "30"
+      }
+    }
+  },
+  "updatedMinutesAgo": "{minutes}분 전 업데이트",
+  "@updatedMinutesAgo": {
+    "description": "Updated minutes ago",
+    "placeholders": {
+      "minutes": {
+        "type": "int",
+        "example": "5"
+      }
+    }
+  },
+  "autoRefresh30Sec": "30초마다 자동 갱신",
+  "@autoRefresh30Sec": {
+    "description": "Auto refresh 30 seconds"
+  },
+  "noLiveMatchesTitle": "진행 중인 경기가 없습니다",
+  "@noLiveMatchesTitle": {
+    "description": "No live matches title"
+  },
+  "noLiveMatchesDesc": "경기가 시작되면 여기서 실시간으로 확인하세요",
+  "@noLiveMatchesDesc": {
+    "description": "No live matches description"
+  },
+  "breakPrep": "연장 준비",
+  "@breakPrep": {
+    "description": "Break preparation"
+  },
+  "firstHalfMinutes": "전반 {minutes}분",
+  "@firstHalfMinutes": {
+    "description": "First half minutes",
+    "placeholders": {
+      "minutes": {
+        "type": "int",
+        "example": "30"
+      }
+    }
+  },
+  "secondHalfMinutes": "후반 {minutes}분",
+  "@secondHalfMinutes": {
+    "description": "Second half minutes",
+    "placeholders": {
+      "minutes": {
+        "type": "int",
+        "example": "15"
+      }
+    }
+  },
+
+  "searchLeague": "리그 검색...",
+  "@searchLeague": {
+    "description": "Search league hint"
+  },
+  "noSearchResults": "검색 결과가 없습니다",
+  "@noSearchResults": {
+    "description": "No search results"
+  },
+  "searchError": "검색 중 오류가 발생했습니다",
+  "@searchError": {
+    "description": "Search error"
+  },
+  "top5Leagues": "5대 리그",
+  "@top5Leagues": {
+    "description": "Top 5 leagues"
+  },
+  "euroClubComps": "유럽 대회",
+  "@euroClubComps": {
+    "description": "European club competitions"
+  },
+  "nationalComps": "국가대항전",
+  "@nationalComps": {
+    "description": "National team competitions"
+  },
+  "otherLeagues": "기타 리그",
+  "@otherLeagues": {
+    "description": "Other leagues"
+  },
+  "cannotLoadLeagues": "리그 목록을 불러올 수 없습니다",
+  "@cannotLoadLeagues": {
+    "description": "Cannot load leagues"
+  },
+  "byCountry": "국가별",
+  "@byCountry": {
+    "description": "By country"
+  },
+  "rank": "순위",
+  "@rank": {
+    "description": "Rank"
+  },
+  "goals": "득점",
+  "@goals": {
+    "description": "Goals"
+  },
+  "assists": "도움",
+  "@assists": {
+    "description": "Assists"
+  },
+  "played": "경기",
+  "@played": {
+    "description": "Played/Matches"
+  },
+  "won": "승",
+  "@won": {
+    "description": "Won"
+  },
+  "drawn": "무",
+  "@drawn": {
+    "description": "Drawn"
+  },
+  "lost": "패",
+  "@lost": {
+    "description": "Lost"
+  },
+  "gf": "득점",
+  "@gf": {
+    "description": "Goals for"
+  },
+  "ga": "실점",
+  "@ga": {
+    "description": "Goals against"
+  },
+  "gd": "득실",
+  "@gd": {
+    "description": "Goal difference"
+  },
+  "pts": "승점",
+  "@pts": {
+    "description": "Points"
+  },
+  "appearances": "출전",
+  "@appearances": {
+    "description": "Appearances"
+  },
+  "noStandingsInfo": "순위 정보가 없습니다",
+  "@noStandingsInfo": {
+    "description": "No standings info"
+  },
+  "cannotLoadStandings": "해당 리그의 순위 정보를 불러올 수 없습니다",
+  "@cannotLoadStandings": {
+    "description": "Cannot load standings"
+  },
+  "noGoalRankInfo": "득점 순위 정보가 없습니다",
+  "@noGoalRankInfo": {
+    "description": "No goal rank info"
+  },
+  "noAssistRankInfo": "어시스트 순위 정보가 없습니다",
+  "@noAssistRankInfo": {
+    "description": "No assist rank info"
+  },
+  "noLeagueStats": "리그 통계 정보가 없습니다",
+  "@noLeagueStats": {
+    "description": "No league stats"
+  },
+  "recentForm": "최근 폼",
+  "@recentForm": {
+    "description": "Recent form"
+  },
+  "last5Games": "최근 5경기",
+  "@last5Games": {
+    "description": "Last 5 games"
+  },
+  "homeAwayStrength": "홈/원정 강자",
+  "@homeAwayStrength": {
+    "description": "Home/Away strength"
+  },
+  "homeStrength": "홈 강자",
+  "@homeStrength": {
+    "description": "Home strength"
+  },
+  "awayStrength": "원정 강자",
+  "@awayStrength": {
+    "description": "Away strength"
+  },
+  "bottomAnalysis": "하위권 분석",
+  "@bottomAnalysis": {
+    "description": "Bottom analysis"
+  },
+  "mostLosses": "최다 패배",
+  "@mostLosses": {
+    "description": "Most losses"
+  },
+  "mostConceded": "최다 실점",
+  "@mostConceded": {
+    "description": "Most conceded"
+  },
+  "leagueOverview": "리그 개요",
+  "@leagueOverview": {
+    "description": "League overview"
+  },
+  "totalGoals": "총 골",
+  "@totalGoals": {
+    "description": "Total goals"
+  },
+  "goalsPerGame": "경기당 골",
+  "@goalsPerGame": {
+    "description": "Goals per game"
+  },
+  "homeWins": "홈 승리",
+  "@homeWins": {
+    "description": "Home wins"
+  },
+  "awayWins": "원정 승리",
+  "@awayWins": {
+    "description": "Away wins"
+  },
+  "homeWin": "홈 승",
+  "@homeWin": {
+    "description": "Home win"
+  },
+  "awayWin": "원정 승",
+  "@awayWin": {
+    "description": "Away win"
+  },
+  "nGames": "{count}경기",
+  "@nGames": {
+    "description": "N games",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "5"
+      }
+    }
+  },
+  "teamRanking": "팀 순위",
+  "@teamRanking": {
+    "description": "Team ranking"
+  },
+  "mostGoals": "최다 득점",
+  "@mostGoals": {
+    "description": "Most goals"
+  },
+  "mostConcededGoals": "최다 실점",
+  "@mostConcededGoals": {
+    "description": "Most conceded goals"
+  },
+  "mostWins": "최다 승리",
+  "@mostWins": {
+    "description": "Most wins"
+  },
+  "mostDraws": "최다 무승부",
+  "@mostDraws": {
+    "description": "Most draws"
+  },
+  "nGoals": "{count}골",
+  "@nGoals": {
+    "description": "N goals",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "10"
+      }
+    }
+  },
+  "nWins": "{count}승",
+  "@nWins": {
+    "description": "N wins",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "5"
+      }
+    }
+  },
+  "nDraws": "{count}무",
+  "@nDraws": {
+    "description": "N draws",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "nLosses": "{count}패",
+  "@nLosses": {
+    "description": "N losses",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "nConceded": "{count}실점",
+  "@nConceded": {
+    "description": "N conceded",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "10"
+      }
+    }
+  },
+  "goalAnalysis": "골 분석",
+  "@goalAnalysis": {
+    "description": "Goal analysis"
+  },
+  "homeGoals": "홈 골",
+  "@homeGoals": {
+    "description": "Home goals"
+  },
+  "awayGoals": "원정 골",
+  "@awayGoals": {
+    "description": "Away goals"
+  },
+  "top5GD": "득실차 상위 5팀",
+  "@top5GD": {
+    "description": "Top 5 goal difference"
+  },
+  "cardRanking": "카드 순위",
+  "@cardRanking": {
+    "description": "Card ranking"
+  },
+  "mostYellows": "최다 경고",
+  "@mostYellows": {
+    "description": "Most yellow cards"
+  },
+  "mostReds": "최다 퇴장",
+  "@mostReds": {
+    "description": "Most red cards"
+  },
+  "noData": "데이터가 없습니다",
+  "@noData": {
+    "description": "No data"
+  },
+
+  "recordNotFound": "기록을 찾을 수 없습니다",
+  "@recordNotFound": {
+    "description": "Record not found"
+  },
+  "diary": "일기",
+  "@diary": {
+    "description": "Diary tab"
+  },
+  "details": "기록",
+  "@details": {
+    "description": "Details tab"
+  },
+  "broadcast": "중계",
+  "@broadcast": {
+    "description": "Broadcast tab"
+  },
+  "lineup": "라인업",
+  "@lineup": {
+    "description": "Lineup tab"
+  },
+  "h2h": "전적",
+  "@h2h": {
+    "description": "Head to head tab"
+  },
+  "matchDiary": "직관 일기",
+  "@matchDiary": {
+    "description": "Match diary section title"
+  },
+  "matchInfo": "경기 정보",
+  "@matchInfo": {
+    "description": "Match info section title"
+  },
+  "date": "날짜",
+  "@date": {
+    "description": "Date label"
+  },
+  "league": "리그",
+  "@league": {
+    "description": "League label"
+  },
+  "seat": "좌석",
+  "@seat": {
+    "description": "Seat label"
+  },
+  "additionalInfo": "추가 정보",
+  "@additionalInfo": {
+    "description": "Additional info section title"
+  },
+  "weather": "날씨",
+  "@weather": {
+    "description": "Weather label"
+  },
+  "companions": "함께 간 사람",
+  "@companions": {
+    "description": "Companions label"
+  },
+  "ticketPrice": "티켓 가격",
+  "@ticketPrice": {
+    "description": "Ticket price label"
+  },
+  "currencyWon": "{price}원",
+  "@currencyWon": {
+    "description": "Currency in Korean Won",
+    "placeholders": {
+      "price": {
+        "type": "String",
+        "example": "50,000"
+      }
+    }
+  },
+  "stadiumFood": "경기장 음식",
+  "@stadiumFood": {
+    "description": "Stadium food section title"
+  },
+  "memo": "메모",
+  "@memo": {
+    "description": "Memo section title"
+  },
+  "mvpToday": "오늘의 MVP",
+  "@mvpToday": {
+    "description": "MVP of today"
+  },
+  "noStatsInfo": "통계 정보가 없습니다",
+  "@noStatsInfo": {
+    "description": "No stats info"
+  },
+  "statsAfterMatch": "경기 종료 후 업데이트됩니다",
+  "@statsAfterMatch": {
+    "description": "Stats after match"
+  },
+  "possession": "점유율",
+  "@possession": {
+    "description": "Possession"
+  },
+  "shots": "슈팅",
+  "@shots": {
+    "description": "Shots"
+  },
+  "shotsOnTarget": "유효 슈팅",
+  "@shotsOnTarget": {
+    "description": "Shots on target"
+  },
+  "corners": "코너킥",
+  "@corners": {
+    "description": "Corners"
+  },
+  "fouls": "파울",
+  "@fouls": {
+    "description": "Fouls"
+  },
+  "offsides": "오프사이드",
+  "@offsides": {
+    "description": "Offsides"
+  },
+  "yellowCards": "경고",
+  "@yellowCards": {
+    "description": "Yellow cards"
+  },
+  "redCards": "퇴장",
+  "@redCards": {
+    "description": "Red cards"
+  },
+
+  "matchName": "경기명",
+  "@matchName": {
+    "description": "Match name section"
+  },
+  "homeTeam": "홈팀",
+  "@homeTeam": {
+    "description": "Home team"
+  },
+  "awayTeam": "원정팀",
+  "@awayTeam": {
+    "description": "Away team"
+  },
+  "homeShort": "홈",
+  "@homeShort": {
+    "description": "Home short"
+  },
+  "awayShort": "원정",
+  "@awayShort": {
+    "description": "Away short"
+  },
+  "score": "스코어",
+  "@score": {
+    "description": "Score"
+  },
+  "photos": "사진",
+  "@photos": {
+    "description": "Photos section"
+  },
+  "camera": "카메라",
+  "@camera": {
+    "description": "Camera"
+  },
+  "gallery": "갤러리",
+  "@gallery": {
+    "description": "Gallery"
+  },
+  "tags": "태그",
+  "@tags": {
+    "description": "Tags section"
+  },
+  "tagVictory": "승리",
+  "@tagVictory": {
+    "description": "Victory tag"
+  },
+  "tagComeback": "역전",
+  "@tagComeback": {
+    "description": "Comeback tag"
+  },
+  "tagGoalFest": "골잔치",
+  "@tagGoalFest": {
+    "description": "Goal fest tag"
+  },
+  "tagCleanSheet": "클린시트",
+  "@tagCleanSheet": {
+    "description": "Clean sheet tag"
+  },
+  "tagFirstMatch": "첫직관",
+  "@tagFirstMatch": {
+    "description": "First match tag"
+  },
+  "tagAway": "원정",
+  "@tagAway": {
+    "description": "Away tag"
+  },
+  "currencyUnit": "원",
+  "@currencyUnit": {
+    "description": "Korean currency unit"
+  },
+  "switchToSearch": "검색으로",
+  "@switchToSearch": {
+    "description": "Switch to search mode"
+  },
+  "switchToManual": "직접 입력",
+  "@switchToManual": {
+    "description": "Switch to manual input"
+  },
+  "addTag": "태그 추가",
+  "@addTag": {
+    "description": "Add tag hint"
+  },
+  "suggestedTags": "추천 태그",
+  "@suggestedTags": {
+    "description": "Suggested tags section"
+  },
+  "companionHint": "예: 친구들, 가족",
+  "@companionHint": {
+    "description": "Companion hint text"
+  },
+  "foodReviewHint": "먹은 음식, 맛 평가 등",
+  "@foodReviewHint": {
+    "description": "Food review hint text"
+  },
+  "priceHint": "예: 50,000",
+  "@priceHint": {
+    "description": "Price hint text"
+  },
+
+  "penaltyGoal": "페널티골",
+  "@penaltyGoal": {
+    "description": "Penalty goal"
+  },
+  "ownGoal": "자책골",
+  "@ownGoal": {
+    "description": "Own goal"
+  },
+  "goal": "골",
+  "@goal": {
+    "description": "Goal"
+  },
+  "yellowCard": "경고",
+  "@yellowCard": {
+    "description": "Yellow card"
+  },
+  "redCard": "퇴장",
+  "@redCard": {
+    "description": "Red card"
+  },
+  "card": "카드",
+  "@card": {
+    "description": "Card"
+  },
+  "substitution": "교체",
+  "@substitution": {
+    "description": "Substitution"
+  },
+  "grass": "잔디",
+  "@grass": {
+    "description": "Grass field"
+  },
+  "resultWin": "승",
+  "@resultWin": {
+    "description": "Win result"
+  },
+  "resultDraw": "무",
+  "@resultDraw": {
+    "description": "Draw result"
+  },
+  "resultLoss": "패",
+  "@resultLoss": {
+    "description": "Loss result"
+  },
+  "goalsScored": "득점 {home} : {away}",
+  "@goalsScored": {
+    "description": "Goals scored",
+    "placeholders": {
+      "home": {"type": "int"},
+      "away": {"type": "int"}
+    }
+  },
+  "nMatches": "{count}경기",
+  "@nMatches": {
+    "description": "N matches",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "capacity": "수용 인원",
+  "@capacity": {
+    "description": "Stadium capacity"
+  },
+
+  "profileTab": "프로필",
+  "@profileTab": {
+    "description": "Profile tab"
+  },
+  "careerTab": "커리어",
+  "@careerTab": {
+    "description": "Career tab"
+  },
+  "assist": "도움",
+  "@assist": {
+    "description": "Assist"
+  },
+  "matchesPlayed": "출전",
+  "@matchesPlayed": {
+    "description": "Matches played"
+  },
+  "playingTime": "출전시간",
+  "@playingTime": {
+    "description": "Playing time"
+  },
+  "clubTeams": "소속팀",
+  "@clubTeams": {
+    "description": "Club teams"
+  },
+  "nationalTeam": "국가대표팀",
+  "@nationalTeam": {
+    "description": "National team"
+  },
+  "season": "시즌",
+  "@season": {
+    "description": "Season"
+  },
+  "teamShort": "팀",
+  "@teamShort": {
+    "description": "Team short"
+  },
+  "matches": "경기",
+  "@matches": {
+    "description": "Matches"
+  },
+  "rating": "평점",
+  "@rating": {
+    "description": "Rating"
+  },
+  "started": "선발",
+  "@started": {
+    "description": "Started/Lineups"
+  },
+  "goalkeeper": "골키퍼",
+  "@goalkeeper": {
+    "description": "Goalkeeper position"
+  },
+  "defender": "수비수",
+  "@defender": {
+    "description": "Defender position"
+  },
+  "midfielder": "미드필더",
+  "@midfielder": {
+    "description": "Midfielder position"
+  },
+  "attacker": "공격수",
+  "@attacker": {
+    "description": "Attacker position"
+  },
+  "nationality": "국적",
+  "@nationality": {
+    "description": "Nationality"
+  },
+  "birthDate": "생년월일",
+  "@birthDate": {
+    "description": "Birth date"
+  },
+  "age": "나이",
+  "@age": {
+    "description": "Age"
+  },
+  "ageYears": "{years}세",
+  "@ageYears": {
+    "description": "Age in years",
+    "placeholders": {
+      "years": {"type": "int"}
+    }
+  },
+  "height": "키",
+  "@height": {
+    "description": "Height"
+  },
+  "weight": "몸무게",
+  "@weight": {
+    "description": "Weight"
+  },
+  "birthPlace": "출생지",
+  "@birthPlace": {
+    "description": "Birth place"
+  },
+  "injured": "부상",
+  "@injured": {
+    "description": "Injured status"
+  },
+  "suspended": "정지",
+  "@suspended": {
+    "description": "Suspended status"
+  },
+  "other": "기타",
+  "@other": {
+    "description": "Other"
+  },
+  "seasonStats": "시즌 통계",
+  "@seasonStats": {
+    "description": "Season stats tab"
+  },
+  "playerInfo": "선수 정보",
+  "@playerInfo": {
+    "description": "Player info title"
+  },
+  "playerNotFoundDesc": "선수 정보를 찾을 수 없습니다",
+  "@playerNotFoundDesc": {
+    "description": "Player not found description"
+  },
+  "error": "오류",
+  "@error": {
+    "description": "Error prefix"
+  },
+  "currentSeason": "현재 시즌",
+  "@currentSeason": {
+    "description": "Current season"
+  },
+  "seasonStatsSummary": "{season} 통계 요약",
+  "@seasonStatsSummary": {
+    "description": "Season stats summary title",
+    "placeholders": {
+      "season": {"type": "String"}
+    }
+  },
+  "noSeasonStats": "시즌 통계가 없습니다",
+  "@noSeasonStats": {
+    "description": "No season stats"
+  },
+  "loadingSeasonStats": "시즌별 통계를 불러오는 중...",
+  "@loadingSeasonStats": {
+    "description": "Loading season stats"
+  },
+  "basicInfo": "기본 정보",
+  "@basicInfo": {
+    "description": "Basic info section"
+  },
+  "injuryHistory": "부상/출전정지 이력",
+  "@injuryHistory": {
+    "description": "Injury and suspension history"
+  },
+  "nRecords": "{count}건",
+  "@nRecords": {
+    "description": "N records",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "currentlyOut": "현재 결장 중",
+  "@currentlyOut": {
+    "description": "Currently out status"
+  },
+  "recentHistory": "최근 이력",
+  "@recentHistory": {
+    "description": "Recent history"
+  },
+  "transferHistory": "이적 기록",
+  "@transferHistory": {
+    "description": "Transfer history"
+  },
+  "moreTransfers": "외 {count}건의 이적 기록",
+  "@moreTransfers": {
+    "description": "More transfer records",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "trophies": "수상 경력",
+  "@trophies": {
+    "description": "Trophies section"
+  },
+  "nTrophies": "{count}개",
+  "@nTrophies": {
+    "description": "N trophies",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "addedToFavorites": "즐겨찾기에 추가되었습니다",
+  "@addedToFavorites": {
+    "description": "Added to favorites message"
+  },
+  "removedFromFavorites": "즐겨찾기에서 제거되었습니다",
+  "@removedFromFavorites": {
+    "description": "Removed from favorites message"
+  },
+  "noTimelineInfo": "타임라인 정보가 없습니다",
+  "@noTimelineInfo": {
+    "description": "No timeline info"
+  },
+  "updatedAfterMatch": "경기 종료 후 업데이트됩니다",
+  "@updatedAfterMatch": {
+    "description": "Updated after match ends"
+  },
+  "assistBy": "어시스트: {name}",
+  "@assistBy": {
+    "description": "Assist by player",
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "noLineupInfo": "라인업 정보가 없습니다",
+  "@noLineupInfo": {
+    "description": "No lineup info"
+  },
+  "startersCount": "선발 ({count})",
+  "@startersCount": {
+    "description": "Starters with count",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "noStarterInfo": "선발 정보 없음",
+  "@noStarterInfo": {
+    "description": "No starter info"
+  },
+  "substitutesCount": "교체 ({count})",
+  "@substitutesCount": {
+    "description": "Substitutes with count",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "noTeamInfo": "팀 정보가 없습니다",
+  "@noTeamInfo": {
+    "description": "No team info"
+  },
+  "noH2HRecord": "상대전적 기록이 없습니다",
+  "@noH2HRecord": {
+    "description": "No H2H record"
+  },
+  "recentMatches": "최근 경기",
+  "@recentMatches": {
+    "description": "Recent matches"
+  },
+  "weatherSunny": "맑음 ☀️",
+  "@weatherSunny": {
+    "description": "Weather sunny"
+  },
+  "weatherCloudy": "흐림 ☁️",
+  "@weatherCloudy": {
+    "description": "Weather cloudy"
+  },
+  "weatherRainy": "비 🌧️",
+  "@weatherRainy": {
+    "description": "Weather rainy"
+  },
+  "weatherSnowy": "눈 ❄️",
+  "@weatherSnowy": {
+    "description": "Weather snowy"
+  },
+  "weatherWindy": "바람 💨",
+  "@weatherWindy": {
+    "description": "Weather windy"
+  },
+  "matchRecord": "직관 기록",
+  "@matchRecord": {
+    "description": "Match record title"
+  },
+  "matchInfo": "경기 정보",
+  "@matchInfo": {
+    "description": "Match info step"
+  },
+  "diaryWrite": "일기 작성",
+  "@diaryWrite": {
+    "description": "Diary write step"
+  },
+  "searchResults": "검색 결과",
+  "@searchResults": {
+    "description": "Search results"
+  },
+  "seatInfo": "좌석 정보",
+  "@seatInfo": {
+    "description": "Seat info"
+  },
+  "seatHint": "예: A블록 12열 34번",
+  "@seatHint": {
+    "description": "Seat hint"
+  },
+  "goToDiary": "일기 작성하기 →",
+  "@goToDiary": {
+    "description": "Go to diary button"
+  },
+  "oneLiner": "오늘의 한 줄",
+  "@oneLiner": {
+    "description": "One liner section"
+  },
+  "oneLinerHint": "경기를 한 줄로 표현한다면?",
+  "@oneLinerHint": {
+    "description": "One liner hint"
+  },
+  "diarySection": "직관 일기",
+  "@diarySection": {
+    "description": "Diary section title"
+  },
+  "diaryHint": "오늘 경기는 어땠나요? 자유롭게 기록해보세요.",
+  "@diaryHint": {
+    "description": "Diary hint"
+  },
+  "matchSearch": "경기 검색",
+  "@matchSearch": {
+    "description": "Match search tab"
+  },
+  "manualInput": "직접 입력",
+  "@manualInput": {
+    "description": "Manual input tab"
+  },
+  "teamSearchHint": "팀 이름으로 검색 (선택사항)",
+  "@teamSearchHint": {
+    "description": "Team search hint"
+  },
+  "selectLeague": "리그 선택",
+  "@selectLeague": {
+    "description": "Select league"
+  },
+  "enterMatchName": "경기명을 입력하세요",
+  "@enterMatchName": {
+    "description": "Enter match name hint"
+  },
+  "mySupportedTeam": "내가 응원한 팀",
+  "@mySupportedTeam": {
+    "description": "My supported team"
+  },
+  "winDrawLossStats": "승/무/패 통계에 반영됩니다",
+  "@winDrawLossStats": {
+    "description": "Win/Draw/Loss stats info"
+  },
+  "searchOrEnterStadium": "경기장 검색 또는 직접 입력",
+  "@searchOrEnterStadium": {
+    "description": "Search or enter stadium"
+  },
+  "todaysMatchRating": "오늘 경기 평점",
+  "@todaysMatchRating": {
+    "description": "Today's match rating"
+  },
+  "ratingWorst": "최악 😢",
+  "@ratingWorst": {
+    "description": "Rating worst"
+  },
+  "ratingBest": "최고 🔥",
+  "@ratingBest": {
+    "description": "Rating best"
+  },
+  "todaysMood": "오늘의 기분",
+  "@todaysMood": {
+    "description": "Today's mood"
+  },
+  "todaysMvp": "오늘의 MVP",
+  "@todaysMvp": {
+    "description": "Today's MVP"
+  },
+  "selectPlayer": "선수 선택",
+  "@selectPlayer": {
+    "description": "Select player"
+  },
+  "selectMatchFirst": "먼저 경기를 선택해주세요",
+  "@selectMatchFirst": {
+    "description": "Select match first"
+  },
+  "loginRequired": "로그인이 필요합니다",
+  "@loginRequired": {
+    "description": "Login required"
+  },
+  "diarySaved": "직관 일기가 저장되었습니다!",
+  "@diarySaved": {
+    "description": "Diary saved"
+  },
+  "saveFailed": "저장 실패: {error}",
+  "@saveFailed": {
+    "description": "Save failed",
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "searchPlayerName": "선수 이름 검색",
+  "@searchPlayerName": {
+    "description": "Search player name"
+  },
+  "noPlayerInfo": "선수 정보가 없습니다",
+  "@noPlayerInfo": {
+    "description": "No player info"
+  },
+  "enterTeamNameDirectly": "팀 이름을 직접 입력하세요",
+  "@enterTeamNameDirectly": {
+    "description": "Enter team name directly"
+  },
+  "teamName": "팀 이름",
+  "@teamName": {
+    "description": "Team name hint"
+  },
+  "searchTeamLabel": "{label} 검색",
+  "@searchTeamLabel": {
+    "description": "Search team with label",
+    "placeholders": {
+      "label": {"type": "String"}
+    }
+  },
+  "moodExcited": "신남",
+  "@moodExcited": {
+    "description": "Excited mood"
+  },
+  "moodHappy": "기쁨",
+  "@moodHappy": {
+    "description": "Happy mood"
+  },
+  "moodSatisfied": "만족",
+  "@moodSatisfied": {
+    "description": "Satisfied mood"
+  },
+  "moodNeutral": "보통",
+  "@moodNeutral": {
+    "description": "Neutral mood"
+  },
+  "moodDisappointed": "아쉬움",
+  "@moodDisappointed": {
+    "description": "Disappointed mood"
+  },
+  "moodSad": "슬픔",
+  "@moodSad": {
+    "description": "Sad mood"
+  },
+  "moodAngry": "분노",
+  "@moodAngry": {
+    "description": "Angry mood"
+  },
+  "selectThisTeam": "이 팀으로 선택",
+  "@selectThisTeam": {
+    "description": "Select this team button"
+  },
+  "searchByTeamName": "팀 이름으로 검색",
+  "@searchByTeamName": {
+    "description": "Search by team name hint"
+  },
+  "selectLeagueOrSearchTeam": "리그를 선택하거나\n팀 이름을 검색하세요",
+  "@selectLeagueOrSearchTeam": {
+    "description": "Select league or search team prompt"
+  },
+  "venueSearch": "경기장 검색",
+  "@venueSearch": {
+    "description": "Venue search title"
+  },
+  "enterVenueNameDirectly": "경기장 이름을 직접 입력하세요",
+  "@enterVenueNameDirectly": {
+    "description": "Enter venue name directly"
+  },
+  "venueName": "경기장 이름",
+  "@venueName": {
+    "description": "Venue name hint"
+  },
+  "selectThisVenue": "이 경기장으로 선택",
+  "@selectThisVenue": {
+    "description": "Select this venue button"
+  },
+  "selectCountry": "국가 선택",
+  "@selectCountry": {
+    "description": "Select country"
+  },
+  "searchByVenueName": "경기장 이름으로 검색",
+  "@searchByVenueName": {
+    "description": "Search by venue name hint"
+  },
+  "selectCountryOrSearchVenue": "국가를 선택하거나\n경기장 이름을 검색하세요",
+  "@selectCountryOrSearchVenue": {
+    "description": "Select country or search venue prompt"
+  },
+  "noName": "이름 없음",
+  "@noName": {
+    "description": "No name fallback"
+  },
+  "editMatchRecord": "직관 기록 수정",
+  "@editMatchRecord": {
+    "description": "Edit match record title"
+  },
+  "editMatchDiary": "직관 일기 수정",
+  "@editMatchDiary": {
+    "description": "Edit match diary title"
+  },
+  "cannotLoadRecord": "기록을 불러올 수 없습니다",
+  "@cannotLoadRecord": {
+    "description": "Cannot load record error"
+  },
+  "saved": "수정되었습니다!",
+  "@saved": {
+    "description": "Saved message"
+  },
+  "editDiary": "일기 수정",
+  "@editDiary": {
+    "description": "Edit diary tab label"
+  },
+  "editDiaryButton": "일기 수정하기 →",
+  "@editDiaryButton": {
+    "description": "Edit diary button"
+  },
+  "addTagHint": "태그 추가",
+  "@addTagHint": {
+    "description": "Add tag hint"
+  },
+  "suggestedTagsLabel": "추천 태그",
+  "@suggestedTagsLabel": {
+    "description": "Suggested tags label"
+  },
+  "additionalInfoSection": "추가 정보",
+  "@additionalInfoSection": {
+    "description": "Additional info section"
+  },
+
+  "matchInfoNotFound": "경기 정보를 찾을 수 없습니다",
+  "errorWithMessage": "오류: {message}",
+  "@errorWithMessage": {
+    "placeholders": { "message": { "type": "String" } }
+  },
+  "tabComparison": "비교",
+  "tabStats": "기록",
+  "tabLineup": "라인업",
+  "tabRanking": "순위",
+  "tabPrediction": "예측",
+  "tabComments": "댓글",
+  "matchEnded": "경기 종료",
+  "matchInfo": "경기 정보",
+  "leagueLabel": "리그",
+  "seasonLabel": "시즌",
+  "roundLabel": "라운드",
+  "dateLabel": "날짜",
+  "timeLabel": "시간",
+  "venueLabel": "경기장",
+  "statusLabel": "상태",
+  "refereeLabel": "주심",
+  "statusFinished": "경기 종료",
+  "statusHalftime": "하프타임",
+  "statusLive": "진행 중",
+  "statusScheduled": "예정",
+  "statusTBD": "시간 미정",
+  "statusPostponed": "연기",
+  "statusCancelled": "취소",
+  "statusAET": "연장 종료",
+  "statusPEN": "승부차기 종료",
+  "noPredictionInfo": "예측 정보가 없습니다",
+  "cannotLoadPrediction": "예측 정보를 불러올 수 없습니다",
+  "odds": "배당률",
+  "drawLabel": "무승부",
+  "liveOdds": "실시간 배당률",
+  "allCategory": "전체",
+  "noBettingInfo": "배팅 정보가 없습니다",
+  "categoryMainBets": "주요 배팅",
+  "categoryGoalRelated": "골 관련",
+  "categoryHandicap": "핸디캡",
+  "categoryHalfTime": "전/후반",
+  "categoryTeamRelated": "팀 관련",
+  "categoryOther": "기타",
+  "initialOdd": "초기 {odd}",
+  "@initialOdd": {
+    "placeholders": { "odd": { "type": "String" } }
+  },
+  "matchPrediction": "승부 예측",
+  "expectedWinner": "예상 승자",
+  "drawPrediction": "무승부",
+  "detailedAnalysis": "상세 분석",
+  "comparisonForm": "폼",
+  "comparisonAttack": "공격력",
+  "comparisonDefense": "수비력",
+  "comparisonH2H": "상대전적",
+  "comparisonGoals": "득점력",
+  "lineupLoadError": "라인업 로딩 오류: {error}",
+  "@lineupLoadError": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+  "noLineupInfo": "라인업 정보가 없습니다",
+  "lineupUpdateBeforeMatch": "경기 시작 전 업데이트됩니다",
+  "substitutes": "교체 선수",
+  "substitutionRecord": "교체 기록",
+  "bench": "벤치",
+  "playerAppsLabel": "출전",
+  "playerGoalsLabel": "골",
+  "playerAssistsLabel": "어시스트",
+  "playerPassAccuracy": "패스 성공률",
+  "noMatchStats": "경기 통계가 없습니다",
+  "statsUpdateDuringMatch": "경기 중 또는 경기 후에 업데이트됩니다",
+  "attackSection": "공격",
+  "shotsLabel": "슈팅",
+  "shotsOnLabel": "유효 슈팅",
+  "offsidesLabel": "오프사이드",
+  "passSection": "패스",
+  "totalPassLabel": "총 패스",
+  "keyPassLabel": "키 패스",
+  "defenseSection": "수비",
+  "tackleLabel": "태클",
+  "interceptLabel": "인터셉트",
+  "blockLabel": "블록",
+  "duelDribbleSection": "듀얼 & 드리블",
+  "duelLabel": "듀얼",
+  "dribbleLabel": "드리블",
+  "foulCardSection": "파울 & 카드",
+  "foulLabel": "파울",
+  "foulDrawnLabel": "피파울",
+  "cardsLabel": "카드",
+  "goalkeeperSection": "골키퍼",
+  "savesLabel": "선방",
+  "concededLabel": "실점",
+  "viewPlayerDetail": "선수 상세 정보 보기",
+  "positionGoalkeeper": "골키퍼",
+  "positionDefender": "수비수",
+  "positionMidfielder": "미드필더",
+  "positionAttacker": "공격수",
+  "missingPlayers": "결장 선수",
+  "checkingMissingInfo": "결장 정보 확인 중...",
+  "injurySuspension": "정지",
+  "injuryKnee": "무릎 부상",
+  "injuryHamstring": "햄스트링",
+  "injuryAnkle": "발목 부상",
+  "injuryMuscle": "근육 부상",
+  "injuryBack": "허리 부상",
+  "injuryIllness": "질병",
+  "injuryGeneral": "부상",
+  "injuryDoubtful": "불투명",
+  "injuryOut": "결장",
+  "sectionStats": "기록",
+  "cannotLoadStats": "통계를 불러올 수 없습니다",
+  "sectionBroadcast": "중계",
+  "cannotLoadTimeline": "타임라인을 불러올 수 없습니다",
+  "noStatsInfo": "통계 정보가 없습니다",
+  "possessionLabel": "점유율",
+  "cornersLabel": "코너킥",
+  "foulsLabel": "파울",
+  "warningsLabel": "경고",
+  "sendOffsLabel": "퇴장",
+  "noTimelineInfo": "타임라인 정보가 없습니다",
+  "assistLabel": "어시스트: {name}",
+  "@assistLabel": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "penaltyGoal": "페널티골",
+  "ownGoal": "자책골",
+  "goalLabel": "골",
+  "warningCard": "경고",
+  "sendOffCard": "퇴장",
+  "cardLabel": "카드",
+  "substitutionLabel": "교체",
+  "matchNotificationSettings": "경기 알림 설정",
+  "kickoffNotification": "경기 시작 알림",
+  "kickoffNotificationDesc": "킥오프 30분 전에 알림",
+  "lineupNotification": "라인업 발표",
+  "lineupNotificationDesc": "선발 명단 공개 시 알림",
+  "resultNotification": "경기 결과",
+  "resultNotificationDesc": "경기 종료 후 결과 알림",
+  "notificationRemoved": "알림이 해제되었습니다",
+  "turnOffNotification": "알림 해제",
+  "cancelLabel": "취소",
+  "saveLabel": "저장",
+  "notificationSet": "알림이 설정되었습니다",
+  "leagueRanking": "리그 순위",
+  "homeAwayRecord": "홈/원정 성적",
+  "last5Matches": "최근 5경기",
+  "goalStats": "득점/실점 통계",
+  "teamStyleComparison": "팀 스타일 비교",
+  "keyPlayers": "주요 선수",
+  "h2hRecord": "상대전적",
+  "noH2HRecord": "상대전적 기록이 없습니다",
+  "winLabel": "승",
+  "drawShortLabel": "무",
+  "goalsDisplay": "득점 {home} : {away}",
+  "@goalsDisplay": {
+    "placeholders": { "home": { "type": "int" }, "away": { "type": "int" } }
+  },
+  "recentNMatches": "최근 {count}경기",
+  "@recentNMatches": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "noRankingInfo": "순위 정보가 없습니다",
+  "rankingLabel": "순위",
+  "pointsLabel": "승점",
+  "matchesPlayedLabel": "경기",
+  "winDrawLossLabel": "승-무-패",
+  "goalsForLabel": "득점",
+  "goalsAgainstLabel": "실점",
+  "goalDiffLabel": "득실차",
+  "dataLoadFailed": "데이터 로드 실패",
+  "noRecordInfo": "성적 정보가 없습니다",
+  "avgGoalsFor": "평균 득점",
+  "avgGoalsAgainst": "평균 실점",
+  "loadFailed": "로드 실패",
+  "noStatsAvailable": "통계 정보가 없습니다",
+  "totalGoalsFor": "총 득점",
+  "totalGoalsAgainst": "총 실점",
+  "goalsPerMatch": "경기당 득점",
+  "concededPerMatch": "경기당 실점",
+  "noPlayerStats": "선수 통계 정보가 없습니다",
+  "goalLeaders": "득점 리더",
+  "assistLeaders": "도움 리더",
+  "assistDataLoadFailed": "도움 데이터 로드 실패",
+  "cannotLoadPlayerStats": "선수 통계를 불러올 수 없습니다",
+  "noSeasonStats": "시즌 통계 정보가 없습니다",
+  "radarWinRate": "승률",
+  "radarAttack": "공격력",
+  "radarDefense": "수비력",
+  "radarCleanSheet": "클린시트",
+  "radarHomeRecord": "홈 성적",
+  "cleanSheetLabel": "클린시트",
+  "failedToScoreLabel": "무득점 경기",
+  "cannotLoadRanking": "순위를 불러올 수 없습니다",
+  "retryButton": "다시 시도",
+  "teamColumnHeader": "팀",
+  "matchesColumnHeader": "경기",
+  "winsColumnHeader": "승",
+  "drawsColumnHeader": "무",
+  "lossesColumnHeader": "패",
+  "goalDiffColumnHeader": "득실",
+  "pointsColumnHeader": "승점",
+  "matchTeams": "경기 팀",
+  "relegationLabel": "강등",
+  "promotionLabel": "승격",
+  "playoffLabel": "플레이오프",
+  "advanceLabel": "진출",
+  "matchGroup": "경기 조",
+  "commentWriteFailed": "댓글 작성 실패: {error}",
+  "@commentWriteFailed": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+  "deleteComment": "댓글 삭제",
+  "deleteCommentConfirm": "이 댓글을 삭제하시겠습니까?",
+  "deleteButton": "삭제",
+  "commentDeleted": "댓글이 삭제되었습니다",
+  "deleteFailed": "삭제 실패: {error}",
+  "@deleteFailed": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+  "liveComments": "실시간 댓글",
+  "commentsRefreshed": "댓글을 새로고침했습니다",
+  "refreshButton": "새로고침",
+  "cannotLoadComments": "댓글을 불러올 수 없습니다",
+  "noCommentsYet": "아직 댓글이 없습니다",
+  "beFirstToComment": "첫 댓글을 남겨보세요!",
+  "commentInputHint": "댓글을 입력하세요...",
+  "justNow": "방금 전",
+
+  "matchInfo": "경기 정보",
+  "missingPlayers": "결장 선수",
+  "checkingMissingInfo": "결장 정보 확인 중...",
+  "injurySuspension": "정지",
+  "injuryKnee": "무릎 부상",
+  "injuryHamstring": "햄스트링",
+  "injuryAnkle": "발목 부상",
+  "injuryMuscle": "근육 부상",
+  "injuryBack": "허리 부상",
+  "injuryIllness": "질병",
+  "injuryGeneral": "부상",
+  "injuryDoubtful": "불투명",
+  "injuryOut": "결장",
+  "sectionStats": "기록",
+  "sectionBroadcast": "중계",
+  "cannotLoadStats": "통계를 불러올 수 없습니다",
+  "cannotLoadTimeline": "타임라인을 불러올 수 없습니다",
+  "noStatsInfo": "통계 정보가 없습니다",
+  "possessionLabel": "점유율",
+  "shotsOnLabel": "유효 슈팅",
+  "cornersLabel": "코너킥",
+  "offsidesLabel": "오프사이드",
+  "warningsLabel": "경고",
+  "sendOffsLabel": "퇴장",
+  "noTimelineInfo": "타임라인 정보가 없습니다",
+  "playerAppsLabel": "출전",
+  "playerGoalsLabel": "골",
+  "playerAssistsLabel": "어시스트",
+  "playerPassAccuracy": "패스 성공률",
+  "positionGoalkeeper": "골키퍼",
+  "positionDefender": "수비수",
+  "positionMidfielder": "미드필더",
+  "positionAttacker": "공격수",
+  "noPlayerStatsInfo": "선수 통계 정보가 없습니다",
+  "topScorer": "득점 리더",
+  "topAssister": "도움 리더",
+  "nGoals": "{count}골",
+  "@nGoals": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "nAssists": "{count}도움",
+  "@nAssists": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "homeShort": "홈 성적",
+  "awayShort": "원정 성적",
+  "assistLabel": "어시스트: {name}",
+  "@assistLabel": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "initialOdd": "초기 {value}",
+  "@initialOdd": {
+    "placeholders": { "value": { "type": "String" } }
+  },
+  "errorWithMessage": "오류: {error}",
+  "@errorWithMessage": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+  "seasonWithYear": "{year}-{nextYear} 시즌",
+  "@seasonWithYear": {
+    "placeholders": { "year": { "type": "int" }, "nextYear": { "type": "int" } }
+  },
+  "goalDifference": "득실",
+  "standingsErrorMessage": "순위를 불러올 수 없습니다",
+  "ownGoal": "자책",
+  "nTimes": "{count}회",
+  "@nTimes": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "nPlayers": "{count}명",
+  "@nPlayers": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "nMatches": "{count}경기",
+  "@nMatches": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "matchTeam": "경기 팀",
+  "relegation": "강등",
+  "promotion": "승격",
+  "playoff": "플레이오프",
+  "groupStageWithYear": "{year} 조별리그",
+  "@groupStageWithYear": {
+    "placeholders": { "year": { "type": "int" } }
+  },
+  "qualified": "진출",
+  "betCategoryMain": "주요 배팅",
+  "betCategoryGoal": "골 관련",
+  "betCategoryHandicap": "핸디캡",
+  "betCategoryHalf": "전/후반",
+  "betCategoryTeam": "팀 관련",
+  "betCategoryOther": "기타",
+  "betMatchWinner": "승무패",
+  "betHomeAway": "홈/원정",
+  "betDoubleChance": "더블찬스",
+  "betBothTeamsScore": "양팀 모두 득점",
+  "betExactScore": "정확한 스코어",
+  "betGoalsOverUnder": "총 골 수",
+  "betOverUnder": "오버/언더",
+  "betAsianHandicap": "아시안 핸디캡",
+  "betHandicap": "핸디캡",
+  "betFirstHalfWinner": "전반전 승자",
+  "betSecondHalfWinner": "후반전 승자",
+  "betHalfTimeFullTime": "전반/후반 결과",
+  "betOddEven": "홀/짝",
+  "betTotalHome": "홈팀 총 골",
+  "betTotalAway": "원정팀 총 골",
+  "betCleanSheetHome": "홈팀 무실점",
+  "betCleanSheetAway": "원정팀 무실점",
+  "betWinToNilHome": "홈팀 완봉승",
+  "betWinToNilAway": "원정팀 완봉승",
+  "betCornersOverUnder": "코너킥 수",
+  "betCardsOverUnder": "카드 수",
+  "betFirstTeamToScore": "선제골 팀",
+  "betLastTeamToScore": "마지막 득점 팀",
+  "betHighestScoringHalf": "최다 득점 반",
+  "betToScoreInBothHalves": "양 반전 득점",
+  "betHomeWinBothHalves": "홈팀 양 반전 승리",
+  "betAwayWinBothHalves": "원정팀 양 반전 승리",
+  "leagueLabel": "리그",
+  "cannotLoadLeagueInfo": "리그 정보를 불러올 수 없습니다",
+  "topScorersRanking": "득점 순위",
+  "topAssistsRanking": "도움 순위",
+  "noTopScorersInfo": "득점 순위 정보가 없습니다",
+  "noTopAssistsInfo": "도움 순위 정보가 없습니다",
+  "cannotLoadTopScorers": "득점 순위를 불러올 수 없습니다",
+  "cannotLoadTopAssists": "도움 순위를 불러올 수 없습니다",
+  "goalsFor": "득점",
+  "goalsAgainst": "실점",
+  "uclDirect": "UCL 직행",
+  "uclQualification": "UCL 예선",
+  "uelDirect": "UEL 직행",
+  "mon": "월",
+  "tue": "화",
+  "wed": "수",
+  "thu": "목",
+  "fri": "금",
+  "sat": "토",
+  "sun": "일",
+  "dateWithWeekday": "{month}월 {day}일 ({weekday})",
+  "matchFinished": "종료",
+  "noMatchSchedule": "경기 일정이 없습니다",
+  "tomorrow": "내일",
+  "yesterday": "어제",
+  "champion": "우승",
+  "finalMatch": "결승전",
+  "runnerUp": "준우승",
+  "currentRank": "현재 순위",
+  "seasonEnd": "시즌 종료",
+  "winShortForm": "승",
+  "drawShortForm": "무",
+  "lossShortForm": "패",
+  "last5Matches": "최근 5경기",
+  "leagueOverview": "리그 개요",
+  "homeWin": "홈 승",
+  "awayWin": "원정 승",
+  "xMatches": "{count}경기",
+  "@xMatches": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noLeagueStats": "리그 통계 정보가 없습니다",
+  "cannotLoadStats": "통계를 불러올 수 없습니다",
+  "xPoints": "{count}점",
+  "@xPoints": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "xGoals": "{count}골",
+  "@xGoals": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "todayWithDate": "오늘 {date}",
+  "@todayWithDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "tomorrowWithDate": "내일 {date}",
+  "@tomorrowWithDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "yesterdayWithDate": "어제 {date}",
+  "@yesterdayWithDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "info": "정보",
+  "statistics": "통계",
+  "squad": "선수단",
+  "transfers": "이적",
+  "country": "국가",
+  "founded": "창단",
+  "type": "유형",
+  "nationalTeam": "국가대표팀",
+  "code": "코드",
+  "capacity": "수용인원",
+  "grass": "잔디",
+  "manager": "감독",
+  "winRate": "승률",
+  "cleanSheet": "클린시트",
+  "failedToScore": "무득점",
+  "penaltyKick": "페널티킥",
+  "firstHalf": "전반",
+  "secondHalf": "후반",
+  "other": "기타",
+  "suspended": "정지",
+  "hamstring": "햄스트링",
+  "illness": "질병",
+  "injured": "부상",
+  "doubtful": "불투명",
+  "absent": "결장",
+  "goalkeeper": "골키퍼",
+  "defender": "수비수",
+  "midfielder": "미드필더",
+  "forward": "공격수",
+  "all": "전체",
+  "incoming": "영입",
+  "outgoing": "방출",
+  "loan": "임대",
+  "transfer": "이적",
+  "basicInfo": "기본 정보",
+  "foundedYear": "{year}년",
+  "@foundedYear": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "foundedIn": "창단 {year}",
+  "@foundedIn": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "seasonFormat": "{year1}/{year2} 시즌",
+  "@seasonFormat": {
+    "placeholders": {
+      "year1": {"type": "int"},
+      "year2": {"type": "int"}
+    }
+  },
+  "errorWithMessage": "오류: {message}",
+  "@errorWithMessage": {
+    "placeholders": {
+      "message": {"type": "String"}
+    }
+  },
+  "averageFormat": "평균 {value}",
+  "@averageFormat": {
+    "placeholders": {
+      "value": {"type": "String"}
+    }
+  },
+  "homeAwayFormat": "홈 {home} / 원정 {away}",
+  "@homeAwayFormat": {
+    "placeholders": {
+      "home": {"type": "int"},
+      "away": {"type": "int"}
+    }
+  },
+  "homeAwayComparison": "홈/원정 비교",
+  "goalsByMinute": "시간대별 골 분포",
+  "noPlayerInfo": "선수 정보가 없습니다",
+
+  "injurySuspended": "정지",
+  "injuryKnee": "무릎 부상",
+  "injuryHamstring": "햄스트링",
+  "injuryAnkle": "발목 부상",
+  "injuryMuscle": "근육 부상",
+  "injuryBack": "허리 부상",
+  "injuryIllness": "질병",
+  "injuryGeneral": "부상",
+  "injuryDoubtful": "불투명",
+  "injuryAbsent": "결장",
+
+  "positionGoalkeeper": "골키퍼",
+  "positionDefender": "수비수",
+  "positionMidfielder": "미드필더",
+  "positionForward": "공격수",
+
+  "filterAll": "전체",
+  "transferIncoming": "영입",
+  "transferOutgoing": "방출",
+  "transferTypeLoan": "임대",
+  "transferTypePermanent": "이적",
+  "transferLoanReturn": "임대 복귀",
+  "freeTransfer": "프리",
+  "freeTransferLabel": "자유 이적",
+  "transferFee": "이적료",
+  "noTransferInfo": "이적 정보가 없습니다",
+
+  "teamNotFound": "팀 정보를 찾을 수 없습니다",
+  "teamInfo": "팀 정보",
+  "foundedYear": "창단 {year}",
+  "@foundedYear": {
+    "placeholders": {
+      "year": {"type": "int"}
+    }
+  },
+  "homeStadium": "홈 경기장",
+  "careerTeamCount": "경력: {count}개 팀",
+  "@careerTeamCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "noStatsInfo": "통계 정보가 없습니다",
+  "seasonRecord": "시즌 성적",
+  "seasonRecordTitle": "시즌 기록",
+  "longestWinStreak": "최다 연승",
+  "homeBiggestWin": "홈 최다 득점 승리",
+  "awayBiggestWin": "원정 최다 득점 승리",
+  "homeBiggestLoss": "홈 최다 실점 패배",
+  "awayBiggestLoss": "원정 최다 실점 패배",
+  "noSchedule": "일정이 없습니다",
+  "upcomingMatches": "예정된 경기",
+  "pastMatches": "지난 경기",
+  "injuredPlayers": "부상/결장 선수",
+  "unknownTeam": "알 수 없음",
+  "transferFromTeam": "← {teamName}",
+  "@transferFromTeam": {
+    "placeholders": {
+      "teamName": {"type": "String"}
+    }
+  },
+  "transferToTeam": "→ {teamName}",
+  "@transferToTeam": {
+    "placeholders": {
+      "teamName": {"type": "String"}
+    }
+  },
+  "addedToFavorites": "즐겨찾기에 추가되었습니다",
+  "removedFromFavorites": "즐겨찾기에서 제거되었습니다",
+  "yearsCount": "{count}년",
+  "@yearsCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "winStreak": "{count}연승",
+  "@winStreak": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "currentLanguage": "현재: {language}",
+  "@currentLanguage": {
+    "placeholders": {
+      "language": {"type": "String"}
+    }
+  },
+  "languageChangeNote": "언어를 변경하면 앱의 모든 텍스트가 해당 언어로 표시됩니다.",
+
+  "profileEdit": "프로필 수정",
+  "gallery": "갤러리",
+  "camera": "카메라",
+  "basicInfo": "기본 정보",
+  "name": "이름",
+  "selectFavoriteTeam": "응원팀 선택",
+  "favoriteTeamDescription": "좋아하는 팀을 선택하면 관련 경기 정보를 우선적으로 보여드려요",
+  "noFavoriteTeam": "선택한 팀 없음",
+  "profileSaved": "프로필이 저장되었습니다",
+  "pleaseEnterName": "이름을 입력해주세요",
+
+  "timezoneSettings": "시간대 설정",
+  "timezoneDescription": "경기 시간을 선택한 시간대에 맞춰 표시합니다",
+
+  "notificationSettings": "알림 설정",
+  "matchNotifications": "경기 알림",
+  "matchNotificationsDesc": "경기 시작 전 알림을 받습니다",
+  "liveScoreNotifications": "실시간 점수 알림",
+  "liveScoreNotificationsDesc": "골, 레드카드 등 주요 이벤트 알림",
+  "communityNotifications": "커뮤니티 알림",
+  "communityNotificationsDesc": "좋아요, 댓글 등 새 알림",
+  "marketingNotifications": "마케팅 알림",
+  "marketingNotificationsDesc": "이벤트, 프로모션 등 알림",
+
+  "helpSupport": "도움말 및 지원",
+  "faq": "자주 묻는 질문",
+  "contactSupport": "고객 지원 문의",
+  "appVersion": "앱 버전",
+  "termsOfService": "서비스 약관",
+  "privacyPolicy": "개인정보 처리방침",
+
+  "enterDisplayName": "표시될 이름을 입력하세요",
+  "email": "이메일",
+  "changePassword": "비밀번호 변경",
+  "changePasswordDesc": "계정 보안을 위해 정기적으로 변경하세요",
+  "deleteAccount": "계정 삭제",
+  "deleteAccountDesc": "모든 데이터가 삭제됩니다",
+  "profilePhoto": "프로필 사진 변경",
+  "selectFromGallery": "갤러리에서 선택",
+  "selectFromGalleryDesc": "저장된 사진에서 선택합니다",
+  "takePhoto": "카메라로 촬영",
+  "takePhotoDesc": "새로운 사진을 촬영합니다",
+  "deletePhoto": "사진 삭제",
+  "deletePhotoDesc": "프로필 사진을 제거합니다",
+  "photoUploaded": "사진이 업로드되었습니다. 저장을 눌러 적용하세요.",
+  "photoUploadFailed": "사진 업로드 실패: {error}",
+  "@photoUploadFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "photoWillBeDeleted": "사진이 삭제됩니다. 저장을 눌러 적용하세요.",
+  "profileUpdated": "프로필이 수정되었습니다",
+  "updateFailed": "수정 실패: {error}",
+  "@updateFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "currentPassword": "현재 비밀번호",
+  "newPassword": "새 비밀번호",
+  "confirmNewPassword": "새 비밀번호 확인",
+  "passwordMinLength": "8자 이상 입력하세요",
+  "passwordMismatch": "새 비밀번호가 일치하지 않습니다",
+  "passwordTooShort": "비밀번호는 8자 이상이어야 합니다",
+  "passwordChangePreparing": "비밀번호 변경 기능 준비 중",
+  "change": "변경",
+  "confirmDeleteAccount": "정말 계정을 삭제하시겠습니까?",
+  "deleteWarningRecords": "모든 직관 기록이 삭제됩니다",
+  "deleteWarningFavorites": "즐겨찾기 정보가 삭제됩니다",
+  "deleteWarningPhoto": "프로필 사진이 삭제됩니다",
+  "deleteWarningIrreversible": "이 작업은 되돌릴 수 없습니다",
+  "deleteAccountPreparing": "계정 삭제 기능 준비 중",
+
+  "timezoneSettingsTitle": "타임존 설정",
+  "searchTimezone": "타임존 검색...",
+  "currentSetting": "현재 설정",
+  "timezoneChanged": "타임존이 {name}으로 변경되었습니다",
+  "@timezoneChanged": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+
+  "timezoneKoreaSeoul": "한국 (서울)",
+  "timezoneJapanTokyo": "일본 (도쿄)",
+  "timezoneChinaShanghai": "중국 (상하이)",
+  "timezoneSingapore": "싱가포르",
+  "timezoneHongKong": "홍콩",
+  "timezoneThailandBangkok": "태국 (방콕)",
+  "timezoneIndonesiaJakarta": "인도네시아 (자카르타)",
+  "timezoneIndiaKolkata": "인도 (콜카타)",
+  "timezoneUAEDubai": "UAE (두바이)",
+  "timezoneUKLondon": "영국 (런던)",
+  "timezoneFranceParis": "프랑스 (파리)",
+  "timezoneGermanyBerlin": "독일 (베를린)",
+  "timezoneItalyRome": "이탈리아 (로마)",
+  "timezoneSpainMadrid": "스페인 (마드리드)",
+  "timezoneNetherlandsAmsterdam": "네덜란드 (암스테르담)",
+  "timezoneRussiaMoscow": "러시아 (모스크바)",
+  "timezoneUSEastNewYork": "미국 동부 (뉴욕)",
+  "timezoneUSWestLA": "미국 서부 (LA)",
+  "timezoneUSCentralChicago": "미국 중부 (시카고)",
+  "timezoneBrazilSaoPaulo": "브라질 (상파울루)",
+  "timezoneAustraliaSydney": "호주 (시드니)",
+  "timezoneNewZealandAuckland": "뉴질랜드 (오클랜드)",
+
+  "pushNotifications": "푸시 알림",
+  "receivePushNotifications": "푸시 알림 받기",
+  "masterSwitch": "모든 알림의 마스터 스위치",
+  "favoriteTeamMatchNotifications": "즐겨찾기 팀 경기 알림",
+  "favoriteTeamMatchNotificationsDesc": "즐겨찾기한 팀의 경기에 대한 알림을 설정합니다",
+  "matchStartNotification": "경기 시작 알림",
+  "matchStartNotificationDesc": "즐겨찾기 팀 경기 시작 전 미리 알림",
+  "notificationTime": "알림 시간",
+  "notificationTimeDesc": "즐겨찾기 팀 경기 시작 전 알림 시간",
+  "minutes15Before": "15분 전",
+  "minutes30Before": "30분 전",
+  "hour1Before": "1시간 전",
+  "hours2Before": "2시간 전",
+  "newMatchScheduleNotification": "새 경기 일정 알림",
+  "newMatchScheduleNotificationDesc": "즐겨찾기 팀의 새로운 경기 일정 등록 알림",
+  "favoriteTeamLiveNotifications": "즐겨찾기 팀 실시간 알림",
+  "favoriteTeamLiveNotificationsDesc": "즐겨찾기한 팀의 경기 중 실시간 알림을 설정합니다",
+  "liveScoreUpdates": "라이브 스코어 업데이트",
+  "liveScoreUpdatesDesc": "경기 중 골/이벤트 실시간 알림",
+  "notificationPermissionGuide": "알림 권한 안내",
+  "notificationPermissionDesc": "알림을 받으려면 기기 설정에서 MatchLog 앱의 알림 권한을 허용해주세요.",
+  "errorWithMsg": "오류 발생: {error}",
+  "@errorWithMsg": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+
+  "helpAndSupportTitle": "도움말 및 지원",
+  "faqTitle": "자주 묻는 질문",
+  "contactUs": "문의하기",
+  "appInfo": "앱 정보",
+  "emailInquiry": "이메일 문의",
+  "bugReport": "버그 신고",
+  "bugReportDesc": "오류나 문제점을 알려주세요",
+  "featureSuggestion": "기능 제안",
+  "featureSuggestionDesc": "새로운 아이디어를 공유해주세요",
+  "appVersionLabel": "앱 버전",
+  "buildNumber": "빌드 번호",
+  "developer": "개발자",
+  "emailCopied": "이메일 앱을 열 수 없어 주소가 복사되었습니다",
+  "bugReportHint": "발견한 버그나 문제점을 자세히 설명해주세요...",
+  "featureSuggestionHint": "원하시는 기능을 자세히 설명해주세요...",
+  "submit": "제출",
+
+  "faqAddRecord": "직관 기록은 어떻게 추가하나요?",
+  "faqAddRecordAnswer": "홈 화면이나 직관 일기 탭에서 + 버튼을 눌러 새로운 직관 기록을 추가할 수 있습니다. 경기 일정에서 원하는 경기를 선택한 후 \"직관 기록\" 버튼을 눌러도 됩니다.",
+  "faqAddFavorite": "즐겨찾기 팀은 어떻게 추가하나요?",
+  "faqAddFavoriteAnswer": "내 정보 탭에서 즐겨찾기 섹션의 \"관리\" 버튼을 누르거나, 팀 상세 페이지에서 하트 버튼을 눌러 즐겨찾기에 추가할 수 있습니다.",
+  "faqSchedule": "경기 일정은 어디서 확인하나요?",
+  "faqScheduleAnswer": "하단 메뉴의 \"일정\" 탭에서 캘린더 형태로 경기 일정을 확인할 수 있습니다. 리그별로 필터링도 가능합니다.",
+  "faqNotification": "알림은 어떻게 설정하나요?",
+  "faqNotificationAnswer": "내 정보 > 알림 설정에서 경기 시작 알림, 즐겨찾기 팀 경기 알림 등을 설정할 수 있습니다.",
+  "faqSupportedLeagues": "지원하는 리그는 무엇인가요?",
+  "faqSupportedLeaguesAnswer": "EPL(잉글랜드), 라리가(스페인), 분데스리가(독일), 세리에A(이탈리아), 리그앙(프랑스), K리그, 챔피언스리그, 유로파리그를 지원합니다.",
+
+  "userDefault": "사용자",
+  "activeMember": "활성 회원",
+  "addFavoritePlayerPrompt": "즐겨찾기 선수 추가",
+
+  "emptyAttendanceTitle": "직관 기록이 없습니다",
+  "emptyAttendanceSubtitle": "첫 번째 경기 직관을 기록해보세요!",
+  "addRecord": "기록 추가",
+  "emptyDiaryTitle": "다이어리 기록이 없습니다",
+  "emptyDiarySubtitle": "경기를 보고 기록해보세요!",
+  "viewSchedule": "일정 보기",
+  "emptyScheduleTitle": "오늘 경기가 없습니다",
+  "emptyScheduleSubtitle": "다른 날짜를 선택해보세요",
+  "emptyFavoritesTitle": "즐겨찾기가 없습니다",
+  "emptyFavoritesSubtitle": "좋아하는 팀과 선수를 추가해보세요!",
+  "findTeam": "팀 찾기",
+  "emptySearchTitle": "검색 결과가 없습니다",
+  "emptySearchSubtitle": "\"{query}\"에 대한 결과가 없습니다",
+  "@emptySearchSubtitle": {
+    "placeholders": {
+      "query": {"type": "String"}
+    }
+  },
+  "errorTitle": "오류가 발생했습니다",
+  "errorDefaultSubtitle": "다시 시도해주세요",
+  "anonymous": "익명",
+  "systemDefault": "시스템 기본",
+
+  "monthJan": "1월",
+  "monthFeb": "2월",
+  "monthMar": "3월",
+  "monthApr": "4월",
+  "monthMay": "5월",
+  "monthJun": "6월",
+  "monthJul": "7월",
+  "monthAug": "8월",
+  "monthSep": "9월",
+  "monthOct": "10월",
+  "monthNov": "11월",
+  "monthDec": "12월",
+  "yearMonthFormat": "{year}년 {month}월",
+  "@yearMonthFormat": {
+    "placeholders": {
+      "year": {"type": "int"},
+      "month": {"type": "int"}
+    }
+  },
+
+  "post": "게시글",
+  "postDeleted": "게시글이 삭제되었습니다",
+  "deletePost": "게시글 삭제",
+  "deletePostConfirm": "이 게시글을 삭제하시겠습니까?",
+  "postNotFound": "게시글을 찾을 수 없습니다",
+
+  "comment": "댓글",
+  "commentCount": "댓글 {count}",
+  "@commentCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "noCommentsYet": "아직 댓글이 없습니다.\n첫 번째 댓글을 남겨보세요!",
+  "enterComment": "댓글을 입력하세요",
+  "deleteComment": "댓글 삭제",
+  "deleteCommentConfirm": "이 댓글을 삭제하시겠습니까?",
+  "loadCommentsFailed": "댓글을 불러오는데 실패했습니다: {error}",
+  "@loadCommentsFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+
+  "myAttendanceStats": "나의 직관 통계",
+  "totalAttendance": "총 직관",
+  "attendanceCount": "{count}경기",
+  "@attendanceCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "winRatePercent": "{rate}%",
+  "@winRatePercent": {
+    "placeholders": {
+      "rate": {"type": "String"}
+    }
+  },
+  "mostVisited": "최다 방문: {stadium} ({count}회)",
+  "@mostVisited": {
+    "placeholders": {
+      "stadium": {"type": "String"},
+      "count": {"type": "int"}
+    }
+  },
+  "matchRecord": "직관 기록",
+
+  "justNow": "방금 전",
+  "minutesAgo": "{minutes}분 전",
+  "@minutesAgo": {
+    "placeholders": {
+      "minutes": {"type": "int"}
+    }
+  },
+  "hoursAgo": "{hours}시간 전",
+  "@hoursAgo": {
+    "placeholders": {
+      "hours": {"type": "int"}
+    }
+  },
+  "daysAgo": "{days}일 전",
+  "@daysAgo": {
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
+
+  "attendanceStats": "직관 통계",
+  "frequentStadiums": "자주 가는 구장",
+  "noAttendanceRecordsYet": "아직 직관 기록이 없습니다",
+  "postsLabel": "게시글",
+  "attendanceLabel": "직관",
+
+  "uclDirect": "UCL 직행",
+  "uclQualification": "UCL 예선",
+  "uelDirect": "UEL 직행",
+  "championship": "챔피언십",
+  "lowerSplit": "하위 스플릿",
+  "promotion": "승격",
+  "promotionPlayoff": "승격 PO",
+  "relegation": "강등",
+
+  "competition": "대회",
+  "seasonFormatChanged": "2024-25 시즌부터 새 리그 형식으로 변경되어",
+  "standingsNotAvailable": "순위표가 아직 제공되지 않습니다",
+  "checkScheduleTab": "일정 탭에서 경기 일정을 확인하세요",
+
+  "rankHeader": "순위",
+  "playerHeader": "선수",
+  "appsHeader": "출전",
+  "goalsHeader": "득점",
+  "assistsHeader": "어시",
+  "teamHeader": "팀",
+  "matchesHeader": "경기",
+  "wonHeader": "승",
+  "drawnHeader": "무",
+  "lostHeader": "패",
+  "gfHeader": "득점",
+  "gaHeader": "실점",
+  "gdHeader": "득실",
+  "ptsHeader": "승점",
+
+  "recentFormTitle": "최근 폼",
+  "last5Matches": "최근 5경기",
+  "homeAwayStrong": "홈/원정 강자",
+  "homeStrong": "홈 강자",
+  "awayStrong": "원정 강자",
+  "bottomAnalysisTitle": "하위권 분석",
+  "mostLossesLabel": "최다 패배",
+  "lossesCount": "{count}패",
+  "@lossesCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "mostConcededLabel": "최다 실점",
+  "concededCount": "{count}실점",
+  "@concededCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "leagueOverviewTitle": "리그 개요",
+  "totalGoalsLabel": "총 골",
+  "goalsPerGameLabel": "경기당 골",
+  "homeWinsLabel": "홈 승리",
+  "awayWinsLabel": "원정 승리",
+  "homeWinShort": "홈 승",
+  "awayWinShort": "원정 승",
+  "gamesCount": "{count}경기",
+  "@gamesCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "recentMatchRecords": "최근 직관 기록",
+  "totalCount": "총 {count}개",
+  "@totalCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "errorOccurred": "오류가 발생했습니다",
+
+  "searchTitleContentAuthor": "제목, 내용, 작성자 검색",
+  "hasMatchRecord": "직관 기록 있음",
+  "clearAll": "전체 해제",
+  "noPostsYet": "아직 게시글이 없습니다",
+  "writeFirstPost": "첫 번째 게시글을 작성해보세요!",
+  "writePost": "글쓰기",
+  "noSearchResultsForQuery": "검색 결과가 없습니다",
+  "clearSearchQuery": "검색어 지우기",
+  "matchSearch": "경기 검색",
+  "reset": "초기화",
+  "showOnlyWithMatchRecord": "직관 기록이 있는 게시글만 보기",
+  "matchDate": "경기 날짜",
+  "selectLeagueFilter": "리그 선택",
+  "allLeagues": "전체",
+  "searching": "검색 중...",
+  "searchMatch": "경기 검색",
+  "searchResultsCount": "검색 결과 ({count})",
+  "@searchResultsCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "noMatchesOnDate": "해당 날짜에 경기가 없습니다",
+  "moreMatchesCount": "외 {count}개 더 있음",
+  "@moreMatchesCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "applySelectedMatch": "선택한 경기로 필터 적용",
+  "apply": "적용하기",
+  "selected": "선택됨",
+  "enterTitle": "제목을 입력해주세요",
+  "enterContent": "내용을 입력해주세요",
+  "postEdited": "게시글이 수정되었습니다",
+  "postCreated": "게시글이 작성되었습니다",
+  "selectMatchRecord": "직관 기록 선택",
+  "deselectRecord": "선택 해제",
+  "noMatchRecords": "직관 기록이 없습니다",
+  "loadingStats": "통계를 불러오는 중...",
+  "myAttendanceStatsTitle": "나의 직관 통계",
+  "totalMatchesCount": "{count}경기",
+  "@totalMatchesCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "winRatePercentValue": "{rate}%",
+  "@winRatePercentValue": {
+    "placeholders": {
+      "rate": {"type": "String"}
+    }
+  },
+  "mostVisitedStadium": "최다 방문: {stadium} ({count}회)",
+  "@mostVisitedStadium": {
+    "placeholders": {
+      "stadium": {"type": "String"},
+      "count": {"type": "int"}
+    }
+  },
+  "editPost": "글 수정",
+  "register": "등록",
+  "enterTitleHint": "제목을 입력하세요",
+  "matchRecordLabel": "직관 기록",
+  "loadMyMatchRecord": "나의 직관 기록 불러오기 (선택)",
+  "myAttendanceStatsLabel": "나의 직관 통계",
+  "showMyStats": "나의 직관 통계 자랑하기 (선택)",
+  "contentHint": "내용을 입력하세요\n\n직관 후기, 경기 정보, 꿀팁 등을 자유롭게 공유해보세요!",
+  "tagsOptional": "태그 (선택)",
+  "tagInputHint": "태그 입력 (최대 5개)",
+  "add": "추가",
+  "communityGuideline": "타인을 비방하거나 불쾌감을 주는 내용은 삭제될 수 있습니다.",
+  "loginRequired": "로그인이 필요합니다",
+  "postNotFoundError": "게시글을 찾을 수 없습니다",
+  "noEditPermission": "수정 권한이 없습니다",
+  "noDeletePermission": "삭제 권한이 없습니다",
+  "commentNotFoundError": "댓글을 찾을 수 없습니다",
+
+  "matchLog": "매치로그",
+  "myFootballRecord": "나만의 축구 직관 기록",
+  "emailLabel": "이메일",
+  "passwordLabel": "비밀번호",
+  "enterEmail": "이메일을 입력해주세요",
+  "invalidEmailFormat": "올바른 이메일 형식을 입력해주세요",
+  "enterPasswordPlease": "비밀번호를 입력해주세요",
+  "passwordTooShort": "비밀번호는 6자 이상이어야 합니다",
+  "loginAction": "로그인",
+  "signUpAction": "회원가입",
+  "noAccountSignUp": "계정이 없으신가요? 회원가입",
+  "hasAccountLogin": "이미 계정이 있으신가요? 로그인",
+  "orDivider": "또는",
+  "continueWithGoogle": "Google로 계속하기",
+  "forgotPassword": "비밀번호를 잊으셨나요?",
+  "emailAlreadyInUse": "이미 사용 중인 이메일입니다",
+  "invalidEmailError": "올바르지 않은 이메일 형식입니다",
+  "weakPasswordError": "비밀번호가 너무 약합니다",
+  "userNotFoundError": "등록되지 않은 이메일입니다",
+  "wrongPasswordError": "비밀번호가 올바르지 않습니다",
+  "authServiceUnavailable": "인증 서비스를 사용할 수 없습니다. 잠시 후 다시 시도해주세요.",
+  "genericAuthError": "오류가 발생했습니다. 다시 시도해주세요.",
+  "resetPasswordTitle": "비밀번호 재설정",
+  "enterRegisteredEmail": "가입한 이메일을 입력하세요",
+  "sendButton": "보내기",
+  "passwordResetEmailSent": "비밀번호 재설정 이메일을 보냈습니다",
+
+  "nationalTeam": "국가대표",
+  "untilOpening": "개막까지",
+  "scheduleTab": "일정",
+  "infoTab": "정보",
+  "squadTab": "선수단",
+  "selectNationalTeam": "응원할 국가대표팀을 선택해주세요",
+  "selectCountryButton": "국가 선택하기",
+  "noSchedule": "일정이 없습니다",
+  "upcomingMatches": "예정된 경기",
+  "pastMatches": "지난 경기",
+  "errorPrefix": "오류",
+  "cannotLoadTeamInfo": "팀 정보를 불러올 수 없습니다",
+  "basicInfoSection": "기본 정보",
+  "countryLabel": "국가",
+  "homeStadiumLabel": "홈 경기장",
+  "capacityLabel": "수용 인원",
+  "capacityValue": "{count}명",
+  "@capacityValue": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "foundedLabel": "창단",
+  "last5Form": "최근 5경기 폼",
+  "noFormInfo": "폼 정보가 없습니다",
+  "winShort": "승",
+  "drawShort": "무",
+  "loseShort": "패",
+  "cannotLoadFormInfo": "폼 정보를 불러올 수 없습니다",
+  "competitionsSection": "참가 대회",
+  "tapForLeagueDetail": "탭하여 리그 상세",
+  "noCompetitionInfo": "참가 대회 정보가 없습니다",
+  "cannotLoadCompetitionInfo": "대회 정보를 불러올 수 없습니다",
+  "noSquadInfo": "선수단 정보가 없습니다",
+  "goalkeepersSection": "골키퍼",
+  "defendersSection": "수비수",
+  "midfieldersSection": "미드필더",
+  "attackersSection": "공격수",
+  "squadInfoNote": "국가대표 선수단 정보는\n대회별로 소집됩니다",
+
+  "worldCup": "월드컵",
+  "worldCupQualAfc": "월드컵 예선 (AFC)",
+  "asianCup": "아시안컵",
+  "friendlyMatch": "친선경기",
+
+  "leaguesByCountry": "국가별 리그",
+  "searchCountry": "국가 검색...",
+  "mainCountries": "주요 국가",
+  "allCountries": "전체 국가",
+  "noCountryCode": "국가 코드가 없습니다",
+  "leagueSection": "리그",
+  "cupSection": "컵 대회",
+  "otherSection": "기타",
+  "invalidLeagueId": "잘못된 리그 ID입니다",
+  "leagueStandings": "리그 순위",
+
+  "matchGroup": "경기 조",
+  "deleteAction": "삭제",
+  "justNowShort": "방금 전",
+  "liveOdds": "실시간 배당률",
+  "noBettingInCategory": "해당 카테고리에 배팅이 없습니다",
+  "anonymousUser": "익명",
+  "cannotFindComment": "댓글을 찾을 수 없습니다",
+  "noDeletePermissionComment": "삭제 권한이 없습니다",
+
+  "countryKorea": "대한민국",
+  "countryEngland": "잉글랜드",
+  "countrySpain": "스페인",
+  "countryGermany": "독일",
+  "countryItaly": "이탈리아",
+  "countryFrance": "프랑스",
+  "countryJapan": "일본",
+
+  "noLeaguesInCountry": "{country}에 등록된 리그가 없습니다",
+  "@noLeaguesInCountry": {
+    "placeholders": {
+      "country": {"type": "String"}
+    }
+  },
+
+  "standingsTab": "순위",
+  "scorersTab": "득점",
+  "assistsTab": "도움",
+  "statsTab": "통계",
+  "noStandingsData": "순위 정보가 없습니다",
+  "cannotLoadStandingsForSeason": "해당 시즌의 순위 정보를 불러올 수 없습니다",
+  "noGoalRankData": "득점 순위 정보가 없습니다",
+  "noAssistRankData": "어시스트 순위 정보가 없습니다",
+  "noLeagueStatsData": "리그 통계 정보가 없습니다",
+  "leagueOverviewCard": "리그 개요",
+  "totalGoals": "총 골",
+  "goalsPerGame": "경기당 골",
+  "homeWins": "홈 승리",
+  "awayWins": "원정 승리",
+  "homeWin": "홈 승",
+  "drawLabel": "무승부",
+  "awayWin": "원정 승",
+  "nGamesLabel": "{count}경기",
+  "@nGamesLabel": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "teamRankingCard": "팀 순위",
+  "mostScoringTeam": "최다 득점",
+  "mostConcededTeam": "최다 실점",
+  "mostWinsTeam": "최다 승리",
+  "mostDrawsTeam": "최다 무승부",
+  "nGoalsLabel": "{count}골",
+  "@nGoalsLabel": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "nWinsLabel": "{count}승",
+  "@nWinsLabel": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "nDrawsLabel": "{count}무",
+  "@nDrawsLabel": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "goalAnalysisCard": "골 분석",
+  "homeGoals": "홈 골",
+  "awayGoals": "원정 골",
+  "totalNGoals": "총 {count}골",
+  "@totalNGoals": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "top5GoalDiff": "득실차 상위 5팀",
+  "errorLabel": "오류: {error}",
+  "@errorLabel": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "rankColumn": "순위",
+  "teamColumn": "팀",
+  "matchesColumn": "경기",
+  "winColumn": "승",
+  "drawColumn": "무",
+  "loseColumn": "패",
+  "goalsForColumn": "득점",
+  "goalsAgainstColumn": "실점",
+  "goalDiffColumn": "득실",
+  "pointsColumn": "승점",
+  "playerColumn": "선수",
+  "appsColumn": "출전",
+  "goalsColumn": "득점",
+  "assistsColumn": "어시",
+
+  "dateFormatFull": "yyyy년 M월 d일 (E)",
+  "dateFormatMedium": "yyyy년 M월 d일",
+  "dateFormatWithTime": "yyyy.MM.dd (E) HH:mm",
+  "dateFormatShort": "MM.dd (E)",
+  "dateFormatHeader": "M월 d일 EEEE",
+  "dateFormatDiary": "yyyy.MM.dd (E)",
+  "dateFormatSlash": "yyyy/MM/dd (E)",
+  "searchAllMatchesForDate": "{date} 전체 경기 조회",
+  "@searchAllMatchesForDate": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "searchLeagueMatchesForDate": "{date} {league} 경기 조회",
+  "@searchLeagueMatchesForDate": {
+    "placeholders": {
+      "date": {"type": "String"},
+      "league": {"type": "String"}
+    }
+  },
+  "stadiumListForCountry": "{country} 경기장 목록",
+  "@stadiumListForCountry": {
+    "placeholders": {
+      "country": {"type": "String"}
+    }
+  },
+
+  "leagueEPL": "EPL",
+  "leagueLaLiga": "라리가",
+  "leagueSerieA": "세리에 A",
+  "leagueBundesliga": "분데스리가",
+  "leagueLigue1": "리그 1",
+  "leagueKLeague1": "K리그1",
+  "leagueKLeague2": "K리그2",
+  "leagueUCL": "UCL",
+  "leagueUEL": "UEL",
+  "leagueInternational": "A매치",
+
+  "countryKorea": "대한민국",
+  "countryEngland": "잉글랜드",
+  "countrySpain": "스페인",
+  "countryGermany": "독일",
+  "countryItaly": "이탈리아",
+  "countryFrance": "프랑스",
+  "countryJapan": "일본",
+
+  "worldCup2026": "2026 FIFA 월드컵",
+  "myDiaryTitle": "나의 직관일기",
+  "yearlySummary": "{year}년 직관 요약",
+  "@yearlySummary": {
+    "placeholders": {
+      "year": {"type": "int"}
+    }
+  },
+  "matchUnit": "경기",
+  "nMatchesUnit": "{count}경기",
+  "@nMatchesUnit": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "nYearsUnit": "{count}년",
+  "@nYearsUnit": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "birthDate": "생년월일",
+
+  "totalViews": "총 관람",
+  "averageRating": "평균 평점",
+  "pointsUnit": "점",
+  "leagueStats": "리그별 통계",
+
+  "invalidCoachId": "잘못된 감독 ID입니다",
+  "homeGoal": "홈 골",
+  "awayGoal": "원정 골",
+  "homeStrong": "홈 강자",
+  "awayStrong": "원정 강자",
+  "cardRanking": "카드 순위",
+  "noDataAvailable": "데이터가 없습니다",
+  "loadFailedShort": "불러오기 실패",
+  "mostLosses": "최다 패배",
+  "mostConceded": "최다 실점",
+
+  "ageLabel": "나이",
+  "birthDateLabel": "생년월일",
+  "birthPlaceLabel": "출생지",
+  "championTitle": "우승",
+  "runnerUpTitle": "준우승",
+  "careerTitle": "경력",
+  "currentLabel": "현재",
+  "suspendedLabel": "정지",
+  "worldCupShort": "월드컵",
+  "asianCupShort": "아시안컵",
+  "friendlyMatchLabel": "친선경기",
+  "bottomAnalysis": "하위권 분석",
+
+  "ageYearsValue": "{age}세",
+  "@ageYearsValue": {
+    "placeholders": {
+      "age": {"type": "int"}
+    }
+  },
+  "birthCountry": "출생 국가",
+  "coachCareer": "감독 경력",
+  "careerYears": "{years}년",
+  "@careerYears": {
+    "placeholders": {
+      "years": {"type": "int"}
+    }
+  },
+  "trophyRecord": "수상 기록",
+  "andNMore": "외 {count}개",
+  "@andNMore": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "mostWatchedTeam": "가장 많이 본 팀",
+  "selectSeason": "시즌 선택",
+  "languageSubtitle": "한국어, English",
+  "suspensionHistory": "출전정지 이력",
+  "nCases": "{count}건",
+  "@nCases": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "currentlySuspended": "현재 출전정지 중",
+  "coachInfo": "감독 정보"
+}

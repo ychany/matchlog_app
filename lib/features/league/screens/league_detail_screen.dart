@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/services/api_football_service.dart';
 import '../../../core/constants/api_football_ids.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// 리그 정보 Provider
 final leagueInfoProvider = FutureProvider.family<ApiFootballLeague?, int>((ref, leagueId) async {
@@ -265,7 +266,7 @@ class _LeagueDetailScreenState extends ConsumerState<LeagueDetailScreen> with Si
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              league?.name ?? '리그',
+                              league?.name ?? AppLocalizations.of(context)!.leagueLabel,
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
@@ -319,10 +320,10 @@ class _LeagueDetailScreenState extends ConsumerState<LeagueDetailScreen> with Si
                   indicatorColor: _primary,
                   indicatorWeight: 3,
                   labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                  tabs: const [
-                    Tab(text: '일정'),
-                    Tab(text: '순위'),
-                    Tab(text: '통계'),
+                  tabs: [
+                    Tab(text: AppLocalizations.of(context)!.schedule),
+                    Tab(text: AppLocalizations.of(context)!.standings),
+                    Tab(text: AppLocalizations.of(context)!.stats),
                   ],
                 ),
               ],
@@ -357,14 +358,18 @@ class _LeagueDetailScreenState extends ConsumerState<LeagueDetailScreen> with Si
         children: [
           Icon(Icons.error_outline, size: 48, color: _textSecondary),
           const SizedBox(height: 16),
-          Text(
-            '리그 정보를 불러올 수 없습니다',
-            style: TextStyle(color: _textSecondary, fontSize: 14),
+          Builder(
+            builder: (context) => Text(
+              AppLocalizations.of(context)!.cannotLoadLeagueInfo,
+              style: TextStyle(color: _textSecondary, fontSize: 14),
+            ),
           ),
           const SizedBox(height: 8),
           TextButton(
             onPressed: () => ref.invalidate(leagueInfoProvider(leagueId)),
-            child: const Text('다시 시도'),
+            child: Builder(
+              builder: (context) => Text(AppLocalizations.of(context)!.retry),
+            ),
           ),
         ],
       ),
@@ -400,24 +405,29 @@ class _StandingsTab extends ConsumerWidget {
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: _border),
           ),
-          child: Row(
-            children: [
-              _SubTabButton(
-                label: '순위',
-                isSelected: selectedSubTab == 0,
-                onTap: () => ref.read(_standingsSubTabProvider.notifier).state = 0,
-              ),
-              _SubTabButton(
-                label: '득점',
-                isSelected: selectedSubTab == 1,
-                onTap: () => ref.read(_standingsSubTabProvider.notifier).state = 1,
-              ),
-              _SubTabButton(
-                label: '도움',
-                isSelected: selectedSubTab == 2,
-                onTap: () => ref.read(_standingsSubTabProvider.notifier).state = 2,
-              ),
-            ],
+          child: Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context)!;
+              return Row(
+                children: [
+                  _SubTabButton(
+                    label: l10n.standings,
+                    isSelected: selectedSubTab == 0,
+                    onTap: () => ref.read(_standingsSubTabProvider.notifier).state = 0,
+                  ),
+                  _SubTabButton(
+                    label: l10n.goals,
+                    isSelected: selectedSubTab == 1,
+                    onTap: () => ref.read(_standingsSubTabProvider.notifier).state = 1,
+                  ),
+                  _SubTabButton(
+                    label: l10n.assists,
+                    isSelected: selectedSubTab == 2,
+                    onTap: () => ref.read(_standingsSubTabProvider.notifier).state = 2,
+                  ),
+                ],
+              );
+            },
           ),
         ),
         // 서브탭 컨텐츠
@@ -509,7 +519,7 @@ class _StandingsContent extends ConsumerWidget {
       data: (groupedStandings) {
         if (groupedStandings.isEmpty) {
           return Center(
-            child: Text('순위 정보가 없습니다', style: TextStyle(color: _textSecondary)),
+            child: Text(AppLocalizations.of(context)!.noStandingsInfo, style: TextStyle(color: _textSecondary)),
           );
         }
 
@@ -530,7 +540,7 @@ class _StandingsContent extends ConsumerWidget {
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (_, __) => Center(
-        child: Text('순위를 불러올 수 없습니다', style: TextStyle(color: _textSecondary)),
+        child: Text(AppLocalizations.of(context)!.cannotLoadStandings, style: TextStyle(color: _textSecondary)),
       ),
     );
   }
@@ -584,27 +594,32 @@ class _StandingsContent extends ConsumerWidget {
             ),
           ),
           // 테이블 헤더
-          Container(
-            color: Colors.grey.shade100,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            child: Row(
-              children: [
-                const SizedBox(width: 24, child: Text('#', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11), textAlign: TextAlign.center)),
-                const SizedBox(width: 6),
-                const Expanded(child: Text('팀', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
-                _buildCompactHeaderCell('경'),
-                _buildCompactHeaderCell('승'),
-                _buildCompactHeaderCell('무'),
-                _buildCompactHeaderCell('패'),
-                _buildCompactHeaderCell('득'),
-                _buildCompactHeaderCell('실'),
-                _buildCompactHeaderCell('득실'),
-                const SizedBox(
-                  width: 32,
-                  child: Text('점', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11), textAlign: TextAlign.center),
+          Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context)!;
+              return Container(
+                color: Colors.grey.shade100,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                child: Row(
+                  children: [
+                    const SizedBox(width: 24, child: Text('#', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11), textAlign: TextAlign.center)),
+                    const SizedBox(width: 6),
+                    Expanded(child: Text(l10n.team, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
+                    _buildCompactHeaderCell(l10n.matches),
+                    _buildCompactHeaderCell(l10n.winShort),
+                    _buildCompactHeaderCell(l10n.drawShort),
+                    _buildCompactHeaderCell(l10n.lossShort),
+                    _buildCompactHeaderCell(l10n.goalsFor),
+                    _buildCompactHeaderCell(l10n.goalsAgainst),
+                    _buildCompactHeaderCell(l10n.goalDifference),
+                    SizedBox(
+                      width: 32,
+                      child: Text(l10n.pts, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11), textAlign: TextAlign.center),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              );
+            },
           ),
           // 팀 행들
           ...standings.map((standing) => _buildCompactStandingRow(context, standing)),
@@ -731,13 +746,14 @@ class _StandingsContent extends ConsumerWidget {
       data: (standings) {
         if (standings.isEmpty) {
           return Center(
-            child: Text('순위 정보가 없습니다', style: TextStyle(color: _textSecondary)),
+            child: Text(AppLocalizations.of(context)!.noStandingsInfo, style: TextStyle(color: _textSecondary)),
           );
         }
 
+        final l10n = AppLocalizations.of(context)!;
         return Column(
           children: [
-            _buildLeagueLegend(standings),
+            _buildLeagueLegend(context, standings),
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
@@ -748,19 +764,19 @@ class _StandingsContent extends ConsumerWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       child: Row(
                         children: [
-                          const SizedBox(width: 28, child: Text('순위', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
+                          SizedBox(width: 28, child: Text(l10n.rank, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
                           const SizedBox(width: 8),
-                          const Expanded(child: Text('팀', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
-                          _buildHeaderCell('경기'),
-                          _buildHeaderCell('승'),
-                          _buildHeaderCell('무'),
-                          _buildHeaderCell('패'),
-                          _buildHeaderCell('득점'),
-                          _buildHeaderCell('실점'),
-                          _buildHeaderCell('득실'),
-                          const SizedBox(
+                          Expanded(child: Text(l10n.team, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
+                          _buildHeaderCell(l10n.matches),
+                          _buildHeaderCell(l10n.winShort),
+                          _buildHeaderCell(l10n.drawShort),
+                          _buildHeaderCell(l10n.lossShort),
+                          _buildHeaderCell(l10n.goalsFor),
+                          _buildHeaderCell(l10n.goalsAgainst),
+                          _buildHeaderCell(l10n.goalDifference),
+                          SizedBox(
                             width: 36,
-                            child: Text('승점', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12), textAlign: TextAlign.center),
+                            child: Text(l10n.pts, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12), textAlign: TextAlign.center),
                           ),
                         ],
                       ),
@@ -776,7 +792,7 @@ class _StandingsContent extends ConsumerWidget {
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (_, __) => Center(
-        child: Text('순위를 불러올 수 없습니다', style: TextStyle(color: _textSecondary)),
+        child: Text(AppLocalizations.of(context)!.cannotLoadStandings, style: TextStyle(color: _textSecondary)),
       ),
     );
   }
@@ -788,7 +804,8 @@ class _StandingsContent extends ConsumerWidget {
     );
   }
 
-  Widget _buildLeagueLegend(List<ApiFootballStanding> standings) {
+  Widget _buildLeagueLegend(BuildContext context, List<ApiFootballStanding> standings) {
+    final l10n = AppLocalizations.of(context)!;
     final descriptions = standings
         .where((s) => s.description != null && s.description!.isNotEmpty)
         .map((s) => s.description!.toLowerCase())
@@ -801,16 +818,16 @@ class _StandingsContent extends ConsumerWidget {
     final hasUclQualification = descriptions.any((d) => d.contains('champions') && !d.contains('championship') && (d.contains('qualification') || d.contains('qualifying')));
     final hasUclGeneral = descriptions.any((d) => d.contains('champions') && !d.contains('championship') && !d.contains('1/8') && !d.contains('1/16') && !d.contains('qualification') && !d.contains('qualifying'));
 
-    if (hasUclDirect) legendItems.add(_LegendItem(color: Colors.blue.shade800, label: 'UCL 직행'));
+    if (hasUclDirect) legendItems.add(_LegendItem(color: Colors.blue.shade800, label: l10n.uclDirect));
     if (hasUclPlayoff) legendItems.add(_LegendItem(color: Colors.cyan.shade600, label: 'UCL PO'));
     if (hasUclGeneral) legendItems.add(_LegendItem(color: Colors.blue, label: 'UCL'));
-    if (hasUclQualification && !hasUclPlayoff) legendItems.add(_LegendItem(color: Colors.cyan.shade600, label: 'UCL 예선'));
+    if (hasUclQualification && !hasUclPlayoff) legendItems.add(_LegendItem(color: Colors.cyan.shade600, label: l10n.uclQualification));
 
     final hasUelDirect = descriptions.any((d) => d.contains('europa') && d.contains('1/8'));
     final hasUelPlayoff = descriptions.any((d) => d.contains('europa') && d.contains('1/16'));
     final hasUelGeneral = descriptions.any((d) => d.contains('europa') && !d.contains('1/8') && !d.contains('1/16') && !d.contains('qualification') && !d.contains('qualifying') && !d.contains('relegation'));
 
-    if (hasUelDirect) legendItems.add(_LegendItem(color: Colors.orange.shade800, label: 'UEL 직행'));
+    if (hasUelDirect) legendItems.add(_LegendItem(color: Colors.orange.shade800, label: l10n.uelDirect));
     if (hasUelPlayoff) legendItems.add(_LegendItem(color: Colors.amber.shade700, label: 'UEL PO'));
     if (hasUelGeneral) legendItems.add(_LegendItem(color: Colors.orange, label: 'UEL'));
 
@@ -819,7 +836,7 @@ class _StandingsContent extends ConsumerWidget {
     }
 
     if (descriptions.any((d) => d.contains('relegation') && !d.contains('europa') && !d.contains('conference') && !d.contains('round'))) {
-      legendItems.add(_LegendItem(color: Colors.red, label: '강등'));
+      legendItems.add(_LegendItem(color: Colors.red, label: l10n.relegation));
     }
 
     if (legendItems.isEmpty) return const SizedBox.shrink();
@@ -998,6 +1015,7 @@ class _TopScorersContent extends ConsumerWidget {
 
     return scorersAsync.when(
       data: (scorers) {
+        final l10n = AppLocalizations.of(context)!;
         if (scorers.isEmpty) {
           return Center(
             child: Column(
@@ -1005,7 +1023,7 @@ class _TopScorersContent extends ConsumerWidget {
               children: [
                 Icon(Icons.sports_soccer, size: 48, color: _textSecondary),
                 const SizedBox(height: 16),
-                Text('득점 순위 정보가 없습니다', style: TextStyle(color: _textSecondary)),
+                Text(l10n.noTopScorersInfo, style: TextStyle(color: _textSecondary)),
               ],
             ),
           );
@@ -1020,16 +1038,16 @@ class _TopScorersContent extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
                   children: [
-                    const SizedBox(width: 28, child: Text('순위', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
+                    SizedBox(width: 28, child: Text(l10n.rank, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
                     const SizedBox(width: 8),
-                    const Expanded(child: Text('선수', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
-                    const SizedBox(
+                    Expanded(child: Text(l10n.player, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
+                    SizedBox(
                       width: 50,
-                      child: Text('출전', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11), textAlign: TextAlign.center),
+                      child: Text(l10n.matchesPlayed, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11), textAlign: TextAlign.center),
                     ),
-                    const SizedBox(
+                    SizedBox(
                       width: 50,
-                      child: Text('득점', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12), textAlign: TextAlign.center),
+                      child: Text(l10n.goals, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12), textAlign: TextAlign.center),
                     ),
                   ],
                 ),
@@ -1046,7 +1064,7 @@ class _TopScorersContent extends ConsumerWidget {
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (_, __) => Center(
-        child: Text('득점 순위를 불러올 수 없습니다', style: TextStyle(color: _textSecondary)),
+        child: Text(AppLocalizations.of(context)!.cannotLoadTopScorers, style: TextStyle(color: _textSecondary)),
       ),
     );
   }
@@ -1066,6 +1084,7 @@ class _TopAssistsContent extends ConsumerWidget {
 
     return assistsAsync.when(
       data: (assists) {
+        final l10n = AppLocalizations.of(context)!;
         if (assists.isEmpty) {
           return Center(
             child: Column(
@@ -1073,7 +1092,7 @@ class _TopAssistsContent extends ConsumerWidget {
               children: [
                 Icon(Icons.handshake_outlined, size: 48, color: _textSecondary),
                 const SizedBox(height: 16),
-                Text('도움 순위 정보가 없습니다', style: TextStyle(color: _textSecondary)),
+                Text(l10n.noTopAssistsInfo, style: TextStyle(color: _textSecondary)),
               ],
             ),
           );
@@ -1088,16 +1107,16 @@ class _TopAssistsContent extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
                   children: [
-                    const SizedBox(width: 28, child: Text('순위', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
+                    SizedBox(width: 28, child: Text(l10n.rank, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
                     const SizedBox(width: 8),
-                    const Expanded(child: Text('선수', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
-                    const SizedBox(
+                    Expanded(child: Text(l10n.player, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
+                    SizedBox(
                       width: 50,
-                      child: Text('출전', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11), textAlign: TextAlign.center),
+                      child: Text(l10n.matchesPlayed, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11), textAlign: TextAlign.center),
                     ),
-                    const SizedBox(
+                    SizedBox(
                       width: 50,
-                      child: Text('도움', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12), textAlign: TextAlign.center),
+                      child: Text(l10n.assists, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12), textAlign: TextAlign.center),
                     ),
                   ],
                 ),
@@ -1114,7 +1133,7 @@ class _TopAssistsContent extends ConsumerWidget {
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (_, __) => Center(
-        child: Text('도움 순위를 불러올 수 없습니다', style: TextStyle(color: _textSecondary)),
+        child: Text(AppLocalizations.of(context)!.cannotLoadTopAssists, style: TextStyle(color: _textSecondary)),
       ),
     );
   }
@@ -1378,23 +1397,24 @@ class _FixturesTabState extends ConsumerState<_FixturesTab> {
     return targetDate == today;
   }
 
-  String _formatDateHeader(DateTime date) {
+  String _formatDateHeader(BuildContext context, DateTime date) {
+    final l10n = AppLocalizations.of(context)!;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final tomorrow = today.add(const Duration(days: 1));
     final yesterday = today.subtract(const Duration(days: 1));
     final targetDate = DateTime(date.year, date.month, date.day);
 
-    final weekdays = ['월', '화', '수', '목', '금', '토', '일'];
+    final weekdays = [l10n.mon, l10n.tue, l10n.wed, l10n.thu, l10n.fri, l10n.sat, l10n.sun];
     final weekday = weekdays[date.weekday - 1];
-    final dateStr = '${date.month}월 ${date.day}일 ($weekday)';
+    final dateStr = l10n.dateWithWeekday(date.month.toString(), date.day.toString(), weekday);
 
     if (targetDate == today) {
-      return '오늘 $dateStr';
+      return l10n.todayWithDate(dateStr);
     } else if (targetDate == tomorrow) {
-      return '내일 $dateStr';
+      return l10n.tomorrowWithDate(dateStr);
     } else if (targetDate == yesterday) {
-      return '어제 $dateStr';
+      return l10n.yesterdayWithDate(dateStr);
     }
 
     return dateStr;
@@ -1407,8 +1427,9 @@ class _FixturesTabState extends ConsumerState<_FixturesTab> {
     return fixturesAsync.when(
       data: (fixtures) {
         if (fixtures.isEmpty) {
+          final l10n = AppLocalizations.of(context)!;
           return Center(
-            child: Text('경기 일정이 없습니다', style: TextStyle(color: _textSecondary)),
+            child: Text(l10n.noMatchSchedule, style: TextStyle(color: _textSecondary)),
           );
         }
 
@@ -1460,7 +1481,7 @@ class _FixturesTabState extends ConsumerState<_FixturesTab> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        _formatDateHeader(date),
+                        _formatDateHeader(context, date),
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
@@ -1505,8 +1526,13 @@ class _FixturesTabState extends ConsumerState<_FixturesTab> {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => Center(
-        child: Text('일정을 불러올 수 없습니다', style: TextStyle(color: _textSecondary)),
+      error: (_, __) => Builder(
+        builder: (context) {
+          final l10n = AppLocalizations.of(context)!;
+          return Center(
+            child: Text(l10n.cannotLoadSchedule, style: TextStyle(color: _textSecondary)),
+          );
+        },
       ),
     );
   }
@@ -1533,7 +1559,7 @@ class _FixtureCard extends StatelessWidget {
             // 시간/상태
             SizedBox(
               width: 48,
-              child: _buildTimeOrStatus(),
+              child: _buildTimeOrStatus(context),
             ),
             const SizedBox(width: 12),
             // 팀 정보
@@ -1552,7 +1578,8 @@ class _FixtureCard extends StatelessWidget {
     );
   }
 
-  Widget _buildTimeOrStatus() {
+  Widget _buildTimeOrStatus(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (fixture.isLive) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
@@ -1568,7 +1595,7 @@ class _FixtureCard extends StatelessWidget {
       );
     } else if (fixture.isFinished) {
       return Text(
-        '종료',
+        l10n.matchFinished,
         style: TextStyle(fontSize: 12, color: _textSecondary, fontWeight: FontWeight.w500),
         textAlign: TextAlign.center,
       );
@@ -1640,6 +1667,7 @@ class _StatsTab extends ConsumerWidget {
     final topYellowAsync = ref.watch(leagueTopYellowCardsProvider(leagueId));
     final topRedAsync = ref.watch(leagueTopRedCardsProvider(leagueId));
 
+    final l10n = AppLocalizations.of(context)!;
     return standingsAsync.when(
       data: (standings) {
         if (standings.isEmpty) {
@@ -1649,7 +1677,7 @@ class _StatsTab extends ConsumerWidget {
               children: [
                 Icon(Icons.bar_chart, size: 48, color: _textSecondary),
                 const SizedBox(height: 16),
-                Text('리그 통계 정보가 없습니다', style: TextStyle(color: _textSecondary)),
+                Text(l10n.noLeagueStats, style: TextStyle(color: _textSecondary)),
               ],
             ),
           );
@@ -1693,7 +1721,7 @@ class _StatsTab extends ConsumerWidget {
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (_, __) => Center(
-        child: Text('통계를 불러올 수 없습니다', style: TextStyle(color: _textSecondary)),
+        child: Text(l10n.cannotLoadStats, style: TextStyle(color: _textSecondary)),
       ),
     );
   }
@@ -1715,6 +1743,7 @@ class _RecentFormCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     // form 데이터가 있는 팀만 필터링
     final teamsWithForm = standings.where((s) => s.form != null && s.form!.isNotEmpty).toList();
 
@@ -1747,12 +1776,12 @@ class _RecentFormCard extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Text(
-                '최근 폼',
+                l10n.recentForm,
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: _textPrimary),
               ),
               const Spacer(),
               Text(
-                '최근 5경기',
+                l10n.last5Matches,
                 style: TextStyle(fontSize: 11, color: _textSecondary),
               ),
             ],
@@ -1805,7 +1834,7 @@ class _RecentFormCard extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Row(
-              children: formChars.map((char) => _buildFormBadge(char)).toList(),
+              children: formChars.map((char) => _buildFormBadge(context, char)).toList(),
             ),
           ],
         ),
@@ -1813,7 +1842,8 @@ class _RecentFormCard extends StatelessWidget {
     );
   }
 
-  Widget _buildFormBadge(String result) {
+  Widget _buildFormBadge(BuildContext context, String result) {
+    final l10n = AppLocalizations.of(context)!;
     Color bgColor;
     Color textColor;
     String label;
@@ -1822,17 +1852,17 @@ class _RecentFormCard extends StatelessWidget {
       case 'W':
         bgColor = _success;
         textColor = Colors.white;
-        label = '승';
+        label = l10n.winShortForm;
         break;
       case 'D':
         bgColor = _textSecondary;
         textColor = Colors.white;
-        label = '무';
+        label = l10n.drawShortForm;
         break;
       case 'L':
         bgColor = _error;
         textColor = Colors.white;
-        label = '패';
+        label = l10n.lossShortForm;
         break;
       default:
         bgColor = Colors.grey.shade300;
@@ -1882,6 +1912,7 @@ class _ChampionCard extends StatelessWidget {
 
   /// 컵 대회 우승팀 카드
   Widget _buildCupCard(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final winner = championInfo.cupWinner;
     final runnerUp = championInfo.cupRunnerUp;
     final finalMatch = championInfo.finalMatch;
@@ -1910,7 +1941,7 @@ class _ChampionCard extends StatelessWidget {
               Icon(Icons.emoji_events, color: _gold, size: 18),
               const SizedBox(width: 8),
               Text(
-                '우승',
+                l10n.champion,
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _textPrimary),
               ),
               const Spacer(),
@@ -1921,7 +1952,7 @@ class _ChampionCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  '결승전',
+                  l10n.finalMatch,
                   style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: Colors.amber[800]),
                 ),
               ),
@@ -1982,6 +2013,7 @@ class _ChampionCard extends StatelessWidget {
     required int rank,
     required ApiFootballFixtureTeam team,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     final medalColor = rank == 1 ? _gold : _silver;
 
     return InkWell(
@@ -2020,7 +2052,7 @@ class _ChampionCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
-                rank == 1 ? '우승' : '준우승',
+                rank == 1 ? l10n.champion : l10n.runnerUp,
                 style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: rank == 1 ? Colors.amber[800] : Colors.grey[600]),
               ),
             ),
@@ -2032,13 +2064,14 @@ class _ChampionCard extends StatelessWidget {
 
   /// 리그 우승팀 카드
   Widget _buildLeagueCard(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final champion = championInfo.champion;
     final runnerUp = championInfo.runnerUp;
 
     if (champion == null) return const SizedBox.shrink();
 
     final isComplete = championInfo.isSeasonComplete;
-    final title = isComplete ? '우승' : '현재 순위';
+    final title = isComplete ? l10n.champion : l10n.currentRank;
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -2081,7 +2114,7 @@ class _ChampionCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    '시즌 종료',
+                    l10n.seasonEnd,
                     style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: Colors.amber[800]),
                   ),
                 ),
@@ -2105,6 +2138,7 @@ class _ChampionCard extends StatelessWidget {
     required int rank,
     required ApiFootballStanding team,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     final medalColor = rank == 1 ? _gold : _silver;
 
     return InkWell(
@@ -2137,7 +2171,7 @@ class _ChampionCard extends StatelessWidget {
               ),
             ),
             Text(
-              '${team.points}점',
+              l10n.xPoints(team.points),
               style: TextStyle(fontSize: 11, color: _textSecondary),
             ),
             const SizedBox(width: 6),
@@ -2148,7 +2182,7 @@ class _ChampionCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
-                '${team.goalsFor}골',
+                l10n.xGoals(team.goalsFor),
                 style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: rank == 1 ? Colors.amber[800] : Colors.grey[600]),
               ),
             ),
@@ -2172,6 +2206,7 @@ class _LeagueOverviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     int totalMatches = 0;
     int totalGoals = 0;
     int totalHomeWins = 0;
@@ -2215,7 +2250,7 @@ class _LeagueOverviewCard extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Text(
-                '리그 개요',
+                l10n.leagueOverview,
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: _textPrimary),
               ),
             ],
@@ -2223,17 +2258,17 @@ class _LeagueOverviewCard extends StatelessWidget {
           const SizedBox(height: 16),
           Row(
             children: [
-              _OverviewStatBox(icon: Icons.sports_soccer, label: '총 골', value: '$totalGoals', color: _success),
+              _OverviewStatBox(icon: Icons.sports_soccer, label: l10n.totalGoals, value: '$totalGoals', color: _success),
               const SizedBox(width: 12),
-              _OverviewStatBox(icon: Icons.speed, label: '경기당 골', value: goalsPerMatch.toStringAsFixed(2), color: _primary),
+              _OverviewStatBox(icon: Icons.speed, label: l10n.goalsPerMatch, value: goalsPerMatch.toStringAsFixed(2), color: _primary),
             ],
           ),
           const SizedBox(height: 12),
           Row(
             children: [
-              _OverviewStatBox(icon: Icons.home, label: '홈 승리', value: '$totalHomeWins', color: _success),
+              _OverviewStatBox(icon: Icons.home, label: l10n.homeWins, value: '$totalHomeWins', color: _success),
               const SizedBox(width: 12),
-              _OverviewStatBox(icon: Icons.flight, label: '원정 승리', value: '$totalAwayWins', color: _warning),
+              _OverviewStatBox(icon: Icons.flight, label: l10n.awayWins, value: '$totalAwayWins', color: _warning),
             ],
           ),
           const SizedBox(height: 12),
@@ -2248,9 +2283,9 @@ class _LeagueOverviewCard extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('홈 승', style: TextStyle(fontSize: 12, color: _success, fontWeight: FontWeight.w600)),
-                    Text('무승부', style: TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w600)),
-                    Text('원정 승', style: TextStyle(fontSize: 12, color: _warning, fontWeight: FontWeight.w600)),
+                    Text(l10n.homeWin, style: TextStyle(fontSize: 12, color: _success, fontWeight: FontWeight.w600)),
+                    Text(l10n.draw, style: TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w600)),
+                    Text(l10n.awayWin, style: TextStyle(fontSize: 12, color: _warning, fontWeight: FontWeight.w600)),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -2277,9 +2312,9 @@ class _LeagueOverviewCard extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('$totalHomeWins경기', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
-                    Text('$totalDraws경기', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
-                    Text('$totalAwayWins경기', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                    Text(l10n.xMatches(totalHomeWins), style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                    Text(l10n.xMatches(totalDraws), style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                    Text(l10n.xMatches(totalAwayWins), style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
                   ],
                 ),
               ],
@@ -2388,16 +2423,16 @@ class _TopTeamsCard extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Text(
-                '팀 순위',
+                AppLocalizations.of(context)!.teamRanking,
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: _textPrimary),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          _TeamStatRow(icon: Icons.sports_soccer, label: '최다 득점', team: topScorer, value: '${topScorer.goalsFor}골', color: _success),
-          _TeamStatRow(icon: Icons.gpp_bad, label: '최다 실점', team: topConceder, value: '${topConceder.goalsAgainst}골', color: _error),
-          _TeamStatRow(icon: Icons.military_tech, label: '최다 승리', team: topWinner, value: '${topWinner.win}승', color: _primary),
-          _TeamStatRow(icon: Icons.balance, label: '최다 무승부', team: topDrawer, value: '${topDrawer.draw}무', color: _textSecondary),
+          _TeamStatRow(icon: Icons.sports_soccer, label: AppLocalizations.of(context)!.mostGoals, team: topScorer, value: AppLocalizations.of(context)!.nGoals(topScorer.goalsFor), color: _success),
+          _TeamStatRow(icon: Icons.gpp_bad, label: AppLocalizations.of(context)!.mostConceded, team: topConceder, value: AppLocalizations.of(context)!.nGoals(topConceder.goalsAgainst), color: _error),
+          _TeamStatRow(icon: Icons.military_tech, label: AppLocalizations.of(context)!.mostWins, team: topWinner, value: AppLocalizations.of(context)!.nWins(topWinner.win), color: _primary),
+          _TeamStatRow(icon: Icons.balance, label: AppLocalizations.of(context)!.mostDraws, team: topDrawer, value: AppLocalizations.of(context)!.nDraws(topDrawer.draw), color: _textSecondary),
         ],
       ),
     );
@@ -2520,7 +2555,7 @@ class _GoalStatsCard extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Text(
-                '골 분석',
+                AppLocalizations.of(context)!.goalAnalysis,
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: _textPrimary),
               ),
             ],
@@ -2540,7 +2575,7 @@ class _GoalStatsCard extends StatelessWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('홈 골', style: TextStyle(fontSize: 12, color: _textSecondary)),
+                        Text(AppLocalizations.of(context)!.homeGoal, style: TextStyle(fontSize: 12, color: _textSecondary)),
                         Text('$totalHomeGoals', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: _primary)),
                       ],
                     ),
@@ -2551,14 +2586,14 @@ class _GoalStatsCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        '총 ${totalHomeGoals + totalAwayGoals}골',
+                        AppLocalizations.of(context)!.totalNGoals(totalHomeGoals + totalAwayGoals),
                         style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: _textPrimary),
                       ),
                     ),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text('원정 골', style: TextStyle(fontSize: 12, color: _textSecondary)),
+                        Text(AppLocalizations.of(context)!.awayGoal, style: TextStyle(fontSize: 12, color: _textSecondary)),
                         Text('$totalAwayGoals', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: _success)),
                       ],
                     ),
@@ -2586,7 +2621,7 @@ class _GoalStatsCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            '득실차 상위 5팀',
+            AppLocalizations.of(context)!.top5GD,
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _textPrimary),
           ),
           const SizedBox(height: 12),
@@ -2723,7 +2758,7 @@ class _HomeAwayComparisonCard extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Text(
-                '홈/원정 강자',
+                AppLocalizations.of(context)!.homeAwayStrong,
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: _textPrimary),
               ),
             ],
@@ -2741,7 +2776,7 @@ class _HomeAwayComparisonCard extends StatelessWidget {
                       children: [
                         Icon(Icons.home, size: 16, color: _success),
                         const SizedBox(width: 4),
-                        Text('홈 강자', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _success)),
+                        Text(AppLocalizations.of(context)!.homeStrong, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _success)),
                       ],
                     ),
                     const SizedBox(height: 10),
@@ -2750,7 +2785,7 @@ class _HomeAwayComparisonCard extends StatelessWidget {
                       final team = entry.value;
                       final homeGames = (team.homeWin ?? 0) + (team.homeDraw ?? 0) + (team.homeLose ?? 0);
                       final winRate = homeGames > 0 ? ((team.homeWin ?? 0) / homeGames * 100).toInt() : 0;
-                      return _buildCompactTeamRow(context, index + 1, team, '${team.homeWin ?? 0}승', '$winRate%', _success);
+                      return _buildCompactTeamRow(context, index + 1, team, AppLocalizations.of(context)!.nWins(team.homeWin ?? 0), '$winRate%', _success);
                     }),
                   ],
                 ),
@@ -2765,7 +2800,7 @@ class _HomeAwayComparisonCard extends StatelessWidget {
                       children: [
                         Icon(Icons.flight, size: 16, color: _warning),
                         const SizedBox(width: 4),
-                        Text('원정 강자', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _warning)),
+                        Text(AppLocalizations.of(context)!.awayStrong, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _warning)),
                       ],
                     ),
                     const SizedBox(height: 10),
@@ -2774,7 +2809,7 @@ class _HomeAwayComparisonCard extends StatelessWidget {
                       final team = entry.value;
                       final awayGames = (team.awayWin ?? 0) + (team.awayDraw ?? 0) + (team.awayLose ?? 0);
                       final winRate = awayGames > 0 ? ((team.awayWin ?? 0) / awayGames * 100).toInt() : 0;
-                      return _buildCompactTeamRow(context, index + 1, team, '${team.awayWin ?? 0}승', '$winRate%', _warning);
+                      return _buildCompactTeamRow(context, index + 1, team, AppLocalizations.of(context)!.nWins(team.awayWin ?? 0), '$winRate%', _warning);
                     }),
                   ],
                 ),
@@ -2867,13 +2902,13 @@ class _TopCardsCard extends StatelessWidget {
                 child: Icon(Icons.style, color: _warning, size: 20),
               ),
               const SizedBox(width: 12),
-              Text('카드 순위', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: _textPrimary)),
+              Text(AppLocalizations.of(context)!.cardRanking, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: _textPrimary)),
             ],
           ),
           const SizedBox(height: 16),
-          _buildCardSection(context: context, title: '최다 경고', icon: Icons.square, color: _warning, asyncData: topYellowAsync, isYellow: true),
+          _buildCardSection(context: context, title: AppLocalizations.of(context)!.mostYellows, icon: Icons.square, color: _warning, asyncData: topYellowAsync, isYellow: true),
           const SizedBox(height: 16),
-          _buildCardSection(context: context, title: '최다 퇴장', icon: Icons.square, color: _error, asyncData: topRedAsync, isYellow: false),
+          _buildCardSection(context: context, title: AppLocalizations.of(context)!.mostReds, icon: Icons.square, color: _error, asyncData: topRedAsync, isYellow: false),
         ],
       ),
     );
@@ -2903,7 +2938,7 @@ class _TopCardsCard extends StatelessWidget {
             if (players.isEmpty) {
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text('데이터가 없습니다', style: TextStyle(fontSize: 12, color: _textSecondary)),
+                child: Text(AppLocalizations.of(context)!.noDataAvailable, style: TextStyle(fontSize: 12, color: _textSecondary)),
               );
             }
             final top5 = players.take(5).toList();
@@ -2971,7 +3006,7 @@ class _TopCardsCard extends StatelessWidget {
           ),
           error: (e, _) => Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Text('불러오기 실패', style: TextStyle(fontSize: 12, color: _textSecondary)),
+            child: Text(AppLocalizations.of(context)!.loadFailedShort, style: TextStyle(fontSize: 12, color: _textSecondary)),
           ),
         ),
       ],
@@ -3022,7 +3057,7 @@ class _BottomTeamsCard extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Text(
-                '하위권 분석',
+                AppLocalizations.of(context)!.bottomAnalysis,
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: _textPrimary),
               ),
             ],
@@ -3036,7 +3071,7 @@ class _BottomTeamsCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('최다 패배', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: _textSecondary)),
+                    Text(AppLocalizations.of(context)!.mostLosses, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: _textSecondary)),
                     const SizedBox(height: 10),
                     ...topLosers.asMap().entries.map((entry) {
                       final index = entry.key;
@@ -3052,7 +3087,7 @@ class _BottomTeamsCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('최다 실점', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: _textSecondary)),
+                    Text(AppLocalizations.of(context)!.mostConceded, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: _textSecondary)),
                     const SizedBox(height: 10),
                     ...topConceding.asMap().entries.map((entry) {
                       final index = entry.key;
@@ -3197,7 +3232,7 @@ class _SeasonDropdown extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(16),
               child: Text(
-                '시즌 선택',
+                AppLocalizations.of(context)!.selectSeason,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,

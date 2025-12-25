@@ -6,6 +6,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../attendance/providers/attendance_provider.dart';
 import '../../favorites/providers/favorites_provider.dart';
+import '../../../l10n/app_localizations.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -66,13 +67,14 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   Widget _buildHeader(BuildContext context, dynamic user) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
       child: Row(
         children: [
-          const Text(
-            '내 정보',
-            style: TextStyle(
+          Text(
+            l10n.profile,
+            style: const TextStyle(
               color: _textPrimary,
               fontSize: 24,
               fontWeight: FontWeight.w700,
@@ -92,7 +94,7 @@ class ProfileScreen extends ConsumerWidget {
                   Icon(Icons.edit_outlined, color: _primary, size: 16),
                   const SizedBox(width: 4),
                   Text(
-                    '편집',
+                    l10n.edit,
                     style: TextStyle(
                       color: _primary,
                       fontSize: 13,
@@ -119,7 +121,8 @@ class _ProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final displayName = user?.displayName ?? '사용자';
+    final l10n = AppLocalizations.of(context)!;
+    final displayName = user?.displayName ?? l10n.userDefault;
     final email = user?.email ?? '';
     final photoUrl = user?.photoURL;
     final userId = user?.uid;
@@ -204,9 +207,9 @@ class _ProfileCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 6),
-                        const Text(
-                          '활성 회원',
-                          style: TextStyle(
+                        Text(
+                          l10n.activeMember,
+                          style: const TextStyle(
                             color: Color(0xFF10B981),
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
@@ -250,6 +253,7 @@ class _StatsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
       padding: const EdgeInsets.all(20),
@@ -273,9 +277,9 @@ class _StatsCard extends StatelessWidget {
                 child: const Icon(Icons.stadium_rounded, color: Color(0xFF2563EB), size: 20),
               ),
               const SizedBox(width: 12),
-              const Text(
-                '나의 직관 기록',
-                style: TextStyle(
+              Text(
+                l10n.myAttendanceRecord,
+                style: const TextStyle(
                   color: Color(0xFF111827),
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -287,7 +291,7 @@ class _StatsCard extends StatelessWidget {
                 child: Row(
                   children: [
                     Text(
-                      '전체보기',
+                      l10n.viewAll,
                       style: TextStyle(
                         color: Colors.grey.shade500,
                         fontSize: 13,
@@ -303,11 +307,11 @@ class _StatsCard extends StatelessWidget {
           // 승/무/패 통계
           Row(
             children: [
-              _ResultCircle(value: stats.wins, label: '승', color: const Color(0xFF10B981)),
+              _ResultCircle(value: stats.wins, label: l10n.winShort, color: const Color(0xFF10B981)),
               const SizedBox(width: 16),
-              _ResultCircle(value: stats.draws, label: '무', color: Colors.grey),
+              _ResultCircle(value: stats.draws, label: l10n.drawShort, color: Colors.grey),
               const SizedBox(width: 16),
-              _ResultCircle(value: stats.losses, label: '패', color: const Color(0xFFEF4444)),
+              _ResultCircle(value: stats.losses, label: l10n.lossShort, color: const Color(0xFFEF4444)),
               const Spacer(),
               // 총 경기 수
               Column(
@@ -322,7 +326,7 @@ class _StatsCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '총 경기',
+                    l10n.totalMatches,
                     style: TextStyle(
                       color: Colors.grey.shade500,
                       fontSize: 12,
@@ -341,7 +345,7 @@ class _StatsCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '승률',
+                    l10n.winRate,
                     style: TextStyle(
                       color: Colors.grey.shade600,
                       fontSize: 12,
@@ -392,7 +396,7 @@ class _StatsCard extends StatelessWidget {
                 Icon(Icons.place_rounded, color: const Color(0xFF8B5CF6), size: 20),
                 const SizedBox(width: 8),
                 Text(
-                  '방문한 경기장',
+                  l10n.visitedStadiums,
                   style: TextStyle(
                     color: Colors.grey.shade600,
                     fontSize: 13,
@@ -400,7 +404,7 @@ class _StatsCard extends StatelessWidget {
                 ),
                 const Spacer(),
                 Text(
-                  '${stats.stadiumVisits.length}곳',
+                  '${stats.stadiumVisits.length} ${l10n.stadiumCount}',
                   style: const TextStyle(
                     color: Color(0xFF8B5CF6),
                     fontSize: 15,
@@ -469,6 +473,7 @@ class _ResultCircle extends StatelessWidget {
 class _FavoritesSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final teamsAsync = ref.watch(favoriteTeamsProvider);
     final playersAsync = ref.watch(favoritePlayersProvider);
 
@@ -495,9 +500,9 @@ class _FavoritesSection extends ConsumerWidget {
                 child: const Icon(Icons.favorite_rounded, color: Color(0xFFEF4444), size: 20),
               ),
               const SizedBox(width: 12),
-              const Text(
-                '즐겨찾기',
-                style: TextStyle(
+              Text(
+                l10n.favorites,
+                style: const TextStyle(
                   color: Color(0xFF111827),
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -517,7 +522,7 @@ class _FavoritesSection extends ConsumerWidget {
                       Icon(Icons.add, color: Colors.grey.shade600, size: 14),
                       const SizedBox(width: 4),
                       Text(
-                        '관리',
+                        l10n.manage,
                         style: TextStyle(
                           color: Colors.grey.shade600,
                           fontSize: 12,
@@ -537,7 +542,7 @@ class _FavoritesSection extends ConsumerWidget {
               Icon(Icons.shield_rounded, color: Colors.grey.shade400, size: 14),
               const SizedBox(width: 4),
               Text(
-                '팀',
+                l10n.team,
                 style: TextStyle(
                   color: Colors.grey.shade500,
                   fontSize: 12,
@@ -549,7 +554,7 @@ class _FavoritesSection extends ConsumerWidget {
           teamsAsync.when(
             data: (teams) {
               if (teams.isEmpty) {
-                return _buildEmptyState('좋아하는 팀을 추가해보세요', () => context.push('/favorites'));
+                return _buildEmptyState(l10n.addFavoriteTeamPrompt, () => context.push('/favorites'));
               }
               return SizedBox(
                 height: 80,
@@ -610,7 +615,7 @@ class _FavoritesSection extends ConsumerWidget {
               );
             },
             loading: () => const SizedBox(height: 80, child: Center(child: CircularProgressIndicator(strokeWidth: 2))),
-            error: (_, __) => const Text('불러오기 실패'),
+            error: (_, __) => Text(l10n.loadFailed),
           ),
           const SizedBox(height: 16),
           Container(height: 1, color: const Color(0xFFE5E7EB)),
@@ -621,7 +626,7 @@ class _FavoritesSection extends ConsumerWidget {
               Icon(Icons.person_rounded, color: Colors.grey.shade400, size: 14),
               const SizedBox(width: 4),
               Text(
-                '선수',
+                l10n.player,
                 style: TextStyle(
                   color: Colors.grey.shade500,
                   fontSize: 12,
@@ -633,7 +638,7 @@ class _FavoritesSection extends ConsumerWidget {
           playersAsync.when(
             data: (players) {
               if (players.isEmpty) {
-                return _buildEmptyState('좋아하는 선수를 추가해보세요', () => context.push('/favorites'));
+                return _buildEmptyState(l10n.addFavoritePlayerPrompt, () => context.push('/favorites'));
               }
               return SizedBox(
                 height: 80,
@@ -702,7 +707,7 @@ class _FavoritesSection extends ConsumerWidget {
               );
             },
             loading: () => const SizedBox(height: 80, child: Center(child: CircularProgressIndicator(strokeWidth: 2))),
-            error: (_, __) => const Text('불러오기 실패'),
+            error: (_, __) => Text(l10n.loadFailed),
           ),
         ],
       ),
@@ -739,6 +744,7 @@ class _FavoritesSection extends ConsumerWidget {
 class _MenuSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
       decoration: BoxDecoration(
@@ -751,56 +757,64 @@ class _MenuSection extends StatelessWidget {
           _MenuItem(
             icon: Icons.menu_book_rounded,
             iconColor: const Color(0xFF6366F1),
-            title: '직관 일기',
-            subtitle: '나의 직관 기록들',
+            title: l10n.attendanceDiary,
+            subtitle: l10n.myRecords,
             onTap: () => context.go('/attendance'),
           ),
           Container(height: 1, margin: const EdgeInsets.only(left: 72), color: const Color(0xFFE5E7EB)),
           _MenuItem(
             icon: Icons.leaderboard_rounded,
             iconColor: const Color(0xFFF59E0B),
-            title: '리그 순위',
-            subtitle: '각 리그 순위표 확인',
+            title: l10n.leagueStandings,
+            subtitle: l10n.checkLeagueStandings,
             onTap: () => context.go('/standings'),
           ),
           Container(height: 1, margin: const EdgeInsets.only(left: 72), color: const Color(0xFFE5E7EB)),
           _MenuItem(
             icon: Icons.calendar_month_rounded,
             iconColor: const Color(0xFF14B8A6),
-            title: '경기 일정',
-            subtitle: '다가오는 경기 확인',
+            title: l10n.matchSchedule,
+            subtitle: l10n.upcomingMatches,
             onTap: () => context.go('/schedule'),
           ),
           Container(height: 1, margin: const EdgeInsets.only(left: 72), color: const Color(0xFFE5E7EB)),
           _MenuItem(
             icon: Icons.notifications_outlined,
             iconColor: const Color(0xFFEC4899),
-            title: '알림 설정',
-            subtitle: '경기 알림, 푸시 알림',
+            title: l10n.notificationSettings,
+            subtitle: l10n.matchAlertsPush,
             onTap: () => context.push('/profile/notifications'),
           ),
           Container(height: 1, margin: const EdgeInsets.only(left: 72), color: const Color(0xFFE5E7EB)),
           _MenuItem(
             icon: Icons.schedule_rounded,
             iconColor: const Color(0xFF0EA5E9),
-            title: '타임존 설정',
-            subtitle: '경기 시간 표시 기준',
+            title: l10n.timezoneSettings,
+            subtitle: l10n.matchTimeDisplay,
             onTap: () => context.push('/profile/timezone'),
+          ),
+          Container(height: 1, margin: const EdgeInsets.only(left: 72), color: const Color(0xFFE5E7EB)),
+          _MenuItem(
+            icon: Icons.language_rounded,
+            iconColor: const Color(0xFF06B6D4),
+            title: l10n.languageSettings,
+            subtitle: l10n.languageSubtitle,
+            onTap: () => context.push('/profile/language'),
           ),
           Container(height: 1, margin: const EdgeInsets.only(left: 72), color: const Color(0xFFE5E7EB)),
           _MenuItem(
             icon: Icons.forum_outlined,
             iconColor: const Color(0xFF8B5CF6),
-            title: '커뮤니티',
-            subtitle: '직관 후기, 정보 공유',
+            title: l10n.communityTitle,
+            subtitle: l10n.communityDesc,
             onTap: () => context.push('/community'),
           ),
           Container(height: 1, margin: const EdgeInsets.only(left: 72), color: const Color(0xFFE5E7EB)),
           _MenuItem(
             icon: Icons.help_outline_rounded,
             iconColor: const Color(0xFF3B82F6),
-            title: '도움말 및 지원',
-            subtitle: 'FAQ, 문의하기',
+            title: l10n.helpAndSupport,
+            subtitle: l10n.faqContact,
             onTap: () => context.push('/profile/help'),
           ),
         ],
@@ -883,6 +897,7 @@ class _LogoutButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: GestureDetector(
@@ -895,14 +910,14 @@ class _LogoutButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.3)),
           ),
-          child: const Row(
+          child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.logout_rounded, color: Color(0xFFEF4444), size: 18),
-              SizedBox(width: 8),
+              const Icon(Icons.logout_rounded, color: Color(0xFFEF4444), size: 18),
+              const SizedBox(width: 8),
               Text(
-                '로그아웃',
-                style: TextStyle(
+                l10n.logout,
+                style: const TextStyle(
                   color: Color(0xFFEF4444),
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
@@ -916,23 +931,24 @@ class _LogoutButton extends StatelessWidget {
   }
 
   void _showLogoutDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('로그아웃'),
-        content: const Text('정말 로그아웃하시겠습니까?'),
+        title: Text(l10n.logout),
+        content: Text(l10n.logoutConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('취소', style: TextStyle(color: Colors.grey.shade600)),
+            child: Text(l10n.cancel, style: TextStyle(color: Colors.grey.shade600)),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               ref.read(authNotifierProvider.notifier).signOut();
             },
-            child: const Text('로그아웃', style: TextStyle(color: Color(0xFFEF4444))),
+            child: Text(l10n.logout, style: const TextStyle(color: Color(0xFFEF4444))),
           ),
         ],
       ),
@@ -946,12 +962,13 @@ class _LogoutButton extends StatelessWidget {
 class _AppInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.only(top: 24),
       child: Column(
         children: [
           Text(
-            'MatchLog v1.0.0',
+            l10n.appVersion('1.0.0'),
             style: TextStyle(
               color: Colors.grey.shade400,
               fontSize: 12,
@@ -959,7 +976,7 @@ class _AppInfo extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(
-            '축구 직관 기록 앱',
+            l10n.appTagline,
             style: TextStyle(
               color: Colors.grey.shade400,
               fontSize: 11,

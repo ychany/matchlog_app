@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/services/api_football_service.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// 인기 리그 목록 Provider
 final popularLeaguesProvider = FutureProvider<List<ApiFootballLeague>>((ref) async {
@@ -91,6 +92,7 @@ class _LeagueListScreenState extends ConsumerState<LeagueListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: _background,
       appBar: AppBar(
@@ -101,7 +103,7 @@ class _LeagueListScreenState extends ConsumerState<LeagueListScreen> {
                 controller: _searchController,
                 autofocus: true,
                 decoration: InputDecoration(
-                  hintText: '리그 검색...',
+                  hintText: l10n.searchLeague,
                   hintStyle: TextStyle(color: _textSecondary, fontSize: 16),
                   border: InputBorder.none,
                 ),
@@ -110,9 +112,9 @@ class _LeagueListScreenState extends ConsumerState<LeagueListScreen> {
                   setState(() => _searchQuery = value);
                 },
               )
-            : const Text(
-                '리그',
-                style: TextStyle(
+            : Text(
+                l10n.leagues,
+                style: const TextStyle(
                   color: _textPrimary,
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
@@ -143,6 +145,7 @@ class _LeagueListScreenState extends ConsumerState<LeagueListScreen> {
   }
 
   Widget _buildSearchResults() {
+    final l10n = AppLocalizations.of(context)!;
     final searchAsync = ref.watch(leagueSearchProvider(_searchQuery));
 
     return searchAsync.when(
@@ -155,7 +158,7 @@ class _LeagueListScreenState extends ConsumerState<LeagueListScreen> {
                 Icon(Icons.search_off, size: 48, color: _textSecondary),
                 const SizedBox(height: 16),
                 Text(
-                  '검색 결과가 없습니다',
+                  l10n.noSearchResults,
                   style: TextStyle(color: _textSecondary, fontSize: 14),
                 ),
               ],
@@ -171,12 +174,13 @@ class _LeagueListScreenState extends ConsumerState<LeagueListScreen> {
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (_, __) => Center(
-        child: Text('검색 중 오류가 발생했습니다', style: TextStyle(color: _textSecondary)),
+        child: Text(l10n.searchError, style: TextStyle(color: _textSecondary)),
       ),
     );
   }
 
   Widget _buildPopularLeagues() {
+    final l10n = AppLocalizations.of(context)!;
     final leaguesAsync = ref.watch(popularLeaguesProvider);
 
     return leaguesAsync.when(
@@ -191,22 +195,22 @@ class _LeagueListScreenState extends ConsumerState<LeagueListScreen> {
           padding: const EdgeInsets.all(16),
           children: [
             if (fiveLeagues.isNotEmpty) ...[
-              _buildSectionHeader('5대 리그'),
+              _buildSectionHeader(l10n.top5Leagues),
               ...fiveLeagues.map((l) => _LeagueCard(league: l)),
               const SizedBox(height: 16),
             ],
             if (euroComps.isNotEmpty) ...[
-              _buildSectionHeader('유럽 클럽 대회'),
+              _buildSectionHeader(l10n.euroClubComps),
               ...euroComps.map((l) => _LeagueCard(league: l)),
               const SizedBox(height: 16),
             ],
             if (nationalComps.isNotEmpty) ...[
-              _buildSectionHeader('국가대항전'),
+              _buildSectionHeader(l10n.nationalComps),
               ...nationalComps.map((l) => _LeagueCard(league: l)),
               const SizedBox(height: 16),
             ],
             if (otherLeagues.isNotEmpty) ...[
-              _buildSectionHeader('기타 리그'),
+              _buildSectionHeader(l10n.otherLeagues),
               ...otherLeagues.map((l) => _LeagueCard(league: l)),
             ],
             const SizedBox(height: 20),
@@ -221,13 +225,13 @@ class _LeagueListScreenState extends ConsumerState<LeagueListScreen> {
             Icon(Icons.error_outline, size: 48, color: _textSecondary),
             const SizedBox(height: 16),
             Text(
-              '리그 목록을 불러올 수 없습니다',
+              l10n.cannotLoadLeagues,
               style: TextStyle(color: _textSecondary, fontSize: 14),
             ),
             const SizedBox(height: 8),
             TextButton(
               onPressed: () => ref.invalidate(popularLeaguesProvider),
-              child: const Text('다시 시도'),
+              child: Text(l10n.retry),
             ),
           ],
         ),

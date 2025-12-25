@@ -23,11 +23,11 @@ class UserProfile {
   factory UserProfile.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>?;
     if (data == null) {
-      return UserProfile(id: doc.id, displayName: '익명');
+      return UserProfile(id: doc.id, displayName: 'Anonymous');
     }
     return UserProfile(
       id: doc.id,
-      displayName: data['displayName'] ?? data['name'] ?? '익명',
+      displayName: data['displayName'] ?? data['name'] ?? 'Anonymous',
       photoUrl: data['photoUrl'] ?? data['photoURL'],
       bio: data['bio'],
       favoriteTeamId: data['favoriteTeamId'],

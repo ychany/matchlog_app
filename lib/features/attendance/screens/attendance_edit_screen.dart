@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/services/api_football_service.dart';
 import '../../../shared/services/storage_service.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../models/attendance_record.dart';
 import '../providers/attendance_provider.dart';
@@ -80,13 +81,28 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
   String _homeTeamId = '';
   String _awayTeamId = '';
 
-  final List<String> _weatherOptions = [
-    '맑음 ☀️',
-    '흐림 ☁️',
-    '비 🌧️',
-    '눈 ❄️',
-    '바람 💨'
-  ];
+  List<String> _getWeatherOptions(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return [
+      l10n.weatherSunny,
+      l10n.weatherCloudy,
+      l10n.weatherRainy,
+      l10n.weatherSnowy,
+      l10n.weatherWindy,
+    ];
+  }
+
+  List<String> _getSuggestedTags(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return [
+      l10n.tagVictory,
+      l10n.tagComeback,
+      l10n.tagGoalFest,
+      l10n.tagCleanSheet,
+      l10n.tagFirstMatch,
+      l10n.tagAway,
+    ];
+  }
 
   @override
   void initState() {
@@ -149,7 +165,7 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('기록을 불러올 수 없습니다: $e')),
+          SnackBar(content: Text('${AppLocalizations.of(context)!.cannotLoadRecord}: $e')),
         );
         context.pop();
       }
@@ -185,9 +201,9 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
             backgroundColor: Colors.white,
             foregroundColor: _textPrimary,
             elevation: 0,
-            title: const Text(
-              '직관 기록 수정',
-              style: TextStyle(fontWeight: FontWeight.w600),
+            title: Text(
+              AppLocalizations.of(context)!.editMatchRecord,
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
           body: const Center(child: CircularProgressIndicator()),
@@ -205,10 +221,13 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
           backgroundColor: Colors.white,
           foregroundColor: _textPrimary,
           elevation: 0,
-          title: Text(
-            _currentPage == 0 ? '직관 기록 수정' : '직관 일기 수정',
-            style: const TextStyle(fontWeight: FontWeight.w600),
-          ),
+          title: Builder(builder: (context) {
+            final l10n = AppLocalizations.of(context)!;
+            return Text(
+              _currentPage == 0 ? l10n.editMatchRecord : l10n.editMatchDiary,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            );
+          }),
           actions: [
             TextButton(
               onPressed: _isSaving ? null : _saveRecord,
@@ -218,9 +237,9 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text(
-                      '저장',
-                      style: TextStyle(
+                  : Text(
+                      AppLocalizations.of(context)!.save,
+                      style: const TextStyle(
                         color: _primary,
                         fontWeight: FontWeight.w600,
                       ),
@@ -255,7 +274,7 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           _PageIndicatorDot(
-            label: '경기 정보',
+            label: AppLocalizations.of(context)!.matchInfo,
             isActive: _currentPage == 0,
             onTap: () => _pageController.animateToPage(0,
                 duration: const Duration(milliseconds: 300),
@@ -263,7 +282,7 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
           ),
           Container(width: 40, height: 2, color: _border),
           _PageIndicatorDot(
-            label: '일기 수정',
+            label: AppLocalizations.of(context)!.editDiary,
             isActive: _currentPage == 1,
             onTap: () => _pageController.animateToPage(1,
                 duration: const Duration(milliseconds: 300),
@@ -275,6 +294,7 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
   }
 
   Widget _buildMatchInfoPage() {
+    final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Form(
@@ -290,16 +310,16 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
             const SizedBox(height: 16),
             _buildTextField(
               controller: _stadiumController,
-              label: '경기장',
+              label: l10n.stadium,
               icon: Icons.stadium,
-              hintText: '경기장 이름',
+              hintText: l10n.venueName,
             ),
             const SizedBox(height: 16),
             _buildTextField(
               controller: _seatController,
-              label: '좌석 정보',
+              label: l10n.seatInfo,
               icon: Icons.chair,
-              hintText: '예: A블록 12열 34번',
+              hintText: l10n.seatHint,
             ),
             const SizedBox(height: 16),
             _buildPhotoSection(),
@@ -319,9 +339,9 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
-                  '일기 수정하기 →',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                child: Text(
+                  l10n.editDiaryButton,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -332,6 +352,7 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
   }
 
   Widget _buildDiaryPage() {
+    final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -343,12 +364,12 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
           const SizedBox(height: 24),
           _buildTextField(
             controller: _titleController,
-            label: '오늘의 한 줄',
+            label: l10n.oneLiner,
             icon: Icons.title,
-            hintText: '경기를 한 줄로 표현한다면?',
+            hintText: l10n.oneLinerHint,
           ),
           const SizedBox(height: 16),
-          _buildSectionTitle('직관 일기'),
+          _buildSectionTitle(l10n.diarySection),
           const SizedBox(height: 8),
           Container(
             decoration: BoxDecoration(
@@ -360,7 +381,7 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
               controller: _contentController,
               maxLines: 6,
               decoration: InputDecoration(
-                hintText: '오늘 경기는 어땠나요? 자유롭게 기록해보세요.',
+                hintText: l10n.diaryHint,
                 hintStyle: TextStyle(color: _textSecondary.withValues(alpha: 0.6)),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.all(16),
@@ -549,9 +570,9 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
                 child: const Icon(Icons.scoreboard, size: 18, color: _success),
               ),
               const SizedBox(width: 10),
-              const Text(
-                '스코어',
-                style: TextStyle(
+              Text(
+                AppLocalizations.of(context)!.score,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: _textPrimary,
@@ -659,16 +680,16 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    '내가 응원한 팀',
-                    style: TextStyle(
+                  Text(
+                    AppLocalizations.of(context)!.mySupportedTeam,
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: _textPrimary,
                     ),
                   ),
                   Text(
-                    '승/무/패 통계에 반영됩니다',
+                    AppLocalizations.of(context)!.winDrawLossStats,
                     style: TextStyle(fontSize: 11, color: _textSecondary),
                   ),
                 ],
@@ -758,9 +779,9 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
                     const Icon(Icons.photo_library, size: 18, color: _warning),
               ),
               const SizedBox(width: 10),
-              const Text(
-                '사진',
-                style: TextStyle(
+              Text(
+                AppLocalizations.of(context)!.photos,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: _textPrimary,
@@ -773,13 +794,13 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
             children: [
               _PhotoAddButton(
                 icon: Icons.camera_alt,
-                label: '카메라',
+                label: AppLocalizations.of(context)!.camera,
                 onTap: () => _pickImage(ImageSource.camera),
               ),
               const SizedBox(width: 12),
               _PhotoAddButton(
                 icon: Icons.photo_library,
-                label: '갤러리',
+                label: AppLocalizations.of(context)!.gallery,
                 onTap: () => _pickImage(ImageSource.gallery),
               ),
             ],
@@ -911,9 +932,9 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
                 child: const Icon(Icons.star, size: 18, color: _warning),
               ),
               const SizedBox(width: 10),
-              const Text(
-                '오늘 경기 평점',
-                style: TextStyle(
+              Text(
+                AppLocalizations.of(context)!.todaysMatchRating,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: _textPrimary,
@@ -963,9 +984,9 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('최악 😢',
+              Text(AppLocalizations.of(context)!.ratingWorst,
                   style: TextStyle(fontSize: 12, color: _textSecondary)),
-              Text('최고 🔥',
+              Text(AppLocalizations.of(context)!.ratingBest,
                   style: TextStyle(fontSize: 12, color: _textSecondary)),
             ],
           ),
@@ -996,9 +1017,9 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
                 child: const Icon(Icons.mood, size: 18, color: _primary),
               ),
               const SizedBox(width: 10),
-              const Text(
-                '오늘의 기분',
-                style: TextStyle(
+              Text(
+                AppLocalizations.of(context)!.todaysMood,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: _textPrimary,
@@ -1071,9 +1092,9 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
                     const Icon(Icons.emoji_events, size: 18, color: _warning),
               ),
               const SizedBox(width: 10),
-              const Text(
-                '오늘의 MVP',
-                style: TextStyle(
+              Text(
+                AppLocalizations.of(context)!.todaysMvp,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: _textPrimary,
@@ -1138,7 +1159,7 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
                 awayTeamName: _awayTeamName,
               ),
               icon: const Icon(Icons.person_search, size: 18),
-              label: const Text('선수 선택'),
+              label: Text(AppLocalizations.of(context)!.selectPlayer),
               style: OutlinedButton.styleFrom(
                 foregroundColor: _primary,
                 side: const BorderSide(color: _border),
@@ -1160,7 +1181,7 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
                   Icon(Icons.info_outline, color: _textSecondary, size: 18),
                   const SizedBox(width: 8),
                   Text(
-                    '팀 정보가 없습니다',
+                    AppLocalizations.of(context)!.noTeamInfo,
                     style: TextStyle(color: _textSecondary),
                   ),
                 ],
@@ -1218,9 +1239,9 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
                 child: const Icon(Icons.tag, size: 18, color: _success),
               ),
               const SizedBox(width: 10),
-              const Text(
-                '태그',
-                style: TextStyle(
+              Text(
+                AppLocalizations.of(context)!.tags,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: _textPrimary,
@@ -1269,7 +1290,7 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
                 child: TextField(
                   controller: _tagController,
                   decoration: InputDecoration(
-                    hintText: '태그 추가',
+                    hintText: AppLocalizations.of(context)!.addTagHint,
                     hintStyle: TextStyle(
                         color: _textSecondary.withValues(alpha: 0.6), fontSize: 13),
                     isDense: true,
@@ -1292,14 +1313,13 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            '추천 태그',
+            AppLocalizations.of(context)!.suggestedTagsLabel,
             style: TextStyle(fontSize: 12, color: _textSecondary),
           ),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
-            children:
-                ['승리', '역전', '골잔치', '클린시트', '첫직관', '원정'].map((tag) {
+            children: _getSuggestedTags(context).map((tag) {
               return GestureDetector(
                 onTap: () {
                   if (!_tags.contains(tag)) {
@@ -1347,9 +1367,9 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
                   const Icon(Icons.more_horiz, size: 18, color: _textSecondary),
             ),
             const SizedBox(width: 10),
-            const Text(
-              '추가 정보',
-              style: TextStyle(
+            Text(
+              AppLocalizations.of(context)!.additionalInfoSection,
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: _textPrimary,
@@ -1365,11 +1385,11 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
             _selectedWeather != null || _companionController.text.isNotEmpty,
         children: [
           const SizedBox(height: 8),
-          _buildSectionTitle('날씨'),
+          _buildSectionTitle(AppLocalizations.of(context)!.weather),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
-            children: _weatherOptions.map((weather) {
+            children: _getWeatherOptions(context).map((weather) {
               final isSelected = _selectedWeather == weather;
               return GestureDetector(
                 onTap: () => setState(
@@ -1398,14 +1418,14 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
           const SizedBox(height: 16),
           _buildInlineTextField(
             controller: _companionController,
-            label: '함께 간 사람',
+            label: AppLocalizations.of(context)!.companions,
             icon: Icons.people,
-            hintText: '예: 친구들, 가족',
+            hintText: AppLocalizations.of(context)!.companionHint,
           ),
           const SizedBox(height: 16),
           _buildTicketPriceField(),
           const SizedBox(height: 16),
-          _buildSectionTitle('경기장 음식'),
+          _buildSectionTitle(AppLocalizations.of(context)!.stadiumFood),
           const SizedBox(height: 8),
           Container(
             decoration: BoxDecoration(
@@ -1416,7 +1436,7 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
               controller: _foodReviewController,
               maxLines: 2,
               decoration: InputDecoration(
-                hintText: '먹은 음식, 맛 평가 등',
+                hintText: AppLocalizations.of(context)!.foodReviewHint,
                 hintStyle: TextStyle(color: _textSecondary.withValues(alpha: 0.6)),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.all(12),
@@ -1464,7 +1484,7 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle('티켓 가격'),
+        _buildSectionTitle(AppLocalizations.of(context)!.ticketPrice),
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
@@ -1475,11 +1495,11 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
             controller: _ticketPriceController,
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
-              hintText: '예: 50,000',
+              hintText: AppLocalizations.of(context)!.priceHint,
               hintStyle: TextStyle(color: _textSecondary.withValues(alpha: 0.6)),
               prefixIcon: const Icon(Icons.confirmation_number,
                   color: _textSecondary, size: 20),
-              suffixText: '원',
+              suffixText: AppLocalizations.of(context)!.currencyUnit,
               suffixStyle: const TextStyle(color: _textSecondary),
               border: InputBorder.none,
               contentPadding:
@@ -1518,7 +1538,7 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
     final userId = ref.read(currentUserIdProvider);
     if (userId == null) {
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('로그인이 필요합니다')));
+          .showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.loginRequired)));
       return;
     }
 
@@ -1579,13 +1599,13 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('수정되었습니다!')));
+            .showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.saved)));
         context.pop();
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('수정 실패: $e')));
+            .showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.saveFailed(e.toString()))));
       }
     } finally {
       if (mounted) {
@@ -1888,7 +1908,7 @@ class _TeamPlayersDialogState extends State<_TeamPlayersDialog>
               ),
               child: TextField(
                 decoration: InputDecoration(
-                  hintText: '선수 이름 검색',
+                  hintText: AppLocalizations.of(context)!.searchPlayerName,
                   hintStyle:
                       TextStyle(color: _textSecondary.withValues(alpha: 0.6)),
                   prefixIcon: const Icon(Icons.search, color: _textSecondary),
@@ -1906,8 +1926,8 @@ class _TeamPlayersDialogState extends State<_TeamPlayersDialog>
               unselectedLabelColor: _textSecondary,
               indicatorColor: _primary,
               tabs: [
-                Tab(text: widget.homeTeamName ?? '홈팀'),
-                Tab(text: widget.awayTeamName ?? '원정팀'),
+                Tab(text: widget.homeTeamName ?? AppLocalizations.of(context)!.homeShort),
+                Tab(text: widget.awayTeamName ?? AppLocalizations.of(context)!.awayShort),
               ],
             ),
             Expanded(
@@ -1930,9 +1950,11 @@ class _TeamPlayersDialogState extends State<_TeamPlayersDialog>
   Widget _buildPlayerList(List<ApiFootballSquadPlayer> players) {
     if (players.isEmpty) {
       return Center(
-        child: Text(
-          '선수 정보가 없습니다',
-          style: TextStyle(color: _textSecondary),
+        child: Builder(
+          builder: (context) => Text(
+            AppLocalizations.of(context)!.noPlayerInfo,
+            style: TextStyle(color: _textSecondary),
+          ),
         ),
       );
     }

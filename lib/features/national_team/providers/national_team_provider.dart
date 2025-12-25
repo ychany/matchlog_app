@@ -78,6 +78,6 @@ final worldCupCountdownProvider = Provider<WorldCupCountdown>((ref) {
   return WorldCupCountdown(
     worldCupStart: worldCupStart,
     daysRemaining: daysRemaining,
-    tournamentName: '2026 FIFA 월드컵',
+    tournamentName: 'worldCup2026', // Localize in UI
   );
 });

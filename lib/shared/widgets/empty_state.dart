@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
+import '../../l10n/app_localizations.dart';
 
 class EmptyState extends StatelessWidget {
   final IconData icon;
@@ -76,11 +77,12 @@ class EmptyAttendanceState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return EmptyState(
       icon: Icons.stadium_outlined,
-      title: '직관 기록이 없습니다',
-      subtitle: '첫 번째 경기 직관을 기록해보세요!',
-      actionLabel: '기록 추가',
+      title: l10n.emptyAttendanceTitle,
+      subtitle: l10n.emptyAttendanceSubtitle,
+      actionLabel: l10n.addRecord,
       onAction: onAdd,
     );
   }
@@ -93,11 +95,12 @@ class EmptyDiaryState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return EmptyState(
       icon: Icons.book_outlined,
-      title: '다이어리 기록이 없습니다',
-      subtitle: '경기를 보고 기록해보세요!',
-      actionLabel: '일정 보기',
+      title: l10n.emptyDiaryTitle,
+      subtitle: l10n.emptyDiarySubtitle,
+      actionLabel: l10n.viewSchedule,
       onAction: onAdd,
     );
   }
@@ -108,10 +111,11 @@ class EmptyScheduleState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const EmptyState(
+    final l10n = AppLocalizations.of(context)!;
+    return EmptyState(
       icon: Icons.calendar_today_outlined,
-      title: '오늘 경기가 없습니다',
-      subtitle: '다른 날짜를 선택해보세요',
+      title: l10n.emptyScheduleTitle,
+      subtitle: l10n.emptyScheduleSubtitle,
     );
   }
 }
@@ -123,11 +127,12 @@ class EmptyFavoritesState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return EmptyState(
       icon: Icons.favorite_border,
-      title: '즐겨찾기가 없습니다',
-      subtitle: '좋아하는 팀과 선수를 추가해보세요!',
-      actionLabel: '팀 찾기',
+      title: l10n.emptyFavoritesTitle,
+      subtitle: l10n.emptyFavoritesSubtitle,
+      actionLabel: l10n.findTeam,
       onAction: onAdd,
     );
   }
@@ -140,10 +145,11 @@ class EmptySearchState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return EmptyState(
       icon: Icons.search_off,
-      title: '검색 결과가 없습니다',
-      subtitle: '"$query"에 대한 결과가 없습니다',
+      title: l10n.emptySearchTitle,
+      subtitle: l10n.emptySearchSubtitle(query),
     );
   }
 }
@@ -160,11 +166,12 @@ class ErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return EmptyState(
       icon: Icons.error_outline,
-      title: '오류가 발생했습니다',
-      subtitle: message ?? '다시 시도해주세요',
-      actionLabel: '재시도',
+      title: l10n.errorTitle,
+      subtitle: message ?? l10n.errorDefaultSubtitle,
+      actionLabel: l10n.retry,
       onAction: onRetry,
     );
   }

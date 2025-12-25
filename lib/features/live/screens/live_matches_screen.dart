@@ -7,6 +7,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/services/api_football_service.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../profile/providers/timezone_provider.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// 리그 우선순위 정의
 int _getLeaguePriority(int leagueId) {
@@ -128,6 +129,7 @@ class _LiveMatchesScreenState extends ConsumerState<LiveMatchesScreen> {
   }
 
   Widget _buildHeader(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final timeSinceUpdate = DateTime.now().difference(_lastUpdate).inSeconds;
 
     return Container(
@@ -151,9 +153,9 @@ class _LiveMatchesScreenState extends ConsumerState<LiveMatchesScreen> {
                       // 라이브 표시 (깜빡이는 효과)
                       _PulsingDot(),
                       const SizedBox(width: 8),
-                      const Text(
-                        '라이브 경기',
-                        style: TextStyle(
+                      Text(
+                        l10n.liveMatches,
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
                           color: _textPrimary,
@@ -188,8 +190,8 @@ class _LiveMatchesScreenState extends ConsumerState<LiveMatchesScreen> {
                 const SizedBox(width: 6),
                 Text(
                   timeSinceUpdate < 60
-                      ? '$timeSinceUpdate초 전 업데이트'
-                      : '${timeSinceUpdate ~/ 60}분 전 업데이트',
+                      ? l10n.updatedSecondsAgo(timeSinceUpdate)
+                      : l10n.updatedMinutesAgo(timeSinceUpdate ~/ 60),
                   style: TextStyle(
                     fontSize: 12,
                     color: _textSecondary,
@@ -203,7 +205,7 @@ class _LiveMatchesScreenState extends ConsumerState<LiveMatchesScreen> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
-                    '30초마다 자동 갱신',
+                    l10n.autoRefresh30Sec,
                     style: TextStyle(
                       fontSize: 10,
                       color: _success,
@@ -276,7 +278,7 @@ class _LiveMatchesScreenState extends ConsumerState<LiveMatchesScreen> {
                     child: Row(
                       children: [
                         Text(
-                          league == 'all' ? '전체' : league,
+                          league == 'all' ? AppLocalizations.of(context)!.all : league,
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
@@ -329,6 +331,7 @@ class _LiveMatchesScreenState extends ConsumerState<LiveMatchesScreen> {
   }
 
   Widget _buildEmptyState() {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -346,9 +349,9 @@ class _LiveMatchesScreenState extends ConsumerState<LiveMatchesScreen> {
             ),
           ),
           const SizedBox(height: 24),
-          const Text(
-            '진행 중인 경기가 없습니다',
-            style: TextStyle(
+          Text(
+            l10n.noLiveMatchesTitle,
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
               color: _textPrimary,
@@ -356,7 +359,7 @@ class _LiveMatchesScreenState extends ConsumerState<LiveMatchesScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            '경기가 시작되면 여기서 실시간으로 확인하세요',
+            l10n.noLiveMatchesDesc,
             style: TextStyle(
               fontSize: 14,
               color: _textSecondary,
@@ -366,7 +369,7 @@ class _LiveMatchesScreenState extends ConsumerState<LiveMatchesScreen> {
           ElevatedButton.icon(
             onPressed: () => ref.invalidate(liveMatchesProvider),
             icon: const Icon(Icons.refresh),
-            label: const Text('새로고침'),
+            label: Text(l10n.refresh),
             style: ElevatedButton.styleFrom(
               backgroundColor: _primary,
               foregroundColor: Colors.white,
@@ -382,6 +385,7 @@ class _LiveMatchesScreenState extends ConsumerState<LiveMatchesScreen> {
   }
 
   Widget _buildError(String error) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -389,7 +393,7 @@ class _LiveMatchesScreenState extends ConsumerState<LiveMatchesScreen> {
           Icon(Icons.error_outline, size: 48, color: _live),
           const SizedBox(height: 16),
           Text(
-            '오류가 발생했습니다',
+            l10n.errorOccurred,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -406,7 +410,7 @@ class _LiveMatchesScreenState extends ConsumerState<LiveMatchesScreen> {
           ElevatedButton.icon(
             onPressed: () => ref.invalidate(liveMatchesProvider),
             icon: const Icon(Icons.refresh),
-            label: const Text('다시 시도'),
+            label: Text(l10n.retry),
             style: ElevatedButton.styleFrom(
               backgroundColor: _primary,
               foregroundColor: Colors.white,
@@ -580,7 +584,8 @@ class _LiveBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final displayText = _getDisplayText();
+    final l10n = AppLocalizations.of(context)!;
+    final displayText = _getDisplayText(l10n);
     final isHalftime = status.short == 'HT';
 
     return Container(
@@ -609,20 +614,20 @@ class _LiveBadge extends StatelessWidget {
     );
   }
 
-  String _getDisplayText() {
+  String _getDisplayText(AppLocalizations l10n) {
     switch (status.short) {
       case '1H':
-        return status.elapsed != null ? "${status.elapsed}'" : '전반전';
+        return status.elapsed != null ? "${status.elapsed}'" : l10n.firstHalf;
       case '2H':
-        return status.elapsed != null ? "${status.elapsed}'" : '후반전';
+        return status.elapsed != null ? "${status.elapsed}'" : l10n.secondHalf;
       case 'HT':
-        return '하프타임';
+        return l10n.halfTime;
       case 'ET':
-        return '연장전';
+        return l10n.extraTime;
       case 'P':
-        return '승부차기';
+        return l10n.penalties;
       case 'BT':
-        return '연장 준비';
+        return l10n.breakPrep;
       default:
         return status.elapsed != null ? "${status.elapsed}'" : 'LIVE';
     }
@@ -764,6 +769,7 @@ class _ProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final progress = is2ndHalf
         ? ((elapsed - 45).clamp(0, 45) / 45)
         : (elapsed.clamp(0, 45) / 45);
@@ -785,7 +791,7 @@ class _ProgressBar extends StatelessWidget {
           ),
           const SizedBox(height: 3),
           Text(
-            is2ndHalf ? '후반 ${elapsed - 45}분' : '전반 $elapsed분',
+            is2ndHalf ? l10n.secondHalfMinutes(elapsed - 45) : l10n.firstHalfMinutes(elapsed),
             style: TextStyle(fontSize: 9, color: Colors.grey.shade500),
           ),
         ],

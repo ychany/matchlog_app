@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../l10n/app_localizations.dart';
 
 class HelpSupportScreen extends StatelessWidget {
   const HelpSupportScreen({super.key});
@@ -11,6 +12,7 @@ class HelpSupportScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark.copyWith(
         statusBarColor: Colors.transparent,
@@ -24,9 +26,9 @@ class HelpSupportScreen extends StatelessWidget {
             icon: const Icon(Icons.arrow_back, color: _textPrimary),
             onPressed: () => Navigator.pop(context),
           ),
-          title: const Text(
-            '도움말 및 지원',
-            style: TextStyle(
+          title: Text(
+            l10n.helpAndSupportTitle,
+            style: const TextStyle(
               color: _textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -43,10 +45,10 @@ class HelpSupportScreen extends StatelessWidget {
               _buildSectionHeader(
                 icon: Icons.help_outline_rounded,
                 iconColor: const Color(0xFF3B82F6),
-                title: '자주 묻는 질문',
+                title: l10n.faqTitle,
               ),
               const SizedBox(height: 12),
-              _buildFAQSection(),
+              _buildFAQSection(context),
 
               const SizedBox(height: 24),
 
@@ -54,7 +56,7 @@ class HelpSupportScreen extends StatelessWidget {
               _buildSectionHeader(
                 icon: Icons.mail_outline_rounded,
                 iconColor: const Color(0xFF10B981),
-                title: '문의하기',
+                title: l10n.contactUs,
               ),
               const SizedBox(height: 12),
               _buildContactSection(context),
@@ -65,10 +67,10 @@ class HelpSupportScreen extends StatelessWidget {
               _buildSectionHeader(
                 icon: Icons.info_outline_rounded,
                 iconColor: const Color(0xFF8B5CF6),
-                title: '앱 정보',
+                title: l10n.appInfo,
               ),
               const SizedBox(height: 12),
-              _buildAppInfoSection(),
+              _buildAppInfoSection(context),
 
               const SizedBox(height: 40),
             ],
@@ -106,27 +108,28 @@ class HelpSupportScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFAQSection() {
+  Widget _buildFAQSection(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final faqs = [
       {
-        'question': '직관 기록은 어떻게 추가하나요?',
-        'answer': '홈 화면이나 직관 일기 탭에서 + 버튼을 눌러 새로운 직관 기록을 추가할 수 있습니다. 경기 일정에서 원하는 경기를 선택한 후 "직관 기록" 버튼을 눌러도 됩니다.',
+        'question': l10n.faqAddRecord,
+        'answer': l10n.faqAddRecordAnswer,
       },
       {
-        'question': '즐겨찾기 팀은 어떻게 추가하나요?',
-        'answer': '내 정보 탭에서 즐겨찾기 섹션의 "관리" 버튼을 누르거나, 팀 상세 페이지에서 하트 버튼을 눌러 즐겨찾기에 추가할 수 있습니다.',
+        'question': l10n.faqAddFavorite,
+        'answer': l10n.faqAddFavoriteAnswer,
       },
       {
-        'question': '경기 일정은 어디서 확인하나요?',
-        'answer': '하단 메뉴의 "일정" 탭에서 캘린더 형태로 경기 일정을 확인할 수 있습니다. 리그별로 필터링도 가능합니다.',
+        'question': l10n.faqSchedule,
+        'answer': l10n.faqScheduleAnswer,
       },
       {
-        'question': '알림은 어떻게 설정하나요?',
-        'answer': '내 정보 > 알림 설정에서 경기 시작 알림, 즐겨찾기 팀 경기 알림 등을 설정할 수 있습니다.',
+        'question': l10n.faqNotification,
+        'answer': l10n.faqNotificationAnswer,
       },
       {
-        'question': '지원하는 리그는 무엇인가요?',
-        'answer': 'EPL(잉글랜드), 라리가(스페인), 분데스리가(독일), 세리에A(이탈리아), 리그앙(프랑스), K리그, 챔피언스리그, 유로파리그를 지원합니다.',
+        'question': l10n.faqSupportedLeagues,
+        'answer': l10n.faqSupportedLeaguesAnswer,
       },
     ];
 
@@ -153,6 +156,7 @@ class HelpSupportScreen extends StatelessWidget {
   }
 
   Widget _buildContactSection(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -164,24 +168,24 @@ class HelpSupportScreen extends StatelessWidget {
           _ContactItem(
             icon: Icons.email_outlined,
             iconColor: const Color(0xFF3B82F6),
-            title: '이메일 문의',
+            title: l10n.emailInquiry,
             subtitle: 'dudcks463@gmail.com',
-            onTap: () => _launchEmail(context, subject: '[MatchLog 문의]'),
+            onTap: () => _launchEmail(context, subject: '[MatchLog]'),
           ),
           Container(height: 1, margin: const EdgeInsets.only(left: 56), color: _border),
           _ContactItem(
             icon: Icons.bug_report_outlined,
             iconColor: const Color(0xFFEF4444),
-            title: '버그 신고',
-            subtitle: '오류나 문제점을 알려주세요',
+            title: l10n.bugReport,
+            subtitle: l10n.bugReportDesc,
             onTap: () => _showBugReportDialog(context),
           ),
           Container(height: 1, margin: const EdgeInsets.only(left: 56), color: _border),
           _ContactItem(
             icon: Icons.lightbulb_outline_rounded,
             iconColor: const Color(0xFFF59E0B),
-            title: '기능 제안',
-            subtitle: '새로운 아이디어를 공유해주세요',
+            title: l10n.featureSuggestion,
+            subtitle: l10n.featureSuggestionDesc,
             onTap: () => _showFeatureRequestDialog(context),
           ),
         ],
@@ -189,7 +193,8 @@ class HelpSupportScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAppInfoSection() {
+  Widget _buildAppInfoSection(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -199,17 +204,17 @@ class HelpSupportScreen extends StatelessWidget {
       child: Column(
         children: [
           _InfoItem(
-            title: '앱 버전',
+            title: l10n.appVersionLabel,
             value: 'v1.0.0',
           ),
           Container(height: 1, margin: const EdgeInsets.only(left: 16), color: _border),
           _InfoItem(
-            title: '빌드 번호',
+            title: l10n.buildNumber,
             value: '1',
           ),
           Container(height: 1, margin: const EdgeInsets.only(left: 16), color: _border),
           _InfoItem(
-            title: '개발자',
+            title: l10n.developer,
             value: 'JO YEONG CHAN',
           ),
         ],
@@ -232,9 +237,10 @@ class HelpSupportScreen extends StatelessWidget {
       await launchUrl(emailUri);
     } else {
       if (context.mounted) {
+        final l10n = AppLocalizations.of(context)!;
         Clipboard.setData(const ClipboardData(text: email));
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('이메일 앱을 열 수 없어 주소가 복사되었습니다: $email')),
+          SnackBar(content: Text('${l10n.emailCopied}: $email')),
         );
       }
     }
@@ -248,16 +254,19 @@ class HelpSupportScreen extends StatelessWidget {
   }
 
   void _showBugReportDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (dialogContext) => _FeedbackDialog(
-        title: '버그 신고',
-        hintText: '발견한 버그나 문제점을 자세히 설명해주세요...',
+        title: l10n.bugReport,
+        hintText: l10n.bugReportHint,
+        cancelText: l10n.cancel,
+        submitText: l10n.submit,
         onSubmit: (text) {
           Navigator.pop(dialogContext);
           _launchEmail(
             context,
-            subject: '[MatchLog 버그 신고]',
+            subject: '[MatchLog Bug Report]',
             body: text,
           );
         },
@@ -266,16 +275,19 @@ class HelpSupportScreen extends StatelessWidget {
   }
 
   void _showFeatureRequestDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (dialogContext) => _FeedbackDialog(
-        title: '기능 제안',
-        hintText: '원하시는 기능을 자세히 설명해주세요...',
+        title: l10n.featureSuggestion,
+        hintText: l10n.featureSuggestionHint,
+        cancelText: l10n.cancel,
+        submitText: l10n.submit,
         onSubmit: (text) {
           Navigator.pop(dialogContext);
           _launchEmail(
             context,
-            subject: '[MatchLog 기능 제안]',
+            subject: '[MatchLog Feature Request]',
             body: text,
           );
         },
@@ -476,11 +488,15 @@ class _InfoItem extends StatelessWidget {
 class _FeedbackDialog extends StatefulWidget {
   final String title;
   final String hintText;
+  final String cancelText;
+  final String submitText;
   final Function(String) onSubmit;
 
   const _FeedbackDialog({
     required this.title,
     required this.hintText,
+    required this.cancelText,
+    required this.submitText,
     required this.onSubmit,
   });
 
@@ -521,7 +537,7 @@ class _FeedbackDialogState extends State<_FeedbackDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text('취소', style: TextStyle(color: Colors.grey.shade600)),
+          child: Text(widget.cancelText, style: TextStyle(color: Colors.grey.shade600)),
         ),
         TextButton(
           onPressed: () {
@@ -529,7 +545,7 @@ class _FeedbackDialogState extends State<_FeedbackDialog> {
               widget.onSubmit(_controller.text);
             }
           },
-          child: const Text('제출', style: TextStyle(color: Color(0xFF2563EB))),
+          child: Text(widget.submitText, style: const TextStyle(color: Color(0xFF2563EB))),
         ),
       ],
     );

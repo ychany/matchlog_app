@@ -8,6 +8,7 @@ import '../providers/community_provider.dart';
 import '../models/post_model.dart';
 import '../../attendance/models/attendance_record.dart';
 import '../../attendance/providers/attendance_provider.dart';
+import '../../../l10n/app_localizations.dart';
 
 class PostWriteScreen extends ConsumerStatefulWidget {
   final Post? editPost;
@@ -91,14 +92,14 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
 
     if (title.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('제목을 입력해주세요')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.enterTitle)),
       );
       return;
     }
 
     if (content.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('내용을 입력해주세요')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.enterContent)),
       );
       return;
     }
@@ -184,15 +185,16 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
       ref.read(postsNotifierProvider.notifier).refresh();
 
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(isEditMode ? '게시글이 수정되었습니다' : '게시글이 작성되었습니다')),
+          SnackBar(content: Text(isEditMode ? l10n.postEdited : l10n.postCreated)),
         );
         context.pop(true);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오류가 발생했습니다: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.errorWithMessage(e.toString()))),
         );
       }
     } finally {
@@ -251,9 +253,9 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
                 padding: const EdgeInsets.all(20),
                 child: Row(
                   children: [
-                    const Text(
-                      '직관 기록 선택',
-                      style: TextStyle(
+                    Text(
+                      AppLocalizations.of(context)!.selectMatchRecord,
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
                         color: _textPrimary,
@@ -266,7 +268,7 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
                           setState(() => _selectedRecord = null);
                           Navigator.pop(context);
                         },
-                        child: const Text('선택 해제'),
+                        child: Text(AppLocalizations.of(context)!.deselectRecord),
                       ),
                   ],
                 ),
@@ -284,7 +286,7 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
                             Icon(Icons.stadium_outlined, size: 48, color: Colors.grey.shade400),
                             const SizedBox(height: 16),
                             Text(
-                              '직관 기록이 없습니다',
+                              AppLocalizations.of(context)!.noMatchRecords,
                               style: TextStyle(color: Colors.grey.shade600),
                             ),
                           ],
@@ -311,7 +313,7 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
                     );
                   },
                   loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (e, _) => Center(child: Text('오류: $e')),
+                  error: (e, _) => Center(child: Text(AppLocalizations.of(context)!.errorWithMessage(e.toString()))),
                 ),
               ),
             ],
@@ -356,12 +358,13 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
 
   void _showStatsSelector() {
     final statsAsync = ref.read(attendanceStatsProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     statsAsync.when(
       data: (stats) {
         if (stats.totalMatches == 0) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('직관 기록이 없습니다')),
+            SnackBar(content: Text(l10n.noMatchRecords)),
           );
           return;
         }
@@ -369,18 +372,19 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
       },
       loading: () {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('통계를 불러오는 중...')),
+          SnackBar(content: Text(l10n.loadingStats)),
         );
       },
       error: (e, _) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오류: $e')),
+          SnackBar(content: Text(l10n.errorWithMessage(e.toString()))),
         );
       },
     );
   }
 
-  Widget _buildStatsCard(AttendanceStats stats) {
+  Widget _buildStatsCard(BuildContext context, AttendanceStats stats) {
+    final l10n = AppLocalizations.of(context)!;
     final topStadium = stats.stadiumVisits.entries.isEmpty
         ? null
         : stats.stadiumVisits.entries.reduce((a, b) => a.value > b.value ? a : b);
@@ -403,9 +407,9 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
             children: [
               const Icon(Icons.sports_soccer, color: Colors.white, size: 18),
               const SizedBox(width: 8),
-              const Text(
-                '나의 직관 통계',
-                style: TextStyle(
+              Text(
+                l10n.myAttendanceStatsTitle,
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -418,11 +422,11 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
           Row(
             children: [
               Expanded(
-                child: _buildStatItem('총 직관', '${stats.totalMatches}경기'),
+                child: _buildStatItem(l10n.totalAttendance, l10n.totalMatchesCount(stats.totalMatches)),
               ),
               Container(width: 1, height: 40, color: Colors.white24),
               Expanded(
-                child: _buildStatItem('승률', '${stats.winRate.toStringAsFixed(1)}%'),
+                child: _buildStatItem(l10n.winRate, l10n.winRatePercentValue(stats.winRate.toStringAsFixed(1))),
               ),
             ],
           ),
@@ -436,9 +440,9 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildResultItem('승', stats.wins, const Color(0xFF3B82F6)),
-                _buildResultItem('무', stats.draws, const Color(0xFF9CA3AF)),
-                _buildResultItem('패', stats.losses, const Color(0xFFEF4444)),
+                _buildResultItem(l10n.win, stats.wins, const Color(0xFF3B82F6)),
+                _buildResultItem(l10n.draw, stats.draws, const Color(0xFF9CA3AF)),
+                _buildResultItem(l10n.loss, stats.losses, const Color(0xFFEF4444)),
               ],
             ),
           ),
@@ -457,7 +461,7 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
                   const SizedBox(width: 4),
                   Flexible(
                     child: Text(
-                      '최다 방문: ${topStadium.key} (${topStadium.value}회)',
+                      l10n.mostVisitedStadium(topStadium.key, topStadium.value),
                       style: const TextStyle(color: Colors.white70, fontSize: 12),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -548,7 +552,7 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
             onPressed: () => context.pop(),
           ),
           title: Text(
-            isEditMode ? '글 수정' : '글쓰기',
+            isEditMode ? AppLocalizations.of(context)!.editPost : AppLocalizations.of(context)!.writePost,
             style: const TextStyle(
               color: _textPrimary,
               fontSize: 18,
@@ -567,9 +571,9 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
                         height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text(
-                        '등록',
-                        style: TextStyle(
+                    : Text(
+                        AppLocalizations.of(context)!.register,
+                        style: const TextStyle(
                           color: _primary,
                           fontWeight: FontWeight.w600,
                           fontSize: 16,
@@ -594,9 +598,9 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
                     fontWeight: FontWeight.w600,
                     color: _textPrimary,
                   ),
-                  decoration: const InputDecoration(
-                    hintText: '제목을 입력하세요',
-                    hintStyle: TextStyle(color: _textSecondary),
+                  decoration: InputDecoration(
+                    hintText: AppLocalizations.of(context)!.enterTitleHint,
+                    hintStyle: const TextStyle(color: _textSecondary),
                     border: InputBorder.none,
                   ),
                   maxLength: 100,
@@ -618,9 +622,9 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
                         children: [
                           Icon(Icons.stadium_rounded, color: _primary, size: 16),
                           const SizedBox(width: 6),
-                          const Text(
-                            '직관 기록',
-                            style: TextStyle(
+                          Text(
+                            AppLocalizations.of(context)!.matchRecordLabel,
+                            style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                               color: _textSecondary,
@@ -782,10 +786,10 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
                         children: [
                           const Icon(Icons.stadium_outlined, color: _textSecondary, size: 20),
                           const SizedBox(width: 12),
-                          const Expanded(
+                          Expanded(
                             child: Text(
-                              '나의 직관 기록 불러오기 (선택)',
-                              style: TextStyle(fontSize: 14, color: _textSecondary),
+                              AppLocalizations.of(context)!.loadMyMatchRecord,
+                              style: const TextStyle(fontSize: 14, color: _textSecondary),
                             ),
                           ),
                           const Icon(Icons.chevron_right, color: _textSecondary, size: 20),
@@ -809,9 +813,9 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
                         children: [
                           Icon(Icons.bar_chart_rounded, color: _primary, size: 16),
                           const SizedBox(width: 6),
-                          const Text(
-                            '나의 직관 통계',
-                            style: TextStyle(
+                          Text(
+                            AppLocalizations.of(context)!.myAttendanceStatsLabel,
+                            style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                               color: _textSecondary,
@@ -825,7 +829,7 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      _buildStatsCard(_selectedStats!),
+                      _buildStatsCard(context, _selectedStats!),
                     ],
                   ),
                 ),
@@ -850,10 +854,10 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
                         children: [
                           const Icon(Icons.bar_chart_outlined, color: _textSecondary, size: 20),
                           const SizedBox(width: 12),
-                          const Expanded(
+                          Expanded(
                             child: Text(
-                              '나의 직관 통계 자랑하기 (선택)',
-                              style: TextStyle(fontSize: 14, color: _textSecondary),
+                              AppLocalizations.of(context)!.showMyStats,
+                              style: const TextStyle(fontSize: 14, color: _textSecondary),
                             ),
                           ),
                           const Icon(Icons.chevron_right, color: _textSecondary, size: 20),
@@ -877,9 +881,9 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
                     color: _textPrimary,
                     height: 1.6,
                   ),
-                  decoration: const InputDecoration(
-                    hintText: '내용을 입력하세요\n\n직관 후기, 경기 정보, 꿀팁 등을 자유롭게 공유해보세요!',
-                    hintStyle: TextStyle(color: _textSecondary, height: 1.6),
+                  decoration: InputDecoration(
+                    hintText: AppLocalizations.of(context)!.contentHint,
+                    hintStyle: const TextStyle(color: _textSecondary, height: 1.6),
                     border: InputBorder.none,
                   ),
                   maxLines: null,
@@ -896,9 +900,9 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      '태그 (선택)',
-                      style: TextStyle(
+                    Text(
+                      AppLocalizations.of(context)!.tagsOptional,
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: _textPrimary,
@@ -912,7 +916,7 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
                             controller: _tagController,
                             style: const TextStyle(fontSize: 14),
                             decoration: InputDecoration(
-                              hintText: '태그 입력 (최대 5개)',
+                              hintText: AppLocalizations.of(context)!.tagInputHint,
                               hintStyle: const TextStyle(color: _textSecondary),
                               contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                               border: OutlineInputBorder(
@@ -942,7 +946,7 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          child: const Text('추가'),
+                          child: Text(AppLocalizations.of(context)!.add),
                         ),
                       ],
                     ),
@@ -1005,7 +1009,7 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        '타인을 비방하거나 불쾌감을 주는 내용은 삭제될 수 있습니다.',
+                        AppLocalizations.of(context)!.communityGuideline,
                         style: TextStyle(
                           color: _primary,
                           fontSize: 13,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/timezone_provider.dart';
+import '../../../l10n/app_localizations.dart';
 
 class TimezoneSettingsScreen extends ConsumerStatefulWidget {
   const TimezoneSettingsScreen({super.key});
@@ -21,6 +22,35 @@ class _TimezoneSettingsScreenState extends ConsumerState<TimezoneSettingsScreen>
   static const _border = Color(0xFFE5E7EB);
   static const _success = Color(0xFF10B981);
 
+  String _getTimezoneName(BuildContext context, String nameKey) {
+    final l10n = AppLocalizations.of(context)!;
+    switch (nameKey) {
+      case 'timezoneKoreaSeoul': return l10n.timezoneKoreaSeoul;
+      case 'timezoneJapanTokyo': return l10n.timezoneJapanTokyo;
+      case 'timezoneChinaShanghai': return l10n.timezoneChinaShanghai;
+      case 'timezoneSingapore': return l10n.timezoneSingapore;
+      case 'timezoneHongKong': return l10n.timezoneHongKong;
+      case 'timezoneThailandBangkok': return l10n.timezoneThailandBangkok;
+      case 'timezoneIndonesiaJakarta': return l10n.timezoneIndonesiaJakarta;
+      case 'timezoneIndiaKolkata': return l10n.timezoneIndiaKolkata;
+      case 'timezoneUAEDubai': return l10n.timezoneUAEDubai;
+      case 'timezoneUKLondon': return l10n.timezoneUKLondon;
+      case 'timezoneFranceParis': return l10n.timezoneFranceParis;
+      case 'timezoneGermanyBerlin': return l10n.timezoneGermanyBerlin;
+      case 'timezoneItalyRome': return l10n.timezoneItalyRome;
+      case 'timezoneSpainMadrid': return l10n.timezoneSpainMadrid;
+      case 'timezoneNetherlandsAmsterdam': return l10n.timezoneNetherlandsAmsterdam;
+      case 'timezoneRussiaMoscow': return l10n.timezoneRussiaMoscow;
+      case 'timezoneUSEastNewYork': return l10n.timezoneUSEastNewYork;
+      case 'timezoneUSWestLA': return l10n.timezoneUSWestLA;
+      case 'timezoneUSCentralChicago': return l10n.timezoneUSCentralChicago;
+      case 'timezoneBrazilSaoPaulo': return l10n.timezoneBrazilSaoPaulo;
+      case 'timezoneAustraliaSydney': return l10n.timezoneAustraliaSydney;
+      case 'timezoneNewZealandAuckland': return l10n.timezoneNewZealandAuckland;
+      default: return nameKey;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final selectedTimezone = ref.watch(timezoneProvider);
@@ -29,7 +59,8 @@ class _TimezoneSettingsScreenState extends ConsumerState<TimezoneSettingsScreen>
     final filteredTimezones = availableTimezones.where((tz) {
       if (_searchQuery.isEmpty) return true;
       final query = _searchQuery.toLowerCase();
-      return tz.name.toLowerCase().contains(query) ||
+      final localizedName = _getTimezoneName(context, tz.nameKey);
+      return localizedName.toLowerCase().contains(query) ||
           tz.id.toLowerCase().contains(query) ||
           tz.offset.toLowerCase().contains(query);
     }).toList();
@@ -47,10 +78,10 @@ class _TimezoneSettingsScreenState extends ConsumerState<TimezoneSettingsScreen>
               _buildHeader(context),
 
               // 검색 바
-              _buildSearchBar(),
+              _buildSearchBar(context),
 
               // 현재 설정
-              _buildCurrentSetting(selectedTimezone),
+              _buildCurrentSetting(context, selectedTimezone),
 
               // 타임존 목록
               Expanded(
@@ -62,6 +93,7 @@ class _TimezoneSettingsScreenState extends ConsumerState<TimezoneSettingsScreen>
                     final isSelected = tz.id == selectedTimezone;
                     return _TimezoneItem(
                       timezone: tz,
+                      localizedName: _getTimezoneName(context, tz.nameKey),
                       isSelected: isSelected,
                       onTap: () => _selectTimezone(tz),
                     );
@@ -76,6 +108,7 @@ class _TimezoneSettingsScreenState extends ConsumerState<TimezoneSettingsScreen>
   }
 
   Widget _buildHeader(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 8, 20, 12),
       child: Row(
@@ -86,10 +119,10 @@ class _TimezoneSettingsScreenState extends ConsumerState<TimezoneSettingsScreen>
             color: _textPrimary,
           ),
           const SizedBox(width: 4),
-          const Expanded(
+          Expanded(
             child: Text(
-              '타임존 설정',
-              style: TextStyle(
+              l10n.timezoneSettingsTitle,
+              style: const TextStyle(
                 color: _textPrimary,
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
@@ -101,7 +134,8 @@ class _TimezoneSettingsScreenState extends ConsumerState<TimezoneSettingsScreen>
     );
   }
 
-  Widget _buildSearchBar() {
+  Widget _buildSearchBar(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
       decoration: BoxDecoration(
@@ -112,7 +146,7 @@ class _TimezoneSettingsScreenState extends ConsumerState<TimezoneSettingsScreen>
       child: TextField(
         onChanged: (value) => setState(() => _searchQuery = value),
         decoration: InputDecoration(
-          hintText: '타임존 검색...',
+          hintText: l10n.searchTimezone,
           hintStyle: TextStyle(color: _textSecondary, fontSize: 14),
           prefixIcon: Icon(Icons.search, color: _textSecondary, size: 20),
           border: InputBorder.none,
@@ -122,7 +156,8 @@ class _TimezoneSettingsScreenState extends ConsumerState<TimezoneSettingsScreen>
     );
   }
 
-  Widget _buildCurrentSetting(String selectedTimezone) {
+  Widget _buildCurrentSetting(BuildContext context, String selectedTimezone) {
+    final l10n = AppLocalizations.of(context)!;
     final current = availableTimezones.firstWhere(
       (tz) => tz.id == selectedTimezone,
       orElse: () => availableTimezones.first,
@@ -151,9 +186,9 @@ class _TimezoneSettingsScreenState extends ConsumerState<TimezoneSettingsScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  '현재 설정',
-                  style: TextStyle(
+                Text(
+                  l10n.currentSetting,
+                  style: const TextStyle(
                     color: _primary,
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -161,7 +196,7 @@ class _TimezoneSettingsScreenState extends ConsumerState<TimezoneSettingsScreen>
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  current.name,
+                  _getTimezoneName(context, current.nameKey),
                   style: const TextStyle(
                     color: _textPrimary,
                     fontSize: 16,
@@ -194,9 +229,11 @@ class _TimezoneSettingsScreenState extends ConsumerState<TimezoneSettingsScreen>
   void _selectTimezone(TimezoneOption tz) async {
     await ref.read(timezoneProvider.notifier).setTimezone(tz.id);
     if (mounted) {
+      final l10n = AppLocalizations.of(context)!;
+      final localizedName = _getTimezoneName(context, tz.nameKey);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('타임존이 ${tz.name}으로 변경되었습니다'),
+          content: Text(l10n.timezoneChanged(localizedName)),
           backgroundColor: _success,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -209,6 +246,7 @@ class _TimezoneSettingsScreenState extends ConsumerState<TimezoneSettingsScreen>
 
 class _TimezoneItem extends StatelessWidget {
   final TimezoneOption timezone;
+  final String localizedName;
   final bool isSelected;
   final VoidCallback onTap;
 
@@ -219,6 +257,7 @@ class _TimezoneItem extends StatelessWidget {
 
   const _TimezoneItem({
     required this.timezone,
+    required this.localizedName,
     required this.isSelected,
     required this.onTap,
   });
@@ -260,7 +299,7 @@ class _TimezoneItem extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    timezone.name,
+                    localizedName,
                     style: TextStyle(
                       color: _textPrimary,
                       fontSize: 15,

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../shared/services/storage_service.dart';
 import '../../auth/providers/auth_provider.dart';
 
@@ -43,9 +44,10 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     final photoUrl = _newPhotoUrl ?? user?.photoURL;
     final displayName = user?.displayName ?? '';
 
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('프로필 수정'),
+        title: Text(l10n.profileEdit),
         actions: [
           TextButton(
             onPressed: _isSaving ? null : _saveProfile,
@@ -55,7 +57,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text('저장'),
+                : Text(l10n.save),
           ),
         ],
       ),
@@ -76,20 +78,20 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                   TextButton.icon(
                     onPressed: _isUploadingPhoto ? null : () => _pickImage(ImageSource.gallery),
                     icon: const Icon(Icons.photo_library, size: 18),
-                    label: const Text('갤러리'),
+                    label: Text(l10n.gallery),
                   ),
                   const SizedBox(width: 8),
                   TextButton.icon(
                     onPressed: _isUploadingPhoto ? null : () => _pickImage(ImageSource.camera),
                     icon: const Icon(Icons.camera_alt, size: 18),
-                    label: const Text('카메라'),
+                    label: Text(l10n.camera),
                   ),
                   if (photoUrl != null || _selectedImage != null) ...[
                     const SizedBox(width: 8),
                     TextButton.icon(
                       onPressed: _isUploadingPhoto ? null : _removePhoto,
                       icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
-                      label: const Text('삭제', style: TextStyle(color: Colors.red)),
+                      label: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
                     ),
                   ],
                 ],
@@ -115,7 +117,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                             child: const Icon(Icons.person, color: AppColors.primary, size: 20),
                           ),
                           const SizedBox(width: 12),
-                          const Text('기본 정보', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                          Text(l10n.basicInfo, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                         ],
                       ),
                       const SizedBox(height: 20),
@@ -123,8 +125,8 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                       TextFormField(
                         controller: _nameController,
                         decoration: InputDecoration(
-                          labelText: '이름',
-                          hintText: '표시될 이름을 입력하세요',
+                          labelText: l10n.name,
+                          hintText: l10n.enterDisplayName,
                           hintStyle: TextStyle(color: Colors.grey.shade400),
                           prefixIcon: const Icon(Icons.badge),
                           border: OutlineInputBorder(
@@ -133,7 +135,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return '이름을 입력해주세요';
+                            return l10n.pleaseEnterName;
                           }
                           return null;
                         },
@@ -145,7 +147,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                         initialValue: user?.email ?? '',
                         enabled: false,
                         decoration: InputDecoration(
-                          labelText: '이메일',
+                          labelText: l10n.email,
                           prefixIcon: const Icon(Icons.email),
                           filled: true,
                           fillColor: Colors.grey.shade100,
@@ -175,8 +177,8 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                         ),
                         child: const Icon(Icons.lock_outline, color: Colors.orange, size: 20),
                       ),
-                      title: const Text('비밀번호 변경'),
-                      subtitle: Text('계정 보안을 위해 정기적으로 변경하세요', style: AppTextStyles.caption.copyWith(color: Colors.grey.shade600)),
+                      title: Text(l10n.changePassword),
+                      subtitle: Text(l10n.changePasswordDesc, style: AppTextStyles.caption.copyWith(color: Colors.grey.shade600)),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () => _showPasswordChangeDialog(),
                     ),
@@ -190,8 +192,8 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                         ),
                         child: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
                       ),
-                      title: const Text('계정 삭제', style: TextStyle(color: Colors.red)),
-                      subtitle: Text('모든 데이터가 삭제됩니다', style: AppTextStyles.caption.copyWith(color: Colors.grey.shade600)),
+                      title: Text(l10n.deleteAccount, style: const TextStyle(color: Colors.red)),
+                      subtitle: Text(l10n.deleteAccountDesc, style: AppTextStyles.caption.copyWith(color: Colors.grey.shade600)),
                       trailing: const Icon(Icons.chevron_right, color: Colors.red),
                       onTap: () => _showDeleteAccountDialog(),
                     ),
@@ -272,6 +274,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
   }
 
   void _showPhotoOptions() {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -291,9 +294,9 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              '프로필 사진 변경',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Text(
+              l10n.profilePhoto,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             ListTile(
@@ -305,8 +308,8 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                 ),
                 child: const Icon(Icons.photo_library, color: Colors.blue),
               ),
-              title: const Text('갤러리에서 선택'),
-              subtitle: const Text('저장된 사진에서 선택합니다'),
+              title: Text(l10n.selectFromGallery),
+              subtitle: Text(l10n.selectFromGalleryDesc),
               onTap: () {
                 Navigator.pop(context);
                 _pickImage(ImageSource.gallery);
@@ -321,8 +324,8 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                 ),
                 child: const Icon(Icons.camera_alt, color: Colors.green),
               ),
-              title: const Text('카메라로 촬영'),
-              subtitle: const Text('새로운 사진을 촬영합니다'),
+              title: Text(l10n.takePhoto),
+              subtitle: Text(l10n.takePhotoDesc),
               onTap: () {
                 Navigator.pop(context);
                 _pickImage(ImageSource.camera);
@@ -338,8 +341,8 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                   ),
                   child: const Icon(Icons.delete_outline, color: Colors.red),
                 ),
-                title: const Text('사진 삭제', style: TextStyle(color: Colors.red)),
-                subtitle: const Text('프로필 사진을 제거합니다'),
+                title: Text(l10n.deletePhoto, style: const TextStyle(color: Colors.red)),
+                subtitle: Text(l10n.deletePhotoDesc),
                 onTap: () {
                   Navigator.pop(context);
                   _removePhoto();
@@ -382,8 +385,9 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
           });
 
           if (mounted) {
+            final l10n = AppLocalizations.of(context)!;
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('사진이 업로드되었습니다. 저장을 눌러 적용하세요.')),
+              SnackBar(content: Text(l10n.photoUploaded)),
             );
           }
         }
@@ -391,8 +395,9 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     } catch (e) {
       setState(() => _isUploadingPhoto = false);
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('사진 업로드 실패: $e')),
+          SnackBar(content: Text(l10n.photoUploadFailed(e.toString()))),
         );
       }
     }
@@ -403,8 +408,9 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
       _selectedImage = null;
       _newPhotoUrl = ''; // 빈 문자열로 설정하여 삭제 표시
     });
+    final l10n = AppLocalizations.of(context)!;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('사진이 삭제됩니다. 저장을 눌러 적용하세요.')),
+      SnackBar(content: Text(l10n.photoWillBeDeleted)),
     );
   }
 
@@ -420,15 +426,17 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
       );
 
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('프로필이 수정되었습니다')),
+          SnackBar(content: Text(l10n.profileUpdated)),
         );
         context.pop();
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('수정 실패: $e')),
+          SnackBar(content: Text(l10n.updateFailed(e.toString()))),
         );
       }
     } finally {
@@ -437,6 +445,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
   }
 
   void _showPasswordChangeDialog() {
+    final l10n = AppLocalizations.of(context)!;
     final currentPasswordController = TextEditingController();
     final newPasswordController = TextEditingController();
     final confirmPasswordController = TextEditingController();
@@ -460,7 +469,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                 child: const Icon(Icons.lock_outline, color: Colors.orange),
               ),
               const SizedBox(width: 12),
-              const Text('비밀번호 변경'),
+              Text(l10n.changePassword),
             ],
           ),
           content: SingleChildScrollView(
@@ -471,7 +480,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                   controller: currentPasswordController,
                   obscureText: obscureCurrent,
                   decoration: InputDecoration(
-                    labelText: '현재 비밀번호',
+                    labelText: l10n.currentPassword,
                     prefixIcon: const Icon(Icons.lock),
                     suffixIcon: IconButton(
                       icon: Icon(obscureCurrent ? Icons.visibility_off : Icons.visibility),
@@ -485,14 +494,14 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                   controller: newPasswordController,
                   obscureText: obscureNew,
                   decoration: InputDecoration(
-                    labelText: '새 비밀번호',
+                    labelText: l10n.newPassword,
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
                       icon: Icon(obscureNew ? Icons.visibility_off : Icons.visibility),
                       onPressed: () => setDialogState(() => obscureNew = !obscureNew),
                     ),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    helperText: '8자 이상 입력하세요',
+                    helperText: l10n.passwordMinLength,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -500,7 +509,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                   controller: confirmPasswordController,
                   obscureText: obscureConfirm,
                   decoration: InputDecoration(
-                    labelText: '새 비밀번호 확인',
+                    labelText: l10n.confirmNewPassword,
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
                       icon: Icon(obscureConfirm ? Icons.visibility_off : Icons.visibility),
@@ -515,28 +524,28 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('취소'),
+              child: Text(l10n.cancel),
             ),
             FilledButton(
               onPressed: () {
                 if (newPasswordController.text != confirmPasswordController.text) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('새 비밀번호가 일치하지 않습니다')),
+                    SnackBar(content: Text(l10n.passwordMismatch)),
                   );
                   return;
                 }
                 if (newPasswordController.text.length < 8) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('비밀번호는 8자 이상이어야 합니다')),
+                    SnackBar(content: Text(l10n.passwordTooShort)),
                   );
                   return;
                 }
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('비밀번호 변경 기능 준비 중')),
+                  SnackBar(content: Text(l10n.passwordChangePreparing)),
                 );
               },
-              child: const Text('변경'),
+              child: Text(l10n.change),
             ),
           ],
         ),
@@ -545,9 +554,10 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
   }
 
   void _showDeleteAccountDialog() {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
@@ -560,16 +570,16 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
               child: const Icon(Icons.warning_amber, color: Colors.red),
             ),
             const SizedBox(width: 12),
-            const Text('계정 삭제'),
+            Text(l10n.deleteAccount),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              '정말 계정을 삭제하시겠습니까?',
-              style: TextStyle(fontWeight: FontWeight.w600),
+            Text(
+              l10n.confirmDeleteAccount,
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 12),
             Container(
@@ -581,10 +591,10 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildWarningItem('모든 직관 기록이 삭제됩니다'),
-                  _buildWarningItem('즐겨찾기 정보가 삭제됩니다'),
-                  _buildWarningItem('프로필 사진이 삭제됩니다'),
-                  _buildWarningItem('이 작업은 되돌릴 수 없습니다'),
+                  _buildWarningItem(l10n.deleteWarningRecords),
+                  _buildWarningItem(l10n.deleteWarningFavorites),
+                  _buildWarningItem(l10n.deleteWarningPhoto),
+                  _buildWarningItem(l10n.deleteWarningIrreversible),
                 ],
               ),
             ),
@@ -592,18 +602,18 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('계정 삭제 기능 준비 중')),
+                SnackBar(content: Text(l10n.deleteAccountPreparing)),
               );
             },
-            child: const Text('삭제'),
+            child: Text(l10n.delete),
           ),
         ],
       ),

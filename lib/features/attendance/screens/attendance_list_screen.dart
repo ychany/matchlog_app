@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../models/attendance_record.dart';
@@ -115,12 +116,12 @@ class _AttendanceListScreenState extends ConsumerState<AttendanceListScreen>
                       duration: const Duration(milliseconds: 250),
                       curve: Curves.easeInOut,
                       child: _isFabExtended
-                          ? const Row(
+                          ? Row(
                               children: [
-                                SizedBox(width: 6),
+                                const SizedBox(width: 6),
                                 Text(
-                                  '직관 기록',
-                                  style: TextStyle(
+                                  AppLocalizations.of(context)!.attendanceRecord,
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.w600,
                                     fontSize: 14,
@@ -141,12 +142,13 @@ class _AttendanceListScreenState extends ConsumerState<AttendanceListScreen>
   }
 
   Widget _buildHeader() {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
       alignment: Alignment.centerLeft,
-      child: const Text(
-        '나의 직관 일기',
-        style: TextStyle(
+      child: Text(
+        l10n.myAttendanceDiary,
+        style: const TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.w700,
           color: _textPrimary,
@@ -182,10 +184,10 @@ class _AttendanceListScreenState extends ConsumerState<AttendanceListScreen>
           fontSize: 14,
         ),
         dividerColor: Colors.transparent,
-        tabs: const [
-          Tab(height: 40, text: '리스트'),
-          Tab(height: 40, text: '달력'),
-          Tab(height: 40, text: '통계'),
+        tabs: [
+          Tab(height: 40, text: AppLocalizations.of(context)!.list),
+          Tab(height: 40, text: AppLocalizations.of(context)!.calendar),
+          Tab(height: 40, text: AppLocalizations.of(context)!.stats),
         ],
       ),
     );
@@ -262,7 +264,7 @@ class _AttendanceListScreenState extends ConsumerState<AttendanceListScreen>
                 border: Border.all(color: _border),
               ),
               child: TableCalendar<AttendanceRecord>(
-                locale: 'ko_KR',
+                locale: Localizations.localeOf(context).toString(),
                 firstDay: DateTime(2000),
                 lastDay: DateTime.now().add(const Duration(days: 365)),
                 focusedDay: _focusedDay,
@@ -371,8 +373,8 @@ class _AttendanceListScreenState extends ConsumerState<AttendanceListScreen>
                           const SizedBox(height: 8),
                           Text(
                             _selectedDay != null
-                                ? '${DateFormat('M월 d일').format(_selectedDay!)}에 기록이 없습니다'
-                                : '날짜를 선택해주세요',
+                                ? AppLocalizations.of(context)!.noRecordOnDate(DateFormat('M/d').format(_selectedDay!))
+                                : AppLocalizations.of(context)!.selectDate,
                             style: const TextStyle(color: _textSecondary),
                           ),
                         ],
@@ -425,22 +427,32 @@ class _AttendanceListScreenState extends ConsumerState<AttendanceListScreen>
             Row(
               children: [
                 Expanded(
-                  child: _StatCard(
-                    icon: Icons.stadium,
-                    iconColor: _primary,
-                    label: '총 경기',
-                    value: '${stats.totalMatches}',
-                    unit: '경기',
+                  child: Builder(
+                    builder: (context) {
+                      final l10n = AppLocalizations.of(context)!;
+                      return _StatCard(
+                        icon: Icons.stadium,
+                        iconColor: _primary,
+                        label: l10n.totalMatches,
+                        value: '${stats.totalMatches}',
+                        unit: l10n.matchCount,
+                      );
+                    },
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _StatCard(
-                    icon: Icons.place,
-                    iconColor: _success,
-                    label: '경기장',
-                    value: '${stats.stadiumVisits.length}',
-                    unit: '곳',
+                  child: Builder(
+                    builder: (context) {
+                      final l10n = AppLocalizations.of(context)!;
+                      return _StatCard(
+                        icon: Icons.place,
+                        iconColor: _success,
+                        label: l10n.stadium,
+                        value: '${stats.stadiumVisits.length}',
+                        unit: l10n.stadiumCount,
+                      );
+                    },
                   ),
                 ),
               ],
@@ -448,29 +460,46 @@ class _AttendanceListScreenState extends ConsumerState<AttendanceListScreen>
             const SizedBox(height: 24),
 
             // 리그별 통계
-            _buildSectionHeader('리그별 통계', Icons.sports_soccer),
+            Builder(
+              builder: (context) {
+                final l10n = AppLocalizations.of(context)!;
+                return _buildSectionHeader(l10n.leagueStats, Icons.sports_soccer);
+              },
+            ),
             const SizedBox(height: 12),
             if (stats.leagueCount.isEmpty)
-              _buildEmptySection('아직 기록이 없습니다')
+              Builder(
+                builder: (context) => _buildEmptySection(AppLocalizations.of(context)!.noRecordsYet),
+              )
             else
-              ...stats.leagueCount.entries.map((entry) => _buildStatRow(
-                    entry.key,
-                    '${entry.value}경기',
-                    _primary,
-                  )),
+              ...stats.leagueCount.entries.map((entry) => Builder(
+                builder: (context) => _buildStatRow(
+                      entry.key,
+                      AppLocalizations.of(context)!.nMatches(entry.value),
+                      _primary,
+                    ),
+              )),
 
             const SizedBox(height: 24),
 
             // 경기장 방문 현황
             if (stats.stadiumVisits.isNotEmpty) ...[
-              _buildSectionHeader('경기장 방문 현황', Icons.stadium_outlined),
+              Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context)!;
+                  return _buildSectionHeader(l10n.stadiumVisits, Icons.stadium_outlined);
+                },
+              ),
               const SizedBox(height: 12),
-              ...stats.stadiumVisits.entries.map((entry) => _buildStatRow(
-                    entry.key,
-                    '${entry.value}회',
-                    _success,
-                    icon: Icons.stadium_outlined,
-                  )),
+              ...stats.stadiumVisits.entries.map((entry) => Builder(
+                builder: (context) => _buildStatRow(
+                      entry.key,
+                      AppLocalizations.of(context)!.times,
+                      _success,
+                      icon: Icons.stadium_outlined,
+                      count: entry.value,
+                    ),
+              )),
             ],
           ],
         ),
@@ -525,7 +554,7 @@ class _AttendanceListScreenState extends ConsumerState<AttendanceListScreen>
   }
 
   Widget _buildStatRow(String label, String value, Color color,
-      {IconData? icon}) {
+      {IconData? icon, int? count}) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -557,7 +586,7 @@ class _AttendanceListScreenState extends ConsumerState<AttendanceListScreen>
               borderRadius: BorderRadius.circular(16),
             ),
             child: Text(
-              value,
+              count != null ? '$count $value' : value,
               style: TextStyle(
                 color: color,
                 fontWeight: FontWeight.w600,
@@ -610,9 +639,9 @@ class _AttendanceListScreenState extends ConsumerState<AttendanceListScreen>
                   ),
                   child: const Icon(Icons.edit, color: _primary),
                 ),
-                title: const Text(
-                  '수정',
-                  style: TextStyle(fontWeight: FontWeight.w500),
+                title: Text(
+                  AppLocalizations.of(context)!.edit,
+                  style: const TextStyle(fontWeight: FontWeight.w500),
                 ),
                 onTap: () {
                   Navigator.pop(context);
@@ -628,9 +657,9 @@ class _AttendanceListScreenState extends ConsumerState<AttendanceListScreen>
                   ),
                   child: const Icon(Icons.delete, color: _error),
                 ),
-                title: const Text(
-                  '삭제',
-                  style: TextStyle(
+                title: Text(
+                  AppLocalizations.of(context)!.delete,
+                  style: const TextStyle(
                     fontWeight: FontWeight.w500,
                     color: _error,
                   ),
@@ -648,41 +677,42 @@ class _AttendanceListScreenState extends ConsumerState<AttendanceListScreen>
   }
 
   void _confirmDelete(BuildContext context, WidgetRef ref, String id) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        title: const Text(
-          '기록 삭제',
-          style: TextStyle(
+        title: Text(
+          l10n.deleteRecord,
+          style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
             color: _textPrimary,
           ),
         ),
-        content: const Text(
-          '이 기록을 삭제하시겠습니까?',
-          style: TextStyle(color: _textSecondary),
+        content: Text(
+          l10n.deleteRecordConfirm,
+          style: const TextStyle(color: _textSecondary),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              '취소',
-              style: TextStyle(color: _textSecondary),
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(
+              l10n.cancel,
+              style: const TextStyle(color: _textSecondary),
             ),
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               ref.read(attendanceNotifierProvider.notifier).deleteAttendance(id);
             },
-            child: const Text(
-              '삭제',
-              style: TextStyle(
+            child: Text(
+              l10n.delete,
+              style: const TextStyle(
                 color: _error,
                 fontWeight: FontWeight.w600,
               ),
@@ -741,7 +771,7 @@ class _AttendanceCard extends StatelessWidget {
                       const SizedBox(width: 6),
                       Flexible(
                         child: Text(
-                          DateFormat('yyyy.MM.dd (E)', 'ko').format(record.date),
+                          DateFormat(AppLocalizations.of(context)!.dateFormatDiary, Localizations.localeOf(context).toString()).format(record.date),
                           style: const TextStyle(
                             color: _textSecondary,
                             fontSize: 13,
@@ -1076,12 +1106,14 @@ class _WinRateCard extends StatelessWidget {
                 child: const Icon(Icons.pie_chart, size: 18, color: _primary),
               ),
               const SizedBox(width: 10),
-              const Text(
-                '승률',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: _textPrimary,
+              Builder(
+                builder: (context) => Text(
+                  AppLocalizations.of(context)!.winRate,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: _textPrimary,
+                  ),
                 ),
               ),
             ],
@@ -1108,11 +1140,13 @@ class _WinRateCard extends StatelessWidget {
                         color: _textPrimary,
                       ),
                     ),
-                    Text(
-                      '$totalMatches경기',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: _textSecondary,
+                    Builder(
+                      builder: (context) => Text(
+                        AppLocalizations.of(context)!.nMatches(totalMatches),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: _textSecondary,
+                        ),
                       ),
                     ),
                   ],
@@ -1121,15 +1155,20 @@ class _WinRateCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _LegendItem(color: _success, label: '승', count: wins),
-              const SizedBox(width: 24),
-              _LegendItem(color: _warning, label: '무', count: draws),
-              const SizedBox(width: 24),
-              _LegendItem(color: _error, label: '패', count: losses),
-            ],
+          Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context)!;
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _LegendItem(color: _success, label: l10n.winShort, count: wins),
+                  const SizedBox(width: 24),
+                  _LegendItem(color: _warning, label: l10n.drawShort, count: draws),
+                  const SizedBox(width: 24),
+                  _LegendItem(color: _error, label: l10n.lossShort, count: losses),
+                ],
+              );
+            },
           ),
         ],
       ),

@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/services/api_football_service.dart';
 import '../../../shared/widgets/loading_indicator.dart';
+import '../../../l10n/app_localizations.dart';
 
 // Coach detail provider
 final coachDetailProvider = FutureProvider.family<ApiFootballCoach?, int>((ref, coachId) async {
@@ -43,9 +44,9 @@ class CoachDetailScreen extends ConsumerWidget {
           child: Column(
             children: [
               _buildAppBar(context),
-              const Expanded(
+              Expanded(
                 child: Center(
-                  child: Text('잘못된 감독 ID입니다'),
+                  child: Text(AppLocalizations.of(context)!.invalidCoachId),
                 ),
               ),
             ],
@@ -78,7 +79,7 @@ class CoachDetailScreen extends ConsumerWidget {
                                 size: 64, color: _textSecondary),
                             const SizedBox(height: 16),
                             Text(
-                              '감독 정보를 찾을 수 없습니다',
+                              AppLocalizations.of(context)!.noPlayerInfo,
                               style: TextStyle(color: _textSecondary, fontSize: 16),
                             ),
                           ],
@@ -98,7 +99,7 @@ class CoachDetailScreen extends ConsumerWidget {
                 _buildAppBar(context),
                 Expanded(
                   child: Center(
-                    child: Text('오류: $e', style: TextStyle(color: _textSecondary)),
+                    child: Text('${AppLocalizations.of(context)!.error}: $e', style: TextStyle(color: _textSecondary)),
                   ),
                 ),
               ],
@@ -120,15 +121,17 @@ class CoachDetailScreen extends ConsumerWidget {
             color: _textPrimary,
             onPressed: () => context.pop(),
           ),
-          const Expanded(
-            child: Text(
-              '감독 정보',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: _textPrimary,
+          Expanded(
+            child: Builder(
+              builder: (context) => Text(
+                AppLocalizations.of(context)!.manager,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: _textPrimary,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
             ),
           ),
           const SizedBox(width: 48),
@@ -166,7 +169,7 @@ class _CoachDetailContent extends ConsumerWidget {
               padding: const EdgeInsets.all(16),
               children: [
                 // 기본 정보 카드
-                _buildBasicInfoCard(),
+                _buildBasicInfoCard(context),
 
                 const SizedBox(height: 16),
 
@@ -179,14 +182,14 @@ class _CoachDetailContent extends ConsumerWidget {
                     if (trophies.isEmpty) return const SizedBox.shrink();
                     return Column(
                       children: [
-                        _buildTrophiesCard(trophies),
+                        _buildTrophiesCard(context, trophies),
                         const SizedBox(height: 16),
                       ],
                     );
                   },
                   loading: () => Column(
                     children: [
-                      _buildTrophiesLoadingCard(),
+                      _buildTrophiesLoadingCard(context),
                       const SizedBox(height: 16),
                     ],
                   ),
@@ -194,7 +197,7 @@ class _CoachDetailContent extends ConsumerWidget {
                 ),
 
                 // 경력 카드
-                if (coach.career.isNotEmpty) _buildCareerCard(),
+                if (coach.career.isNotEmpty) _buildCareerCard(context),
               ],
             ),
           ),
@@ -218,10 +221,10 @@ class _CoachDetailContent extends ConsumerWidget {
                   color: _textPrimary,
                   onPressed: () => context.pop(),
                 ),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    '감독 정보',
-                    style: TextStyle(
+                    AppLocalizations.of(context)!.coachInfo,
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: _textPrimary,
@@ -297,7 +300,8 @@ class _CoachDetailContent extends ConsumerWidget {
     );
   }
 
-  Widget _buildBasicInfoCard() {
+  Widget _buildBasicInfoCard(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -319,9 +323,9 @@ class _CoachDetailContent extends ConsumerWidget {
                 child: Icon(Icons.info_outline, color: _primary, size: 20),
               ),
               const SizedBox(width: 12),
-              const Text(
-                '기본 정보',
-                style: TextStyle(
+              Text(
+                l10n.basicInfo,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: _textPrimary,
@@ -334,39 +338,40 @@ class _CoachDetailContent extends ConsumerWidget {
           if (coach.age != null)
             _InfoRow(
               icon: Icons.cake_outlined,
-              label: '나이',
-              value: '${coach.age}세',
+              label: l10n.ageLabel,
+              value: l10n.ageYearsValue(coach.age!),
             ),
           if (coach.birthDate != null)
             _InfoRow(
               icon: Icons.calendar_today_outlined,
-              label: '생년월일',
+              label: l10n.birthDateLabel,
               value: coach.birthDate!,
             ),
           if (coach.birthPlace != null)
             _InfoRow(
               icon: Icons.location_city_outlined,
-              label: '출생지',
+              label: l10n.birthPlaceLabel,
               value: coach.birthPlace!,
             ),
           if (coach.birthCountry != null)
             _InfoRow(
               icon: Icons.flag_outlined,
-              label: '출생 국가',
+              label: l10n.birthCountry,
               value: coach.birthCountry!,
             ),
           if (coach.totalCareerYears > 0)
             _InfoRow(
               icon: Icons.work_outline,
-              label: '감독 경력',
-              value: '${coach.totalCareerYears}년',
+              label: l10n.coachCareer,
+              value: l10n.careerYears(coach.totalCareerYears),
             ),
         ],
       ),
     );
   }
 
-  Widget _buildTrophiesLoadingCard() {
+  Widget _buildTrophiesLoadingCard(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -388,9 +393,9 @@ class _CoachDetailContent extends ConsumerWidget {
                 child: Icon(Icons.emoji_events, color: _gold, size: 20),
               ),
               const SizedBox(width: 12),
-              const Text(
-                '수상 기록',
-                style: TextStyle(
+              Text(
+                l10n.trophyRecord,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: _textPrimary,
@@ -414,7 +419,8 @@ class _CoachDetailContent extends ConsumerWidget {
     );
   }
 
-  Widget _buildTrophiesCard(List<CoachTrophy> trophies) {
+  Widget _buildTrophiesCard(BuildContext context, List<CoachTrophy> trophies) {
+    final l10n = AppLocalizations.of(context)!;
     // 우승만 필터링하고 시즌 기준 정렬
     final winners = trophies.where((t) => t.isWinner).toList()
       ..sort((a, b) => b.season.compareTo(a.season));
@@ -449,9 +455,9 @@ class _CoachDetailContent extends ConsumerWidget {
                   child: Icon(Icons.emoji_events, color: _gold, size: 20),
                 ),
                 const SizedBox(width: 12),
-                const Text(
-                  '수상 기록',
-                  style: TextStyle(
+                Text(
+                  l10n.trophyRecord,
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                     color: _textPrimary,
@@ -517,7 +523,7 @@ class _CoachDetailContent extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
               child: Text(
-                '우승',
+                l10n.championTitle,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -533,7 +539,7 @@ class _CoachDetailContent extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Text(
-                  '외 ${winners.length - 10}개',
+                  l10n.andNMore(winners.length - 10),
                   style: TextStyle(
                     fontSize: 12,
                     color: _textSecondary,
@@ -548,7 +554,7 @@ class _CoachDetailContent extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
               child: Text(
-                '준우승',
+                l10n.runnerUpTitle,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -564,7 +570,7 @@ class _CoachDetailContent extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Text(
-                  '외 ${runnerUps.length - 5}개',
+                  l10n.andNMore(runnerUps.length - 5),
                   style: TextStyle(
                     fontSize: 12,
                     color: _textSecondary,
@@ -579,7 +585,8 @@ class _CoachDetailContent extends ConsumerWidget {
     );
   }
 
-  Widget _buildCareerCard() {
+  Widget _buildCareerCard(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -602,9 +609,9 @@ class _CoachDetailContent extends ConsumerWidget {
                   child: Icon(Icons.history, color: _primary, size: 20),
                 ),
                 const SizedBox(width: 12),
-                const Text(
-                  '경력',
-                  style: TextStyle(
+                Text(
+                  l10n.careerTitle,
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                     color: _textPrimary,
@@ -612,7 +619,7 @@ class _CoachDetailContent extends ConsumerWidget {
                 ),
                 const Spacer(),
                 Text(
-                  '${coach.career.length}개 팀',
+                  l10n.nPlayers(coach.career.length),
                   style: const TextStyle(
                     fontSize: 13,
                     color: _textSecondary,
@@ -687,7 +694,7 @@ class _CoachDetailContent extends ConsumerWidget {
                               children: [
                                 Flexible(
                                   child: Text(
-                                    career.teamName ?? '알 수 없음',
+                                    career.teamName ?? l10n.unknownTeam,
                                     style: TextStyle(
                                       fontSize: 15,
                                       fontWeight: isCurrentTeam
@@ -709,9 +716,9 @@ class _CoachDetailContent extends ConsumerWidget {
                                       color: _primary.withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
-                                    child: const Text(
-                                      '현재',
-                                      style: TextStyle(
+                                    child: Text(
+                                      l10n.currentLabel,
+                                      style: const TextStyle(
                                         fontSize: 11,
                                         fontWeight: FontWeight.w600,
                                         color: _primary,
@@ -928,9 +935,9 @@ class _CoachSidelinedSection extends StatelessWidget {
                         child: Icon(Icons.gavel, color: _warning, size: 20),
                       ),
                       const SizedBox(width: 12),
-                      const Text(
-                        '출전정지 이력',
-                        style: TextStyle(
+                      Text(
+                        AppLocalizations.of(context)!.suspensionHistory,
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: _textPrimary,
@@ -945,7 +952,7 @@ class _CoachSidelinedSection extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          '${records.length}건',
+                          AppLocalizations.of(context)!.nCases(records.length),
                           style: TextStyle(
                             color: _textSecondary,
                             fontSize: 12,
@@ -980,15 +987,15 @@ class _CoachSidelinedSection extends StatelessWidget {
                                   color: _error,
                                   borderRadius: BorderRadius.circular(6),
                                 ),
-                                child: const Row(
+                                child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(Icons.warning_amber_rounded,
+                                    const Icon(Icons.warning_amber_rounded,
                                         size: 12, color: Colors.white),
-                                    SizedBox(width: 4),
+                                    const SizedBox(width: 4),
                                     Text(
-                                      '현재 출전정지 중',
-                                      style: TextStyle(
+                                      AppLocalizations.of(context)!.currentlySuspended,
+                                      style: const TextStyle(
                                         color: Colors.white,
                                         fontSize: 11,
                                         fontWeight: FontWeight.w600,
@@ -1012,9 +1019,9 @@ class _CoachSidelinedSection extends StatelessWidget {
 
                   // 과거 기록
                   if (pastRecords.isNotEmpty) ...[
-                    const Text(
-                      '최근 이력',
-                      style: TextStyle(
+                    Text(
+                      AppLocalizations.of(context)!.recentHistory,
+                      style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: _textSecondary,
@@ -1105,7 +1112,7 @@ class _CoachSidelinedItem extends StatelessWidget {
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
-              '정지',
+              AppLocalizations.of(context)!.suspendedLabel,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,

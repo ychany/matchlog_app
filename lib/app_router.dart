@@ -23,6 +23,7 @@ import 'features/profile/screens/profile_edit_screen.dart';
 import 'features/profile/screens/notification_settings_screen.dart';
 import 'features/profile/screens/help_support_screen.dart';
 import 'features/profile/screens/timezone_settings_screen.dart';
+import 'features/profile/screens/language_settings_screen.dart';
 import 'features/community/screens/community_screen.dart';
 import 'features/community/screens/post_write_screen.dart';
 import 'features/community/screens/post_detail_screen.dart';
@@ -32,6 +33,7 @@ import 'features/national_team/screens/national_team_screen.dart';
 import 'features/live/screens/live_matches_screen.dart';
 import 'features/league/screens/league_list_screen.dart';
 import 'features/league/screens/league_detail_screen.dart';
+import 'l10n/app_localizations.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -220,6 +222,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                 builder: (context, state) => const TimezoneSettingsScreen(),
               ),
               GoRoute(
+                path: 'language',
+                builder: (context, state) => const LanguageSettingsScreen(),
+              ),
+              GoRoute(
                 path: 'community',
                 builder: (context, state) => const CommunityScreen(),
               ),
@@ -271,42 +277,44 @@ class MainShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       body: child,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _calculateSelectedIndex(context),
         onTap: (index) => _onItemTapped(index, context),
         type: BottomNavigationBarType.fixed,
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: '홈',
+            icon: const Icon(Icons.home_outlined),
+            activeIcon: const Icon(Icons.home),
+            label: l10n.home,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today_outlined),
-            activeIcon: Icon(Icons.calendar_today),
-            label: '일정',
+            icon: const Icon(Icons.calendar_today_outlined),
+            activeIcon: const Icon(Icons.calendar_today),
+            label: l10n.schedule,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.menu_book_outlined),
-            activeIcon: Icon(Icons.menu_book),
-            label: '직관 일기',
+            icon: const Icon(Icons.menu_book_outlined),
+            activeIcon: const Icon(Icons.menu_book),
+            label: l10n.attendanceDiary,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.leaderboard_outlined),
-            activeIcon: Icon(Icons.leaderboard),
-            label: '순위',
+            icon: const Icon(Icons.leaderboard_outlined),
+            activeIcon: const Icon(Icons.leaderboard),
+            label: l10n.standings,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.sports_soccer_outlined),
-            activeIcon: Icon(Icons.sports_soccer),
-            label: '리그',
+            icon: const Icon(Icons.sports_soccer_outlined),
+            activeIcon: const Icon(Icons.sports_soccer),
+            label: l10n.leagues,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: '내 정보',
+            icon: const Icon(Icons.person_outline),
+            activeIcon: const Icon(Icons.person),
+            label: l10n.profile,
           ),
         ],
       ),

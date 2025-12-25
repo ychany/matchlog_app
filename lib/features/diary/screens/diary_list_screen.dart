@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../models/diary_entry.dart';
@@ -83,9 +84,9 @@ class DiaryListScreen extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
-            '나의 직관일기',
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context)!.myDiaryTitle,
+            style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w700,
               color: _textPrimary,
@@ -406,7 +407,7 @@ class _SummarySheet extends StatelessWidget {
                       ),
                       const SizedBox(width: 12),
                       Text(
-                        '${summary.year}년 직관 요약',
+                        AppLocalizations.of(context)!.yearlySummary(summary.year),
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
@@ -424,9 +425,9 @@ class _SummarySheet extends StatelessWidget {
                         child: _StatCard(
                           icon: Icons.visibility,
                           iconColor: _primary,
-                          label: '총 관람',
+                          label: AppLocalizations.of(context)!.totalViews,
                           value: '${summary.totalMatches}',
-                          unit: '경기',
+                          unit: AppLocalizations.of(context)!.matchUnit,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -434,9 +435,9 @@ class _SummarySheet extends StatelessWidget {
                         child: _StatCard(
                           icon: Icons.star,
                           iconColor: _warning,
-                          label: '평균 평점',
+                          label: AppLocalizations.of(context)!.averageRating,
                           value: summary.averageRating.toStringAsFixed(1),
-                          unit: '점',
+                          unit: AppLocalizations.of(context)!.pointsUnit,
                         ),
                       ),
                     ],
@@ -467,7 +468,7 @@ class _SummarySheet extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  '가장 많이 본 팀',
+                                  AppLocalizations.of(context)!.mostWatchedTeam,
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: _textSecondary,
@@ -492,7 +493,7 @@ class _SummarySheet extends StatelessWidget {
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: Text(
-                              '${summary.favoriteTeamWatched}경기',
+                              AppLocalizations.of(context)!.nMatchesUnit(summary.favoriteTeamWatched),
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,
@@ -529,9 +530,9 @@ class _SummarySheet extends StatelessWidget {
                               child: Icon(Icons.sports_soccer, color: _success, size: 20),
                             ),
                             const SizedBox(width: 10),
-                            const Text(
-                              '리그별 통계',
-                              style: TextStyle(
+                            Text(
+                              AppLocalizations.of(context)!.leagueStats,
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
                                 color: _textPrimary,
@@ -560,7 +561,7 @@ class _SummarySheet extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
-                                  '${entry.value}경기',
+                                  AppLocalizations.of(context)!.nMatchesUnit(entry.value),
                                   style: TextStyle(
                                     color: _primary,
                                     fontWeight: FontWeight.w600,
@@ -577,7 +578,7 @@ class _SummarySheet extends StatelessWidget {
                 ],
               ),
               loading: () => const LoadingIndicator(),
-              error: (e, _) => Center(child: Text('오류: $e')),
+              error: (e, _) => Center(child: Text('${AppLocalizations.of(context)!.error}: $e')),
             ),
           ),
         ],

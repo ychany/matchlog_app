@@ -4,40 +4,40 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// 지원하는 타임존 목록
 class TimezoneOption {
   final String id;
-  final String name;
+  final String nameKey;  // l10n key for the timezone name
   final String offset;
 
   const TimezoneOption({
     required this.id,
-    required this.name,
+    required this.nameKey,
     required this.offset,
   });
 }
 
 /// 자주 사용되는 타임존 목록
 const List<TimezoneOption> availableTimezones = [
-  TimezoneOption(id: 'Asia/Seoul', name: '한국 (서울)', offset: 'UTC+9'),
-  TimezoneOption(id: 'Asia/Tokyo', name: '일본 (도쿄)', offset: 'UTC+9'),
-  TimezoneOption(id: 'Asia/Shanghai', name: '중국 (상하이)', offset: 'UTC+8'),
-  TimezoneOption(id: 'Asia/Singapore', name: '싱가포르', offset: 'UTC+8'),
-  TimezoneOption(id: 'Asia/Hong_Kong', name: '홍콩', offset: 'UTC+8'),
-  TimezoneOption(id: 'Asia/Bangkok', name: '태국 (방콕)', offset: 'UTC+7'),
-  TimezoneOption(id: 'Asia/Jakarta', name: '인도네시아 (자카르타)', offset: 'UTC+7'),
-  TimezoneOption(id: 'Asia/Kolkata', name: '인도 (콜카타)', offset: 'UTC+5:30'),
-  TimezoneOption(id: 'Asia/Dubai', name: 'UAE (두바이)', offset: 'UTC+4'),
-  TimezoneOption(id: 'Europe/London', name: '영국 (런던)', offset: 'UTC+0'),
-  TimezoneOption(id: 'Europe/Paris', name: '프랑스 (파리)', offset: 'UTC+1'),
-  TimezoneOption(id: 'Europe/Berlin', name: '독일 (베를린)', offset: 'UTC+1'),
-  TimezoneOption(id: 'Europe/Rome', name: '이탈리아 (로마)', offset: 'UTC+1'),
-  TimezoneOption(id: 'Europe/Madrid', name: '스페인 (마드리드)', offset: 'UTC+1'),
-  TimezoneOption(id: 'Europe/Amsterdam', name: '네덜란드 (암스테르담)', offset: 'UTC+1'),
-  TimezoneOption(id: 'Europe/Moscow', name: '러시아 (모스크바)', offset: 'UTC+3'),
-  TimezoneOption(id: 'America/New_York', name: '미국 동부 (뉴욕)', offset: 'UTC-5'),
-  TimezoneOption(id: 'America/Los_Angeles', name: '미국 서부 (LA)', offset: 'UTC-8'),
-  TimezoneOption(id: 'America/Chicago', name: '미국 중부 (시카고)', offset: 'UTC-6'),
-  TimezoneOption(id: 'America/Sao_Paulo', name: '브라질 (상파울루)', offset: 'UTC-3'),
-  TimezoneOption(id: 'Australia/Sydney', name: '호주 (시드니)', offset: 'UTC+11'),
-  TimezoneOption(id: 'Pacific/Auckland', name: '뉴질랜드 (오클랜드)', offset: 'UTC+13'),
+  TimezoneOption(id: 'Asia/Seoul', nameKey: 'timezoneKoreaSeoul', offset: 'UTC+9'),
+  TimezoneOption(id: 'Asia/Tokyo', nameKey: 'timezoneJapanTokyo', offset: 'UTC+9'),
+  TimezoneOption(id: 'Asia/Shanghai', nameKey: 'timezoneChinaShanghai', offset: 'UTC+8'),
+  TimezoneOption(id: 'Asia/Singapore', nameKey: 'timezoneSingapore', offset: 'UTC+8'),
+  TimezoneOption(id: 'Asia/Hong_Kong', nameKey: 'timezoneHongKong', offset: 'UTC+8'),
+  TimezoneOption(id: 'Asia/Bangkok', nameKey: 'timezoneThailandBangkok', offset: 'UTC+7'),
+  TimezoneOption(id: 'Asia/Jakarta', nameKey: 'timezoneIndonesiaJakarta', offset: 'UTC+7'),
+  TimezoneOption(id: 'Asia/Kolkata', nameKey: 'timezoneIndiaKolkata', offset: 'UTC+5:30'),
+  TimezoneOption(id: 'Asia/Dubai', nameKey: 'timezoneUAEDubai', offset: 'UTC+4'),
+  TimezoneOption(id: 'Europe/London', nameKey: 'timezoneUKLondon', offset: 'UTC+0'),
+  TimezoneOption(id: 'Europe/Paris', nameKey: 'timezoneFranceParis', offset: 'UTC+1'),
+  TimezoneOption(id: 'Europe/Berlin', nameKey: 'timezoneGermanyBerlin', offset: 'UTC+1'),
+  TimezoneOption(id: 'Europe/Rome', nameKey: 'timezoneItalyRome', offset: 'UTC+1'),
+  TimezoneOption(id: 'Europe/Madrid', nameKey: 'timezoneSpainMadrid', offset: 'UTC+1'),
+  TimezoneOption(id: 'Europe/Amsterdam', nameKey: 'timezoneNetherlandsAmsterdam', offset: 'UTC+1'),
+  TimezoneOption(id: 'Europe/Moscow', nameKey: 'timezoneRussiaMoscow', offset: 'UTC+3'),
+  TimezoneOption(id: 'America/New_York', nameKey: 'timezoneUSEastNewYork', offset: 'UTC-5'),
+  TimezoneOption(id: 'America/Los_Angeles', nameKey: 'timezoneUSWestLA', offset: 'UTC-8'),
+  TimezoneOption(id: 'America/Chicago', nameKey: 'timezoneUSCentralChicago', offset: 'UTC-6'),
+  TimezoneOption(id: 'America/Sao_Paulo', nameKey: 'timezoneBrazilSaoPaulo', offset: 'UTC-3'),
+  TimezoneOption(id: 'Australia/Sydney', nameKey: 'timezoneAustraliaSydney', offset: 'UTC+11'),
+  TimezoneOption(id: 'Pacific/Auckland', nameKey: 'timezoneNewZealandAuckland', offset: 'UTC+13'),
 ];
 
 const String _timezoneKey = 'selected_timezone';

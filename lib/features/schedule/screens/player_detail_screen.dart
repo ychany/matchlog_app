@@ -6,6 +6,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/services/api_football_service.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../favorites/providers/favorites_provider.dart';
+import '../../../l10n/app_localizations.dart';
 
 // Providers (API-Football 사용)
 final playerDetailProvider =
@@ -114,11 +115,11 @@ class PlayerDetailScreen extends ConsumerWidget {
                             Icon(Icons.person_off,
                                 size: 64, color: _textSecondary),
                             const SizedBox(height: 16),
-                            Text(
-                              '선수 정보를 찾을 수 없습니다',
+                            Builder(builder: (context) => Text(
+                              AppLocalizations.of(context)!.playerNotFoundDesc,
                               style:
                                   TextStyle(color: _textSecondary, fontSize: 16),
-                            ),
+                            )),
                           ],
                         ),
                       ),
@@ -136,8 +137,10 @@ class PlayerDetailScreen extends ConsumerWidget {
                 _buildAppBar(context),
                 Expanded(
                   child: Center(
-                    child: Text('오류: $e',
-                        style: const TextStyle(color: _textSecondary)),
+                    child: Builder(builder: (ctx) => Text(
+                      '${AppLocalizations.of(ctx)!.error}: $e',
+                      style: const TextStyle(color: _textSecondary)),
+                    ),
                   ),
                 ),
               ],
@@ -159,16 +162,16 @@ class PlayerDetailScreen extends ConsumerWidget {
             color: const Color(0xFF111827),
             onPressed: () => context.pop(),
           ),
-          const Expanded(
-            child: Text(
-              '선수 정보',
-              style: TextStyle(
+          Expanded(
+            child: Builder(builder: (ctx) => Text(
+              AppLocalizations.of(ctx)!.playerInfo,
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: Color(0xFF111827),
               ),
               textAlign: TextAlign.center,
-            ),
+            )),
           ),
           const SizedBox(width: 48),
         ],
@@ -235,10 +238,10 @@ class _PlayerDetailContentState extends ConsumerState<_PlayerDetailContent>
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
-                      tabs: const [
-                        Tab(text: '프로필'),
-                        Tab(text: '시즌 통계'),
-                        Tab(text: '커리어'),
+                      tabs: [
+                        Tab(text: AppLocalizations.of(context)!.profileTab),
+                        Tab(text: AppLocalizations.of(context)!.seasonStats),
+                        Tab(text: AppLocalizations.of(context)!.careerTab),
                       ],
                     ),
                   ),
@@ -347,7 +350,8 @@ class _CurrentSeasonSummary extends StatelessWidget {
     if (totalAppearances == 0) return const SizedBox.shrink();
 
     final season = player.statistics.first.season;
-    final seasonText = season != null ? '$season/${season + 1}' : '현재 시즌';
+    final l10n = AppLocalizations.of(context)!;
+    final seasonText = season != null ? '$season/${season + 1}' : l10n.currentSeason;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -371,7 +375,7 @@ class _CurrentSeasonSummary extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Text(
-                '$seasonText 통계 요약',
+                l10n.seasonStatsSummary(seasonText),
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -385,68 +389,78 @@ class _CurrentSeasonSummary extends StatelessWidget {
           // 주요 통계 그리드
           Row(
             children: [
-              _SummaryStatBox(
+              Builder(builder: (context) => _SummaryStatBox(
                 icon: Icons.sports_soccer,
-                label: '골',
+                label: AppLocalizations.of(context)!.goal,
                 value: '$totalGoals',
                 color: _success,
-              ),
+              )),
               const SizedBox(width: 12),
-              _SummaryStatBox(
+              Builder(builder: (context) => _SummaryStatBox(
                 icon: Icons.handshake_outlined,
-                label: '도움',
+                label: AppLocalizations.of(context)!.assist,
                 value: '$totalAssists',
                 color: _primary,
-              ),
+              )),
             ],
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              _SummaryStatBox(
-                icon: Icons.timer_outlined,
-                label: '출전',
-                value: '$totalAppearances경기',
-                color: Colors.purple,
-              ),
-              const SizedBox(width: 12),
-              _SummaryStatBox(
-                icon: Icons.schedule,
-                label: '출전시간',
-                value: '$totalMinutes분',
-                color: Colors.teal,
-              ),
-            ],
+          Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context)!;
+              return Row(
+                children: [
+                  _SummaryStatBox(
+                    icon: Icons.timer_outlined,
+                    label: l10n.matchesPlayed,
+                    value: l10n.nMatches(totalAppearances),
+                    color: Colors.purple,
+                  ),
+                  const SizedBox(width: 12),
+                  _SummaryStatBox(
+                    icon: Icons.schedule,
+                    label: l10n.playingTime,
+                    value: '${totalMinutes}m',
+                    color: Colors.teal,
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 12),
 
           // 카드 통계
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _CardStatItem(
-                  color: _warning,
-                  value: totalYellowCards,
-                  label: '경고',
+          Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context)!;
+              return Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                Container(
-                  width: 1,
-                  height: 30,
-                  color: _border,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _CardStatItem(
+                      color: _warning,
+                      value: totalYellowCards,
+                      label: l10n.yellowCard,
+                    ),
+                    Container(
+                      width: 1,
+                      height: 30,
+                      color: _border,
+                    ),
+                    _CardStatItem(
+                      color: _error,
+                      value: totalRedCards,
+                      label: l10n.redCard,
+                    ),
+                  ],
                 ),
-                _CardStatItem(
-                  color: _error,
-                  value: totalRedCards,
-                  label: '퇴장',
-                ),
-              ],
-            ),
+              );
+            },
           ),
         ],
       ),
@@ -530,6 +544,7 @@ class _SeasonStatsTab extends ConsumerWidget {
     return multiSeasonAsync.when(
       data: (seasons) {
         if (seasons.isEmpty) {
+          final l10n = AppLocalizations.of(context)!;
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -537,7 +552,7 @@ class _SeasonStatsTab extends ConsumerWidget {
                 Icon(Icons.bar_chart, size: 64, color: _textSecondary),
                 const SizedBox(height: 16),
                 Text(
-                  '시즌 통계가 없습니다',
+                  l10n.noSeasonStats,
                   style: TextStyle(color: _textSecondary, fontSize: 16),
                 ),
               ],
@@ -556,18 +571,21 @@ class _SeasonStatsTab extends ConsumerWidget {
           ),
         );
       },
-      loading: () => const Center(
+      loading: () => Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('시즌별 통계를 불러오는 중...'),
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Builder(builder: (ctx) => Text(AppLocalizations.of(ctx)!.loadingSeasonStats)),
           ],
         ),
       ),
       error: (e, _) => Center(
-        child: Text('오류: $e', style: TextStyle(color: _textSecondary)),
+        child: Builder(builder: (ctx) => Text(
+          '${AppLocalizations.of(ctx)!.error}: $e',
+          style: TextStyle(color: _textSecondary),
+        )),
       ),
     );
   }
@@ -602,13 +620,14 @@ class _SeasonStatsTableState extends State<_SeasonStatsTable> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       children: [
         // 소속팀 통계
-        _buildSectionTable(context, '소속팀', isClub: true),
+        _buildSectionTable(context, l10n.clubTeams, isClub: true),
         const SizedBox(height: 16),
         // 국가대표팀 통계
-        _buildSectionTable(context, '국가대표팀', isClub: false),
+        _buildSectionTable(context, l10n.nationalTeam, isClub: false),
       ],
     );
   }
@@ -660,24 +679,27 @@ class _SeasonStatsTableState extends State<_SeasonStatsTable> {
             ),
           ),
           // 헤더
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              border: Border(top: BorderSide(color: _border)),
-            ),
-            child: Row(
-              children: [
-                const SizedBox(width: 20), // 화살표 아이콘 공간
-                const SizedBox(width: 48, child: Text('시즌', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12))),
-                const SizedBox(width: 48, child: Text('팀', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12), textAlign: TextAlign.center)),
-                const Expanded(child: Text('경기', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12), textAlign: TextAlign.center)),
-                const Expanded(child: Text('골', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12), textAlign: TextAlign.center)),
-                const Expanded(child: Text('도움', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12), textAlign: TextAlign.center)),
-                const Expanded(child: Text('평점', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12), textAlign: TextAlign.center)),
-              ],
-            ),
-          ),
+          Builder(builder: (context) {
+            final l10n = AppLocalizations.of(context)!;
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                border: Border(top: BorderSide(color: _border)),
+              ),
+              child: Row(
+                children: [
+                  const SizedBox(width: 20), // 화살표 아이콘 공간
+                  SizedBox(width: 48, child: Text(l10n.season, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12))),
+                  SizedBox(width: 48, child: Text(l10n.teamShort, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12), textAlign: TextAlign.center)),
+                  Expanded(child: Text(l10n.matches, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12), textAlign: TextAlign.center)),
+                  Expanded(child: Text(l10n.goal, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12), textAlign: TextAlign.center)),
+                  Expanded(child: Text(l10n.assist, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12), textAlign: TextAlign.center)),
+                  Expanded(child: Text(l10n.rating, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12), textAlign: TextAlign.center)),
+                ],
+              ),
+            );
+          }),
           // 데이터 행
           ...widget.seasons.asMap().entries.map((entry) {
             final index = entry.key;
@@ -881,7 +903,7 @@ class _LeagueStatsRow extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      stats.leagueName ?? '리그',
+                      stats.leagueName ?? AppLocalizations.of(context)!.league,
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -924,16 +946,19 @@ class _LeagueStatsRow extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           // 통계 행
-          Row(
-            children: [
-              _MiniStatChip(label: '경기', value: '${stats.appearances ?? 0}'),
-              _MiniStatChip(label: '선발', value: '${stats.lineups ?? 0}'),
-              _MiniStatChip(label: '골', value: '${stats.goals ?? 0}', highlight: (stats.goals ?? 0) > 0, highlightColor: _success),
-              _MiniStatChip(label: '도움', value: '${stats.assists ?? 0}', highlight: (stats.assists ?? 0) > 0, highlightColor: _primary),
-              _MiniStatChip(label: '경고', value: '${stats.yellowCards ?? 0}', highlight: (stats.yellowCards ?? 0) > 0, highlightColor: _warning),
-              _MiniStatChip(label: '퇴장', value: '${stats.redCards ?? 0}', highlight: (stats.redCards ?? 0) > 0, highlightColor: _error),
-            ],
-          ),
+          Builder(builder: (context) {
+            final l10n = AppLocalizations.of(context)!;
+            return Row(
+              children: [
+                _MiniStatChip(label: l10n.matches, value: '${stats.appearances ?? 0}'),
+                _MiniStatChip(label: l10n.started, value: '${stats.lineups ?? 0}'),
+                _MiniStatChip(label: l10n.goal, value: '${stats.goals ?? 0}', highlight: (stats.goals ?? 0) > 0, highlightColor: _success),
+                _MiniStatChip(label: l10n.assist, value: '${stats.assists ?? 0}', highlight: (stats.assists ?? 0) > 0, highlightColor: _primary),
+                _MiniStatChip(label: l10n.yellowCard, value: '${stats.yellowCards ?? 0}', highlight: (stats.yellowCards ?? 0) > 0, highlightColor: _warning),
+                _MiniStatChip(label: l10n.redCard, value: '${stats.redCards ?? 0}', highlight: (stats.redCards ?? 0) > 0, highlightColor: _error),
+              ],
+            );
+          }),
         ],
       ),
     );
@@ -1042,10 +1067,10 @@ class _PlayerHeader extends ConsumerWidget {
                   color: _textPrimary,
                   onPressed: () => context.pop(),
                 ),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    '선수 정보',
-                    style: TextStyle(
+                    AppLocalizations.of(context)!.playerInfo,
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: _textPrimary,
@@ -1155,7 +1180,7 @@ class _PlayerHeader extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    _getPositionKorean(stats!.position!),
+                    _getPositionText(context, stats!.position!),
                     style: TextStyle(
                       color: _primary,
                       fontSize: 12,
@@ -1171,17 +1196,18 @@ class _PlayerHeader extends ConsumerWidget {
     );
   }
 
-  String _getPositionKorean(String position) {
+  String _getPositionText(BuildContext context, String position) {
+    final l10n = AppLocalizations.of(context)!;
     switch (position.toLowerCase()) {
       case 'goalkeeper':
-        return '골키퍼';
+        return l10n.goalkeeper;
       case 'defender':
-        return '수비수';
+        return l10n.defender;
       case 'midfielder':
-        return '미드필더';
+        return l10n.midfielder;
       case 'attacker':
       case 'forward':
-        return '공격수';
+        return l10n.attacker;
       default:
         return position;
     }
@@ -1206,41 +1232,44 @@ class _BasicInfoCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: _border),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: _primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+      child: Builder(builder: (context) {
+        final l10n = AppLocalizations.of(context)!;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: _primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.person_outline, color: _primary, size: 20),
                 ),
-                child: Icon(Icons.person_outline, color: _primary, size: 20),
-              ),
-              const SizedBox(width: 12),
-              const Text(
-                '기본 정보',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: _textPrimary,
+                const SizedBox(width: 12),
+                Text(
+                  l10n.basicInfo,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: _textPrimary,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          _InfoRow(icon: Icons.flag_outlined, label: '국적', value: player.nationality ?? '-'),
-          _InfoRow(icon: Icons.cake_outlined, label: '생년월일', value: player.birthDate ?? '-'),
-          if (player.age != null)
-            _InfoRow(icon: Icons.calendar_today_outlined, label: '나이', value: '${player.age}세'),
-          _InfoRow(icon: Icons.height, label: '키', value: player.height ?? '-'),
-          _InfoRow(icon: Icons.fitness_center_outlined, label: '몸무게', value: player.weight ?? '-'),
-          if (player.birthPlace != null)
-            _InfoRow(icon: Icons.location_on_outlined, label: '출생지', value: player.birthPlace!),
-        ],
-      ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _InfoRow(icon: Icons.flag_outlined, label: l10n.nationality, value: player.nationality ?? '-'),
+            _InfoRow(icon: Icons.cake_outlined, label: l10n.birthDate, value: player.birthDate ?? '-'),
+            if (player.age != null)
+              _InfoRow(icon: Icons.calendar_today_outlined, label: l10n.age, value: l10n.ageYears(player.age!)),
+            _InfoRow(icon: Icons.height, label: l10n.height, value: player.height ?? '-'),
+            _InfoRow(icon: Icons.fitness_center_outlined, label: l10n.weight, value: player.weight ?? '-'),
+            if (player.birthPlace != null)
+              _InfoRow(icon: Icons.location_on_outlined, label: l10n.birthPlace, value: player.birthPlace!),
+          ],
+        );
+      }),
     );
   }
 }
@@ -1374,36 +1403,39 @@ class _TransfersSection extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: _primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
+              Builder(builder: (context) {
+                final l10n = AppLocalizations.of(context)!;
+                return Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: _primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(Icons.swap_horiz, color: _primary, size: 20),
                     ),
-                    child: Icon(Icons.swap_horiz, color: _primary, size: 20),
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    '이적 기록',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: _textPrimary,
+                    const SizedBox(width: 12),
+                    Text(
+                      l10n.transferHistory,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: _textPrimary,
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                );
+              }),
               const SizedBox(height: 12),
               ...transfers.take(5).map((transfer) => _TransferItem(transfer: transfer)),
               if (transfers.length > 5)
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
-                  child: Text(
-                    '외 ${transfers.length - 5}건의 이적 기록',
+                  child: Builder(builder: (context) => Text(
+                    AppLocalizations.of(context)!.moreTransfers(transfers.length - 5),
                     style: TextStyle(fontSize: 12, color: _textSecondary),
-                  ),
+                  )),
                 ),
             ],
           ),
@@ -1534,44 +1566,47 @@ class _TrophiesSection extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: _warning.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
+              Builder(builder: (context) {
+                final l10n = AppLocalizations.of(context)!;
+                return Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: _warning.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(Icons.emoji_events, color: _warning, size: 20),
                     ),
-                    child: Icon(Icons.emoji_events, color: _warning, size: 20),
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    '수상 경력',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: _textPrimary,
-                    ),
-                  ),
-                  const Spacer(),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: _warning.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '${winnerTrophies.length}개',
-                      style: TextStyle(
-                        color: _warning,
-                        fontSize: 12,
+                    const SizedBox(width: 12),
+                    Text(
+                      l10n.trophies,
+                      style: const TextStyle(
+                        fontSize: 16,
                         fontWeight: FontWeight.w600,
+                        color: _textPrimary,
                       ),
                     ),
-                  ),
-                ],
-              ),
+                    const Spacer(),
+                    Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: _warning.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        l10n.nTrophies(winnerTrophies.length),
+                        style: TextStyle(
+                          color: _warning,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              }),
               const SizedBox(height: 12),
               ...winnerTrophies.take(10).map((trophy) => Padding(
                 padding: const EdgeInsets.only(bottom: 6),
@@ -1641,10 +1676,11 @@ class _PlayerFavoriteButton extends ConsumerWidget {
               .read(favoritesNotifierProvider.notifier)
               .togglePlayerFollow(playerId);
           if (context.mounted) {
+            final l10n = AppLocalizations.of(context)!;
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                    isFollowed ? '즐겨찾기에서 제거되었습니다' : '즐겨찾기에 추가되었습니다'),
+                    isFollowed ? l10n.removedFromFavorites : l10n.addedToFavorites),
                 duration: const Duration(seconds: 1),
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(
@@ -1721,44 +1757,47 @@ class _SidelinedSection extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: _error.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
+              Builder(builder: (context) {
+                final l10n = AppLocalizations.of(context)!;
+                return Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: _error.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(Icons.healing, color: _error, size: 20),
                     ),
-                    child: Icon(Icons.healing, color: _error, size: 20),
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    '부상/출전정지 이력',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: _textPrimary,
-                    ),
-                  ),
-                  const Spacer(),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: _textSecondary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '${records.length}건',
-                      style: TextStyle(
-                        color: _textSecondary,
-                        fontSize: 12,
+                    const SizedBox(width: 12),
+                    Text(
+                      l10n.injuryHistory,
+                      style: const TextStyle(
+                        fontSize: 16,
                         fontWeight: FontWeight.w600,
+                        color: _textPrimary,
                       ),
                     ),
-                  ),
-                ],
-              ),
+                    const Spacer(),
+                    Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: _textSecondary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        l10n.nRecords(records.length),
+                        style: TextStyle(
+                          color: _textSecondary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              }),
               const SizedBox(height: 16),
 
               // 현재 진행 중인 부상/출전정지
@@ -1784,20 +1823,20 @@ class _SidelinedSection extends ConsumerWidget {
                               color: _error,
                               borderRadius: BorderRadius.circular(6),
                             ),
-                            child: const Row(
+                            child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.warning_amber_rounded,
+                                const Icon(Icons.warning_amber_rounded,
                                     size: 12, color: Colors.white),
-                                SizedBox(width: 4),
-                                Text(
-                                  '현재 결장 중',
-                                  style: TextStyle(
+                                const SizedBox(width: 4),
+                                Builder(builder: (context) => Text(
+                                  AppLocalizations.of(context)!.currentlyOut,
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,
                                   ),
-                                ),
+                                )),
                               ],
                             ),
                           ),
@@ -1816,14 +1855,14 @@ class _SidelinedSection extends ConsumerWidget {
 
               // 과거 기록
               if (pastRecords.isNotEmpty) ...[
-                const Text(
-                  '최근 이력',
-                  style: TextStyle(
+                Builder(builder: (context) => Text(
+                  AppLocalizations.of(context)!.recentHistory,
+                  style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     color: _textSecondary,
                   ),
-                ),
+                )),
                 const SizedBox(height: 8),
                 ...pastRecords.map((record) => _SidelinedItem(
                       record: record,
@@ -1912,25 +1951,28 @@ class _SidelinedItem extends StatelessWidget {
             ),
           ),
           // 타입 뱃지
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text(
-              record.isInjury
-                  ? '부상'
-                  : record.isSuspension
-                      ? '정지'
-                      : '기타',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: color,
+          Builder(builder: (context) {
+            final l10n = AppLocalizations.of(context)!;
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(6),
               ),
-            ),
-          ),
+              child: Text(
+                record.isInjury
+                    ? l10n.injured
+                    : record.isSuspension
+                        ? l10n.suspended
+                        : l10n.other,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
+              ),
+            );
+          }),
         ],
       ),
     );

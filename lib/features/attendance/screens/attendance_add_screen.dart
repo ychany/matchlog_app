@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../core/services/api_football_service.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../shared/services/storage_service.dart';
@@ -86,13 +87,16 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
   // 수동 입력 모드
   bool _isManualMode = false;
 
-  final List<String> _weatherOptions = [
-    '맑음 ☀️',
-    '흐림 ☁️',
-    '비 🌧️',
-    '눈 ❄️',
-    '바람 💨'
-  ];
+  List<String> _getWeatherOptions(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return [
+      l10n.weatherSunny,
+      l10n.weatherCloudy,
+      l10n.weatherRainy,
+      l10n.weatherSnowy,
+      l10n.weatherWindy,
+    ];
+  }
 
   @override
   void initState() {
@@ -159,13 +163,16 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
           backgroundColor: Colors.white,
           foregroundColor: _textPrimary,
           elevation: 0,
-          title: Text(
-            _currentPage == 0 ? '직관 기록' : '직관 일기',
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              color: _textPrimary,
-            ),
-          ),
+          title: Builder(builder: (context) {
+            final l10n = AppLocalizations.of(context)!;
+            return Text(
+              _currentPage == 0 ? l10n.matchRecord : l10n.attendanceDiary,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                color: _textPrimary,
+              ),
+            );
+          }),
           actions: [
             if (hasMatchInfo)
               TextButton(
@@ -176,9 +183,9 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
                         height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text(
-                        '저장',
-                        style: TextStyle(
+                    : Text(
+                        AppLocalizations.of(context)!.save,
+                        style: const TextStyle(
                           color: _primary,
                           fontWeight: FontWeight.w600,
                         ),
@@ -212,6 +219,7 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
   }
 
   Widget _buildPageIndicator() {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -219,7 +227,7 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           _PageIndicatorDot(
-            label: '경기 정보',
+            label: l10n.matchInfo,
             isActive: _currentPage == 0,
             onTap: () => _pageController.animateToPage(0,
                 duration: const Duration(milliseconds: 300),
@@ -231,7 +239,7 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
             color: _border,
           ),
           _PageIndicatorDot(
-            label: '일기 작성',
+            label: l10n.diaryWrite,
             isActive: _currentPage == 1,
             onTap: () => _pageController.animateToPage(1,
                 duration: const Duration(milliseconds: 300),
@@ -257,7 +265,7 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
           if (!_isManualMode && _searchResults.isNotEmpty) ...[
             const SizedBox(height: 16),
             Text(
-              '검색 결과',
+              AppLocalizations.of(context)!.searchResults,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -300,12 +308,15 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
             const SizedBox(height: 16),
             _buildStadiumField(),
             const SizedBox(height: 16),
-            _buildTextField(
-              controller: _seatController,
-              label: '좌석 정보',
-              icon: Icons.chair,
-              hintText: '예: A블록 12열 34번',
-            ),
+            Builder(builder: (context) {
+              final l10n = AppLocalizations.of(context)!;
+              return _buildTextField(
+                controller: _seatController,
+                label: l10n.seatInfo,
+                icon: Icons.chair,
+                hintText: l10n.seatHint,
+              );
+            }),
             const SizedBox(height: 16),
             _buildPhotoSection(),
             const SizedBox(height: 32),
@@ -324,9 +335,9 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
-                  '일기 작성하기 →',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                child: Text(
+                  AppLocalizations.of(context)!.goToDiary,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -346,14 +357,17 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
           const SizedBox(height: 24),
           _buildMoodSection(),
           const SizedBox(height: 24),
-          _buildTextField(
-            controller: _titleController,
-            label: '오늘의 한 줄',
-            icon: Icons.title,
-            hintText: '경기를 한 줄로 표현한다면?',
-          ),
+          Builder(builder: (context) {
+            final l10n = AppLocalizations.of(context)!;
+            return _buildTextField(
+              controller: _titleController,
+              label: l10n.oneLiner,
+              icon: Icons.title,
+              hintText: l10n.oneLinerHint,
+            );
+          }),
           const SizedBox(height: 16),
-          _buildSectionTitle('직관 일기'),
+          _buildSectionTitle(AppLocalizations.of(context)!.diarySection),
           const SizedBox(height: 8),
           Container(
             decoration: BoxDecoration(
@@ -365,7 +379,7 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
               controller: _contentController,
               maxLines: 6,
               decoration: InputDecoration(
-                hintText: '오늘 경기는 어땠나요? 자유롭게 기록해보세요.',
+                hintText: AppLocalizations.of(context)!.diaryHint,
                 hintStyle: TextStyle(color: _textSecondary.withValues(alpha: 0.6)),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.all(16),
@@ -408,7 +422,7 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
           Expanded(
             child: _ModeButton(
               icon: Icons.search,
-              label: '경기 검색',
+              label: AppLocalizations.of(context)!.matchSearch,
               isSelected: !_isManualMode,
               onTap: () => setState(() {
                 _isManualMode = false;
@@ -422,7 +436,7 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
           Expanded(
             child: _ModeButton(
               icon: Icons.edit,
-              label: '직접 입력',
+              label: AppLocalizations.of(context)!.manualInput,
               isSelected: _isManualMode,
               onTap: () => setState(() {
                 _isManualMode = true;
@@ -454,7 +468,7 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
           child: TextField(
             controller: _searchController,
             decoration: InputDecoration(
-              hintText: '팀 이름으로 검색 (선택사항)',
+              hintText: AppLocalizations.of(context)!.teamSearchHint,
               hintStyle: TextStyle(color: _textSecondary.withValues(alpha: 0.6)),
               prefixIcon: const Icon(Icons.search, color: _textSecondary),
               suffixIcon: _isSearching
@@ -490,8 +504,11 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
               ),
             ),
             label: Text(_searchLeague != null
-                ? '${DateFormat('MM/dd').format(_selectedDate)} ${AppConstants.getLeagueDisplayName(_searchLeague!)} 경기 조회'
-                : '${DateFormat('MM/dd').format(_selectedDate)} 전체 경기 조회'),
+                ? AppLocalizations.of(context)!.searchLeagueMatchesForDate(
+                    DateFormat('MM/dd').format(_selectedDate),
+                    AppConstants.getLocalizedLeagueName(context, _searchLeague!))
+                : AppLocalizations.of(context)!.searchAllMatchesForDate(
+                    DateFormat('MM/dd').format(_selectedDate))),
           ),
         ),
       ],
@@ -503,7 +520,7 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '리그 선택',
+          AppLocalizations.of(context)!.selectLeague,
           style: TextStyle(fontSize: 12, color: _textSecondary),
         ),
         const SizedBox(height: 8),
@@ -512,7 +529,7 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
           child: Row(
             children: [
               _LeagueFilterChip(
-                label: '전체',
+                label: AppLocalizations.of(context)!.all,
                 isSelected: _searchLeague == null,
                 onTap: () => setState(() => _searchLeague = null),
               ),
@@ -520,7 +537,7 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
               ...AppConstants.supportedLeagues.map((league) => Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: _LeagueFilterChip(
-                      label: AppConstants.getLeagueDisplayName(league),
+                      label: AppConstants.getLocalizedLeagueName(context, league),
                       isSelected: _searchLeague == league,
                       onTap: () => setState(() => _searchLeague = league),
                     ),
@@ -538,10 +555,10 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
       children: [
         _buildDateSelector(),
         const SizedBox(height: 16),
-        _buildSectionTitle('경기명'),
+        _buildSectionTitle(AppLocalizations.of(context)!.matchName),
         const SizedBox(height: 4),
         Text(
-          '예: 친선경기, 프리시즌, FA컵 등',
+          'e.g. Friendly, Preseason, FA Cup',
           style: TextStyle(fontSize: 12, color: _textSecondary),
         ),
         const SizedBox(height: 8),
@@ -554,7 +571,7 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
           child: TextFormField(
             controller: _matchNameController,
             decoration: InputDecoration(
-              hintText: '경기명을 입력하세요',
+              hintText: AppLocalizations.of(context)!.enterMatchName,
               hintStyle: TextStyle(color: _textSecondary.withValues(alpha: 0.6)),
               prefixIcon: const Icon(Icons.sports_soccer, color: _textSecondary),
               border: InputBorder.none,
@@ -563,10 +580,10 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
           ),
         ),
         const SizedBox(height: 16),
-        _buildTeamSearchWithLeagueFilter('홈팀', _selectedHomeTeam,
+        _buildTeamSearchWithLeagueFilter(AppLocalizations.of(context)!.homeTeam, _selectedHomeTeam,
             (team) => setState(() => _selectedHomeTeam = team)),
         const SizedBox(height: 16),
-        _buildTeamSearchWithLeagueFilter('원정팀', _selectedAwayTeam,
+        _buildTeamSearchWithLeagueFilter(AppLocalizations.of(context)!.awayTeam, _selectedAwayTeam,
             (team) => setState(() => _selectedAwayTeam = team)),
       ],
     );
@@ -588,7 +605,7 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
             const Icon(Icons.calendar_today, size: 20, color: _primary),
             const SizedBox(width: 12),
             Text(
-              DateFormat('yyyy년 M월 d일 (E)', 'ko').format(_selectedDate),
+              DateFormat(AppLocalizations.of(context)!.dateFormatFull, Localizations.localeOf(context).toString()).format(_selectedDate),
               style: const TextStyle(
                 fontSize: 15,
                 color: _textPrimary,
@@ -615,7 +632,7 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
           OutlinedButton.icon(
             onPressed: () => _showTeamSearchSheet(label, onSelect),
             icon: const Icon(Icons.search, size: 18),
-            label: Text('$label 검색'),
+            label: Text(AppLocalizations.of(context)!.searchTeamLabel(label)),
             style: OutlinedButton.styleFrom(
               foregroundColor: _primary,
               side: const BorderSide(color: _border),
@@ -804,7 +821,7 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            DateFormat('yyyy년 M월 d일').format(_selectedDate),
+            DateFormat(AppLocalizations.of(context)!.dateFormatMedium, Localizations.localeOf(context).toString()).format(_selectedDate),
             style: TextStyle(fontSize: 13, color: _textSecondary),
           ),
         ],
@@ -850,9 +867,9 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
                 child: const Icon(Icons.scoreboard, size: 18, color: _success),
               ),
               const SizedBox(width: 10),
-              const Text(
-                '스코어',
-                style: TextStyle(
+              Text(
+                AppLocalizations.of(context)!.score,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: _textPrimary,
@@ -880,7 +897,7 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
                     ),
                     decoration: InputDecoration(
                       hintText:
-                          _selectedEvent?.homeTeam.name ?? _selectedHomeTeam?.name ?? '홈',
+                          _selectedEvent?.homeTeam.name ?? _selectedHomeTeam?.name ?? AppLocalizations.of(context)!.homeShort,
                       hintStyle: TextStyle(
                         fontSize: 14,
                         color: _textSecondary.withValues(alpha: 0.6),
@@ -919,7 +936,7 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
                     ),
                     decoration: InputDecoration(
                       hintText:
-                          _selectedEvent?.awayTeam.name ?? _selectedAwayTeam?.name ?? '원정',
+                          _selectedEvent?.awayTeam.name ?? _selectedAwayTeam?.name ?? AppLocalizations.of(context)!.awayShort,
                       hintStyle: TextStyle(
                         fontSize: 14,
                         color: _textSecondary.withValues(alpha: 0.6),
@@ -940,12 +957,13 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
   Widget _buildSupportedTeamSelector() {
     final homeTeamId =
         (_selectedEvent?.homeTeam.id ?? _selectedHomeTeam?.id)?.toString() ?? '';
+    final l10n = AppLocalizations.of(context)!;
     final homeTeamName =
-        _selectedEvent?.homeTeam.name ?? _selectedHomeTeam?.name ?? '홈팀';
+        _selectedEvent?.homeTeam.name ?? _selectedHomeTeam?.name ?? l10n.homeTeam;
     final awayTeamId =
         (_selectedEvent?.awayTeam.id ?? _selectedAwayTeam?.id)?.toString() ?? '';
     final awayTeamName =
-        _selectedEvent?.awayTeam.name ?? _selectedAwayTeam?.name ?? '원정팀';
+        _selectedEvent?.awayTeam.name ?? _selectedAwayTeam?.name ?? l10n.awayTeam;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -971,16 +989,16 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    '내가 응원한 팀',
-                    style: TextStyle(
+                  Text(
+                    l10n.mySupportedTeam,
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: _textPrimary,
                     ),
                   ),
                   Text(
-                    '승/무/패 통계에 반영됩니다',
+                    l10n.winDrawLossStats,
                     style: TextStyle(fontSize: 11, color: _textSecondary),
                   ),
                 ],
@@ -1047,7 +1065,7 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle('경기장'),
+        _buildSectionTitle(AppLocalizations.of(context)!.stadium),
         const SizedBox(height: 8),
         GestureDetector(
           onTap: () => _showVenueSearchSheet(),
@@ -1066,7 +1084,7 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
                   child: Text(
                     _stadiumController.text.isNotEmpty
                         ? _stadiumController.text
-                        : '경기장 검색 또는 직접 입력',
+                        : AppLocalizations.of(context)!.searchOrEnterStadium,
                     style: TextStyle(
                       color: _stadiumController.text.isNotEmpty
                           ? _textPrimary
@@ -1128,9 +1146,9 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
                 child: const Icon(Icons.photo_library, size: 18, color: _warning),
               ),
               const SizedBox(width: 10),
-              const Text(
-                '사진',
-                style: TextStyle(
+              Text(
+                AppLocalizations.of(context)!.photos,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: _textPrimary,
@@ -1143,13 +1161,13 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
             children: [
               _PhotoAddButton(
                 icon: Icons.camera_alt,
-                label: '카메라',
+                label: AppLocalizations.of(context)!.camera,
                 onTap: () => _pickImage(ImageSource.camera),
               ),
               const SizedBox(width: 12),
               _PhotoAddButton(
                 icon: Icons.photo_library,
-                label: '갤러리',
+                label: AppLocalizations.of(context)!.gallery,
                 onTap: () => _pickImage(ImageSource.gallery),
               ),
             ],
@@ -1221,9 +1239,9 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
                 child: const Icon(Icons.star, size: 18, color: _warning),
               ),
               const SizedBox(width: 10),
-              const Text(
-                '오늘 경기 평점',
-                style: TextStyle(
+              Text(
+                AppLocalizations.of(context)!.todaysMatchRating,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: _textPrimary,
@@ -1269,13 +1287,16 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
               ),
             ],
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('최악 😢', style: TextStyle(fontSize: 12, color: _textSecondary)),
-              Text('최고 🔥', style: TextStyle(fontSize: 12, color: _textSecondary)),
-            ],
-          ),
+          Builder(builder: (context) {
+            final l10n = AppLocalizations.of(context)!;
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(l10n.ratingWorst, style: TextStyle(fontSize: 12, color: _textSecondary)),
+                Text(l10n.ratingBest, style: TextStyle(fontSize: 12, color: _textSecondary)),
+              ],
+            );
+          }),
         ],
       ),
     );
@@ -1303,9 +1324,9 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
                 child: const Icon(Icons.mood, size: 18, color: _primary),
               ),
               const SizedBox(width: 10),
-              const Text(
-                '오늘의 기분',
-                style: TextStyle(
+              Text(
+                AppLocalizations.of(context)!.todaysMood,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: _textPrimary,
@@ -1314,41 +1335,43 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: MatchMood.values.map((mood) {
-              final isSelected = _selectedMood == mood;
-              return GestureDetector(
-                onTap: () => setState(() => _selectedMood = mood),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: isSelected ? _primary : _background,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: isSelected ? _primary : _border,
+          Builder(builder: (context) {
+            return Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: MatchMood.values.map((mood) {
+                final isSelected = _selectedMood == mood;
+                return GestureDetector(
+                  onTap: () => setState(() => _selectedMood = mood),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: isSelected ? _primary : _background,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: isSelected ? _primary : _border,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(mood.emoji, style: const TextStyle(fontSize: 18)),
+                        const SizedBox(width: 6),
+                        Text(
+                          mood.getLocalizedLabel(context),
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : _textPrimary,
+                            fontWeight:
+                                isSelected ? FontWeight.w600 : FontWeight.normal,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(mood.emoji, style: const TextStyle(fontSize: 18)),
-                      const SizedBox(width: 6),
-                      Text(
-                        mood.label,
-                        style: TextStyle(
-                          color: isSelected ? Colors.white : _textPrimary,
-                          fontWeight:
-                              isSelected ? FontWeight.w600 : FontWeight.normal,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
+                );
+              }).toList(),
+            );
+          }),
         ],
       ),
     );
@@ -1382,9 +1405,9 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
                     const Icon(Icons.emoji_events, size: 18, color: _warning),
               ),
               const SizedBox(width: 10),
-              const Text(
-                '오늘의 MVP',
-                style: TextStyle(
+              Text(
+                AppLocalizations.of(context)!.todaysMvp,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: _textPrimary,
@@ -1448,7 +1471,7 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
                 awayTeamName: awayTeamName,
               ),
               icon: const Icon(Icons.person_search, size: 18),
-              label: const Text('선수 선택'),
+              label: Text(AppLocalizations.of(context)!.selectPlayer),
               style: OutlinedButton.styleFrom(
                 foregroundColor: _primary,
                 side: const BorderSide(color: _border),
@@ -1470,7 +1493,7 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
                   Icon(Icons.info_outline, color: _textSecondary, size: 18),
                   const SizedBox(width: 8),
                   Text(
-                    '먼저 경기를 선택해주세요',
+                    AppLocalizations.of(context)!.selectMatchFirst,
                     style: TextStyle(color: _textSecondary),
                   ),
                 ],
@@ -1525,9 +1548,9 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
                 child: const Icon(Icons.tag, size: 18, color: _success),
               ),
               const SizedBox(width: 10),
-              const Text(
-                '태그',
-                style: TextStyle(
+              Text(
+                AppLocalizations.of(context)!.tags,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: _textPrimary,
@@ -1572,7 +1595,7 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
                 child: TextField(
                   controller: _tagController,
                   decoration: InputDecoration(
-                    hintText: '태그 추가',
+                    hintText: AppLocalizations.of(context)!.addTag,
                     hintStyle: TextStyle(color: _textSecondary.withValues(alpha: 0.6), fontSize: 13),
                     isDense: true,
                     border: InputBorder.none,
@@ -1593,14 +1616,20 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          Text(
-            '추천 태그',
-            style: TextStyle(fontSize: 12, color: _textSecondary),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children: ['승리', '역전', '골잔치', '클린시트', '첫직관', '원정'].map((tag) {
+          Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context)!;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.suggestedTags,
+                    style: TextStyle(fontSize: 12, color: _textSecondary),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    children: [l10n.tagVictory, l10n.tagComeback, l10n.tagGoalFest, l10n.tagCleanSheet, l10n.tagFirstMatch, l10n.tagAway].map((tag) {
               return GestureDetector(
                 onTap: () {
                   if (!_tags.contains(tag)) setState(() => _tags.add(tag));
@@ -1619,6 +1648,10 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
                 ),
               );
             }).toList(),
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -1644,9 +1677,9 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
               child: const Icon(Icons.more_horiz, size: 18, color: _textSecondary),
             ),
             const SizedBox(width: 10),
-            const Text(
-              '추가 정보',
-              style: TextStyle(
+            Text(
+              AppLocalizations.of(context)!.additionalInfo,
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: _textPrimary,
@@ -1660,11 +1693,11 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
         collapsedShape: const RoundedRectangleBorder(),
         children: [
           const SizedBox(height: 8),
-          _buildSectionTitle('날씨'),
+          _buildSectionTitle(AppLocalizations.of(context)!.weather),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
-            children: _weatherOptions.map((weather) {
+            children: _getWeatherOptions(context).map((weather) {
               final isSelected = _selectedWeather == weather;
               return GestureDetector(
                 onTap: () => setState(
@@ -1692,14 +1725,14 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
           const SizedBox(height: 16),
           _buildInlineTextField(
             controller: _companionController,
-            label: '함께 간 사람',
+            label: AppLocalizations.of(context)!.companions,
             icon: Icons.people,
-            hintText: '예: 친구들, 가족',
+            hintText: AppLocalizations.of(context)!.companionHint,
           ),
           const SizedBox(height: 16),
           _buildTicketPriceField(),
           const SizedBox(height: 16),
-          _buildSectionTitle('경기장 음식'),
+          _buildSectionTitle(AppLocalizations.of(context)!.stadiumFood),
           const SizedBox(height: 8),
           Container(
             decoration: BoxDecoration(
@@ -1710,7 +1743,7 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
               controller: _foodReviewController,
               maxLines: 2,
               decoration: InputDecoration(
-                hintText: '먹은 음식, 맛 평가 등',
+                hintText: AppLocalizations.of(context)!.foodReviewHint,
                 hintStyle: TextStyle(color: _textSecondary.withValues(alpha: 0.6)),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.all(12),
@@ -1754,10 +1787,11 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
   }
 
   Widget _buildTicketPriceField() {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle('티켓 가격'),
+        _buildSectionTitle(l10n.ticketPrice),
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
@@ -1768,11 +1802,11 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
             controller: _ticketPriceController,
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
-              hintText: '예: 50,000',
+              hintText: l10n.priceHint,
               hintStyle: TextStyle(color: _textSecondary.withValues(alpha: 0.6)),
               prefixIcon:
                   const Icon(Icons.confirmation_number, color: _textSecondary, size: 20),
-              suffixText: '원',
+              suffixText: l10n.currencyUnit,
               suffixStyle: const TextStyle(color: _textSecondary),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -1870,8 +1904,9 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
   Future<void> _saveRecord() async {
     final userId = ref.read(currentUserIdProvider);
     if (userId == null) {
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('로그인이 필요합니다')));
+          .showSnackBar(SnackBar(content: Text(l10n.loginRequired)));
       return;
     }
 
@@ -1948,14 +1983,16 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
       await ref.read(attendanceNotifierProvider.notifier).addAttendance(record);
 
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('직관 일기가 저장되었습니다!')));
+            .showSnackBar(SnackBar(content: Text(l10n.diarySaved)));
         context.pop();
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('저장 실패: $e')));
+            .showSnackBar(SnackBar(content: Text(l10n.saveFailed(e.toString()))));
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -2453,7 +2490,7 @@ class _TeamPlayersDialogState extends State<_TeamPlayersDialog>
               ),
               child: TextField(
                 decoration: InputDecoration(
-                  hintText: '선수 이름 검색',
+                  hintText: AppLocalizations.of(context)!.searchPlayerName,
                   hintStyle: TextStyle(color: _textSecondary.withValues(alpha: 0.6)),
                   prefixIcon: const Icon(Icons.search, color: _textSecondary),
                   isDense: true,
@@ -2470,8 +2507,8 @@ class _TeamPlayersDialogState extends State<_TeamPlayersDialog>
               unselectedLabelColor: _textSecondary,
               indicatorColor: _primary,
               tabs: [
-                Tab(text: widget.homeTeamName ?? '홈팀'),
-                Tab(text: widget.awayTeamName ?? '원정팀'),
+                Tab(text: widget.homeTeamName ?? AppLocalizations.of(context)!.homeTeam),
+                Tab(text: widget.awayTeamName ?? AppLocalizations.of(context)!.awayTeam),
               ],
             ),
             Expanded(
@@ -2495,7 +2532,7 @@ class _TeamPlayersDialogState extends State<_TeamPlayersDialog>
     if (players.isEmpty) {
       return Center(
         child: Text(
-          '선수 정보가 없습니다',
+          AppLocalizations.of(context)!.noPlayerInfo,
           style: TextStyle(color: _textSecondary),
         ),
       );
@@ -2694,7 +2731,7 @@ class _TeamSearchSheetState extends State<_TeamSearchSheet> {
                     color: _primary,
                   ),
                   label: Text(
-                    _showManualEntry ? '검색으로' : '직접 입력',
+                    _showManualEntry ? AppLocalizations.of(context)!.switchToSearch : AppLocalizations.of(context)!.switchToManual,
                     style: const TextStyle(color: _primary),
                   ),
                 ),
@@ -2704,7 +2741,7 @@ class _TeamSearchSheetState extends State<_TeamSearchSheet> {
 
             if (_showManualEntry) ...[
               Text(
-                '팀 이름을 직접 입력하세요',
+                AppLocalizations.of(context)!.enterTeamNameDirectly,
                 style: TextStyle(fontSize: 12, color: _textSecondary),
               ),
               const SizedBox(height: 8),
@@ -2717,7 +2754,7 @@ class _TeamSearchSheetState extends State<_TeamSearchSheet> {
                   controller: _manualTeamNameController,
                   autofocus: true,
                   decoration: InputDecoration(
-                    hintText: '팀 이름',
+                    hintText: AppLocalizations.of(context)!.teamName,
                     hintStyle: TextStyle(color: _textSecondary.withValues(alpha: 0.6)),
                     prefixIcon: const Icon(Icons.shield, color: _textSecondary),
                     border: InputBorder.none,
@@ -2741,12 +2778,12 @@ class _TeamSearchSheetState extends State<_TeamSearchSheet> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: const Text('이 팀으로 선택'),
+                  child: Text(AppLocalizations.of(context)!.selectThisTeam),
                 ),
               ),
             ] else ...[
               Text(
-                '리그 선택',
+                AppLocalizations.of(context)!.selectLeague,
                 style: TextStyle(fontSize: 12, color: _textSecondary),
               ),
               const SizedBox(height: 8),
@@ -2779,7 +2816,7 @@ class _TeamSearchSheetState extends State<_TeamSearchSheet> {
                 child: TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
-                    hintText: '팀 이름으로 검색',
+                    hintText: AppLocalizations.of(context)!.searchByTeamName,
                     hintStyle: TextStyle(color: _textSecondary.withValues(alpha: 0.6)),
                     prefixIcon: const Icon(Icons.search, color: _textSecondary),
                     suffixIcon: _isSearching
@@ -2821,7 +2858,7 @@ class _TeamSearchSheetState extends State<_TeamSearchSheet> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '검색 결과',
+            AppLocalizations.of(context)!.searchResults,
             style: TextStyle(fontSize: 12, color: _primary, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
@@ -2869,7 +2906,7 @@ class _TeamSearchSheetState extends State<_TeamSearchSheet> {
           Icon(Icons.sports_soccer, size: 48, color: _textSecondary.withValues(alpha: 0.5)),
           const SizedBox(height: 16),
           Text(
-            '리그를 선택하거나\n팀 이름을 검색하세요',
+            AppLocalizations.of(context)!.selectLeagueOrSearchTeam,
             textAlign: TextAlign.center,
             style: TextStyle(color: _textSecondary),
           ),
@@ -2934,16 +2971,19 @@ class _VenueSearchSheetState extends State<_VenueSearchSheet> {
   static const _textSecondary = Color(0xFF6B7280);
   static const _background = Color(0xFFF9FAFB);
 
-  // 주요 국가 목록 (API-Football 국가명 기준)
-  static const List<Map<String, String>> _countries = [
-    {'code': 'South-Korea', 'name': '대한민국', 'flag': '🇰🇷'},
-    {'code': 'England', 'name': '잉글랜드', 'flag': '🏴󠁧󠁢󠁥󠁮󠁧󠁿'},
-    {'code': 'Spain', 'name': '스페인', 'flag': '🇪🇸'},
-    {'code': 'Germany', 'name': '독일', 'flag': '🇩🇪'},
-    {'code': 'Italy', 'name': '이탈리아', 'flag': '🇮🇹'},
-    {'code': 'France', 'name': '프랑스', 'flag': '🇫🇷'},
-    {'code': 'Japan', 'name': '일본', 'flag': '🇯🇵'},
-  ];
+  // 주요 국가 목록 (API-Football 국가명 기준) - locale-aware
+  List<Map<String, String>> _getCountries(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return [
+      {'code': 'South-Korea', 'name': l10n.countryKorea, 'flag': '🇰🇷'},
+      {'code': 'England', 'name': l10n.countryEngland, 'flag': '🏴󠁧󠁢󠁥󠁮󠁧󠁿'},
+      {'code': 'Spain', 'name': l10n.countrySpain, 'flag': '🇪🇸'},
+      {'code': 'Germany', 'name': l10n.countryGermany, 'flag': '🇩🇪'},
+      {'code': 'Italy', 'name': l10n.countryItaly, 'flag': '🇮🇹'},
+      {'code': 'France', 'name': l10n.countryFrance, 'flag': '🇫🇷'},
+      {'code': 'Japan', 'name': l10n.countryJapan, 'flag': '🇯🇵'},
+    ];
+  }
 
   @override
   void dispose() {
@@ -3022,9 +3062,9 @@ class _VenueSearchSheetState extends State<_VenueSearchSheet> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  '경기장 검색',
-                  style: TextStyle(
+                Text(
+                  AppLocalizations.of(context)!.venueSearch,
+                  style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: _textPrimary,
@@ -3039,7 +3079,7 @@ class _VenueSearchSheetState extends State<_VenueSearchSheet> {
                     color: _primary,
                   ),
                   label: Text(
-                    _showManualEntry ? '검색으로' : '직접 입력',
+                    _showManualEntry ? AppLocalizations.of(context)!.switchToSearch : AppLocalizations.of(context)!.switchToManual,
                     style: const TextStyle(color: _primary),
                   ),
                 ),
@@ -3049,7 +3089,7 @@ class _VenueSearchSheetState extends State<_VenueSearchSheet> {
 
             if (_showManualEntry) ...[
               Text(
-                '경기장 이름을 직접 입력하세요',
+                AppLocalizations.of(context)!.enterVenueNameDirectly,
                 style: TextStyle(fontSize: 12, color: _textSecondary),
               ),
               const SizedBox(height: 8),
@@ -3062,7 +3102,7 @@ class _VenueSearchSheetState extends State<_VenueSearchSheet> {
                   controller: _manualVenueController,
                   autofocus: true,
                   decoration: InputDecoration(
-                    hintText: '경기장 이름',
+                    hintText: AppLocalizations.of(context)!.venueName,
                     hintStyle: TextStyle(color: _textSecondary.withValues(alpha: 0.6)),
                     prefixIcon: const Icon(Icons.stadium, color: _textSecondary),
                     border: InputBorder.none,
@@ -3086,19 +3126,19 @@ class _VenueSearchSheetState extends State<_VenueSearchSheet> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: const Text('이 경기장으로 선택'),
+                  child: Text(AppLocalizations.of(context)!.selectThisVenue),
                 ),
               ),
             ] else ...[
               Text(
-                '국가 선택',
+                AppLocalizations.of(context)!.selectCountry,
                 style: TextStyle(fontSize: 12, color: _textSecondary),
               ),
               const SizedBox(height: 8),
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
-                  children: _countries.map((country) => Padding(
+                  children: _getCountries(context).map((country) => Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: _CountryFilterChip(
                       flag: country['flag']!,
@@ -3125,7 +3165,7 @@ class _VenueSearchSheetState extends State<_VenueSearchSheet> {
                 child: TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
-                    hintText: '경기장 이름으로 검색',
+                    hintText: AppLocalizations.of(context)!.searchByVenueName,
                     hintStyle: TextStyle(color: _textSecondary.withValues(alpha: 0.6)),
                     prefixIcon: const Icon(Icons.search, color: _textSecondary),
                     suffixIcon: _isSearching
@@ -3166,7 +3206,7 @@ class _VenueSearchSheetState extends State<_VenueSearchSheet> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '검색 결과',
+            AppLocalizations.of(context)!.searchResults,
             style: TextStyle(fontSize: 12, color: _primary, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
@@ -3187,7 +3227,7 @@ class _VenueSearchSheetState extends State<_VenueSearchSheet> {
     }
 
     if (_countryVenues.isNotEmpty) {
-      final countryInfo = _countries.firstWhere(
+      final countryInfo = _getCountries(context).firstWhere(
         (c) => c['code'] == _selectedCountry,
         orElse: () => {'name': _selectedCountry ?? ''},
       );
@@ -3195,7 +3235,7 @@ class _VenueSearchSheetState extends State<_VenueSearchSheet> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '${countryInfo['name']} 경기장 목록',
+            AppLocalizations.of(context)!.stadiumListForCountry(countryInfo['name'] ?? ''),
             style: TextStyle(fontSize: 12, color: _primary, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
@@ -3218,7 +3258,7 @@ class _VenueSearchSheetState extends State<_VenueSearchSheet> {
           Icon(Icons.stadium, size: 48, color: _textSecondary.withValues(alpha: 0.5)),
           const SizedBox(height: 16),
           Text(
-            '국가를 선택하거나\n경기장 이름을 검색하세요',
+            AppLocalizations.of(context)!.selectCountryOrSearchVenue,
             textAlign: TextAlign.center,
             style: TextStyle(color: _textSecondary),
           ),
@@ -3240,7 +3280,7 @@ class _VenueSearchSheetState extends State<_VenueSearchSheet> {
             )
           : const Icon(Icons.stadium, size: 40, color: _textSecondary),
       title: Text(
-        venue.name ?? '이름 없음',
+        venue.name ?? AppLocalizations.of(context)!.noName,
         style: const TextStyle(color: _textPrimary),
       ),
       subtitle: venue.city != null

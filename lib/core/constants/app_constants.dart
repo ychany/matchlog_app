@@ -1,3 +1,6 @@
+import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
+
 // App Constants
 class AppConstants {
   static const String appName = 'MatchLog';
@@ -100,9 +103,38 @@ class AppConstants {
     return leagueNameToId[leagueName];
   }
 
-  // 표시 이름으로 리그 이름 가져오기 (역방향)
+  // 표시 이름으로 리그 이름 가져오기 (역방향) - 기본 한국어
   static String getLeagueDisplayName(String league) {
     return leagueDisplayNames[league] ?? league;
+  }
+
+  // Locale-aware 리그 이름 가져오기
+  static String getLocalizedLeagueName(BuildContext context, String league) {
+    final l10n = AppLocalizations.of(context)!;
+    switch (league) {
+      case 'English Premier League':
+        return l10n.leagueEPL;
+      case 'Spanish La Liga':
+        return l10n.leagueLaLiga;
+      case 'Italian Serie A':
+        return l10n.leagueSerieA;
+      case 'German Bundesliga':
+        return l10n.leagueBundesliga;
+      case 'French Ligue 1':
+        return l10n.leagueLigue1;
+      case 'South Korean K League 1':
+        return l10n.leagueKLeague1;
+      case 'South Korean K League 2':
+        return l10n.leagueKLeague2;
+      case 'UEFA Champions League':
+        return l10n.leagueUCL;
+      case 'UEFA Europa League':
+        return l10n.leagueUEL;
+      case 'International Friendlies':
+        return l10n.leagueInternational;
+      default:
+        return league;
+    }
   }
 
   // API-Football 리그 이름을 앱 내부 이름으로 변환

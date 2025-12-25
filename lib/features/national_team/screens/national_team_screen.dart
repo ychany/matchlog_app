@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/services/api_football_service.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../providers/national_team_provider.dart';
 import '../providers/selected_national_team_provider.dart';
@@ -177,11 +178,13 @@ class _NationalTeamScreenState extends ConsumerState<NationalTeamScreen>
                           ),
                         ),
                         const SizedBox(height: 2),
-                        Text(
-                          '개막까지',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: _textSecondary,
+                        Builder(
+                          builder: (context) => Text(
+                            AppLocalizations.of(context)!.untilOpening,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: _textSecondary,
+                            ),
                           ),
                         ),
                       ],
@@ -217,10 +220,10 @@ class _NationalTeamScreenState extends ConsumerState<NationalTeamScreen>
                 unselectedLabelColor: _textSecondary,
                 indicatorColor: const Color(0xFF2563EB),
                 indicatorWeight: 3,
-                tabs: const [
-                  Tab(text: '일정'),
-                  Tab(text: '정보'),
-                  Tab(text: '선수단'),
+                tabs: [
+                  Tab(text: AppLocalizations.of(context)!.scheduleTab),
+                  Tab(text: AppLocalizations.of(context)!.infoTab),
+                  Tab(text: AppLocalizations.of(context)!.squadTab),
                 ],
               ),
             ),
@@ -243,6 +246,7 @@ class _NationalTeamScreenState extends ConsumerState<NationalTeamScreen>
   }
 
   Widget _buildNoTeamSelectedScreen(BuildContext context, WorldCupCountdown countdown) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: _background,
       appBar: AppBar(
@@ -251,9 +255,9 @@ class _NationalTeamScreenState extends ConsumerState<NationalTeamScreen>
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => context.pop(),
         ),
-        title: const Text(
-          '국가대표',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        title: Text(
+          l10n.nationalTeam,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
         ),
       ),
       body: Column(
@@ -293,7 +297,7 @@ class _NationalTeamScreenState extends ConsumerState<NationalTeamScreen>
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '개막까지',
+                        l10n.untilOpening,
                         style: TextStyle(
                           fontSize: 12,
                           color: _textSecondary,
@@ -340,9 +344,9 @@ class _NationalTeamScreenState extends ConsumerState<NationalTeamScreen>
                     ),
                   ),
                   const SizedBox(height: 24),
-                  const Text(
-                    '응원할 국가대표팀을 선택해주세요',
-                    style: TextStyle(
+                  Text(
+                    l10n.selectNationalTeam,
+                    style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                       color: _textPrimary,
@@ -350,7 +354,7 @@ class _NationalTeamScreenState extends ConsumerState<NationalTeamScreen>
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '2026 월드컵에 참가하는 국가 중에서 선택할 수 있습니다',
+                    l10n.selectNationalTeam,
                     style: TextStyle(
                       fontSize: 14,
                       color: _textSecondary,
@@ -361,7 +365,7 @@ class _NationalTeamScreenState extends ConsumerState<NationalTeamScreen>
                   ElevatedButton.icon(
                     onPressed: () => context.push('/national-team/select'),
                     icon: const Icon(Icons.search),
-                    label: const Text('국가 선택하기'),
+                    label: Text(l10n.selectCountryButton),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: _gradientStart,
                       foregroundColor: Colors.white,
@@ -418,6 +422,7 @@ class _ScheduleTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final matchesAsync = ref.watch(selectedTeamAllMatchesProvider);
 
     return matchesAsync.when(
@@ -430,7 +435,7 @@ class _ScheduleTab extends ConsumerWidget {
                 Icon(Icons.event_busy, size: 48, color: _textSecondary),
                 const SizedBox(height: 12),
                 Text(
-                  '일정이 없습니다',
+                  l10n.noSchedule,
                   style: TextStyle(color: _textSecondary, fontSize: 14),
                 ),
               ],
@@ -454,13 +459,13 @@ class _ScheduleTab extends ConsumerWidget {
           padding: const EdgeInsets.all(16),
           children: [
             if (upcomingMatches.isNotEmpty) ...[
-              _buildSectionHeader('예정된 경기', Icons.event_outlined, _primary, upcomingMatches.length),
+              _buildSectionHeader(l10n.upcomingMatches, Icons.event_outlined, _primary, upcomingMatches.length),
               const SizedBox(height: 12),
               ...upcomingMatches.map((m) => _MatchCard(match: m, isPast: false)),
               const SizedBox(height: 24),
             ],
             if (pastMatches.isNotEmpty) ...[
-              _buildSectionHeader('지난 경기', Icons.history, _textSecondary, pastMatches.length),
+              _buildSectionHeader(l10n.pastMatches, Icons.history, _textSecondary, pastMatches.length),
               const SizedBox(height: 12),
               ...pastMatches.map((m) => _MatchCard(match: m, isPast: true)),
             ],
@@ -469,7 +474,7 @@ class _ScheduleTab extends ConsumerWidget {
       },
       loading: () => const LoadingIndicator(),
       error: (e, _) => Center(
-        child: Text('오류: $e', style: TextStyle(color: _textSecondary)),
+        child: Text('${l10n.errorPrefix}: $e', style: TextStyle(color: _textSecondary)),
       ),
     );
   }
@@ -564,7 +569,7 @@ class _MatchCard extends ConsumerWidget {
                 ),
                 const Spacer(),
                 Text(
-                  DateFormat('yyyy.MM.dd (E)', 'ko').format(matchDate),
+                  DateFormat(AppLocalizations.of(context)!.dateFormatDiary, Localizations.localeOf(context).toString()).format(matchDate),
                   style: TextStyle(
                     color: _textSecondary,
                     fontSize: 12,
@@ -715,13 +720,14 @@ class _InfoTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final teamAsync = ref.watch(selectedTeamInfoProvider);
     final formAsync = ref.watch(selectedTeamFormProvider);
 
     return teamAsync.when(
       data: (team) {
         if (team == null) {
-          return const Center(child: Text('팀 정보를 불러올 수 없습니다'));
+          return Center(child: Text(l10n.cannotLoadTeamInfo));
         }
 
         return ListView(
@@ -738,21 +744,21 @@ class _InfoTab extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    '기본 정보',
-                    style: TextStyle(
+                  Text(
+                    l10n.basicInfoSection,
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: _textPrimary,
                     ),
                   ),
                   const SizedBox(height: 16),
-                  _InfoRow(icon: Icons.flag_outlined, label: '국가', value: team.country ?? '-'),
-                  _InfoRow(icon: Icons.stadium_outlined, label: '홈 경기장', value: team.venue?.name ?? '-'),
+                  _InfoRow(icon: Icons.flag_outlined, label: l10n.countryLabel, value: team.country ?? '-'),
+                  _InfoRow(icon: Icons.stadium_outlined, label: l10n.homeStadiumLabel, value: team.venue?.name ?? '-'),
                   if (team.venue?.capacity != null)
-                    _InfoRow(icon: Icons.people_outline, label: '수용 인원', value: '${team.venue!.capacity}명'),
+                    _InfoRow(icon: Icons.people_outline, label: l10n.capacityLabel, value: l10n.capacityValue(team.venue!.capacity!)),
                   if (team.founded != null)
-                    _InfoRow(icon: Icons.calendar_today_outlined, label: '창단', value: team.founded.toString()),
+                    _InfoRow(icon: Icons.calendar_today_outlined, label: l10n.foundedLabel, value: team.founded.toString()),
                 ],
               ),
             ),
@@ -769,9 +775,9 @@ class _InfoTab extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    '최근 5경기 폼',
-                    style: TextStyle(
+                  Text(
+                    l10n.last5Form,
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: _textPrimary,
@@ -781,7 +787,7 @@ class _InfoTab extends ConsumerWidget {
                   formAsync.when(
                     data: (form) {
                       if (form == null) {
-                        return const Text('폼 정보가 없습니다');
+                        return Text(l10n.noFormInfo);
                       }
                       return Column(
                         children: [
@@ -824,16 +830,16 @@ class _InfoTab extends ConsumerWidget {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
-                              _StatItem(label: '승', value: '${form.wins}', color: const Color(0xFF10B981)),
-                              _StatItem(label: '무', value: '${form.draws}', color: const Color(0xFF6B7280)),
-                              _StatItem(label: '패', value: '${form.losses}', color: const Color(0xFFEF4444)),
+                              _StatItem(label: l10n.winShort, value: '${form.wins}', color: const Color(0xFF10B981)),
+                              _StatItem(label: l10n.drawShort, value: '${form.draws}', color: const Color(0xFF6B7280)),
+                              _StatItem(label: l10n.loseShort, value: '${form.losses}', color: const Color(0xFFEF4444)),
                             ],
                           ),
                         ],
                       );
                     },
                     loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (_, __) => const Text('폼 정보를 불러올 수 없습니다'),
+                    error: (_, __) => Text(l10n.cannotLoadFormInfo),
                   ),
                 ],
               ),
@@ -846,7 +852,7 @@ class _InfoTab extends ConsumerWidget {
         );
       },
       loading: () => const LoadingIndicator(),
-      error: (e, _) => Center(child: Text('오류: $e')),
+      error: (e, _) => Center(child: Text('${l10n.errorPrefix}: $e')),
     );
   }
 }
@@ -928,6 +934,7 @@ class _DynamicCompetitionsCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final competitionsAsync = ref.watch(selectedTeamCompetitionsProvider);
 
     return Container(
@@ -942,9 +949,9 @@ class _DynamicCompetitionsCard extends ConsumerWidget {
         children: [
           Row(
             children: [
-              const Text(
-                '참가 대회',
-                style: TextStyle(
+              Text(
+                l10n.competitionsSection,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: _textPrimary,
@@ -952,7 +959,7 @@ class _DynamicCompetitionsCard extends ConsumerWidget {
               ),
               const Spacer(),
               Text(
-                '탭하여 리그 상세',
+                l10n.tapForLeagueDetail,
                 style: TextStyle(
                   fontSize: 11,
                   color: _textSecondary,
@@ -968,7 +975,7 @@ class _DynamicCompetitionsCard extends ConsumerWidget {
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   child: Center(
                     child: Text(
-                      '참가 대회 정보가 없습니다',
+                      l10n.noCompetitionInfo,
                       style: TextStyle(color: _textSecondary, fontSize: 14),
                     ),
                   ),
@@ -987,7 +994,7 @@ class _DynamicCompetitionsCard extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(vertical: 16),
               child: Center(
                 child: Text(
-                  '대회 정보를 불러올 수 없습니다',
+                  l10n.cannotLoadCompetitionInfo,
                   style: TextStyle(color: _textSecondary, fontSize: 14),
                 ),
               ),
@@ -1054,6 +1061,7 @@ class _SquadTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final squadAsync = ref.watch(selectedTeamSquadProvider);
 
     return squadAsync.when(
@@ -1066,7 +1074,7 @@ class _SquadTab extends ConsumerWidget {
                 Icon(Icons.info_outline, size: 48, color: _textSecondary),
                 const SizedBox(height: 16),
                 Text(
-                  '선수단 정보가 없습니다',
+                  l10n.noSquadInfo,
                   style: TextStyle(color: _textSecondary, fontSize: 14),
                 ),
               ],
@@ -1084,19 +1092,19 @@ class _SquadTab extends ConsumerWidget {
           padding: const EdgeInsets.all(16),
           children: [
             if (goalkeepers.isNotEmpty) ...[
-              _buildSectionCard('골키퍼', goalkeepers),
+              _buildSectionCard(l10n.goalkeepersSection, goalkeepers),
               const SizedBox(height: 16),
             ],
             if (defenders.isNotEmpty) ...[
-              _buildSectionCard('수비수', defenders),
+              _buildSectionCard(l10n.defendersSection, defenders),
               const SizedBox(height: 16),
             ],
             if (midfielders.isNotEmpty) ...[
-              _buildSectionCard('미드필더', midfielders),
+              _buildSectionCard(l10n.midfieldersSection, midfielders),
               const SizedBox(height: 16),
             ],
             if (attackers.isNotEmpty) ...[
-              _buildSectionCard('공격수', attackers),
+              _buildSectionCard(l10n.attackersSection, attackers),
             ],
             if (goalkeepers.isEmpty && defenders.isEmpty && midfielders.isEmpty && attackers.isEmpty)
               Container(
@@ -1112,7 +1120,7 @@ class _SquadTab extends ConsumerWidget {
                       Icon(Icons.info_outline, size: 32, color: _textSecondary),
                       const SizedBox(height: 8),
                       Text(
-                        '국가대표 선수단 정보는\n대회별로 소집됩니다',
+                        l10n.squadInfoNote,
                         style: TextStyle(color: _textSecondary, fontSize: 14),
                         textAlign: TextAlign.center,
                       ),
@@ -1130,7 +1138,7 @@ class _SquadTab extends ConsumerWidget {
           children: [
             Icon(Icons.error_outline, size: 48, color: _textSecondary),
             const SizedBox(height: 12),
-            Text('오류: $e', style: TextStyle(color: _textSecondary, fontSize: 14)),
+            Text('${l10n.errorPrefix}: $e', style: TextStyle(color: _textSecondary, fontSize: 14)),
           ],
         ),
       ),

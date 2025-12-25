@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../l10n/app_localizations.dart';
 import '../providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -29,6 +30,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
     final isLoading = authState.isLoading;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       body: SafeArea(
@@ -47,13 +49,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               const SizedBox(height: 24),
               Text(
-                '매치로그',
+                l10n.matchLog,
                 style: AppTextStyles.headline1,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               Text(
-                '나만의 축구 직관 기록',
+                l10n.myFootballRecord,
                 style: AppTextStyles.body2.copyWith(
                   color: AppColors.textSecondaryLight,
                 ),
@@ -69,16 +71,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(
-                        labelText: '이메일',
-                        prefixIcon: Icon(Icons.email_outlined),
+                      decoration: InputDecoration(
+                        labelText: l10n.emailLabel,
+                        prefixIcon: const Icon(Icons.email_outlined),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return '이메일을 입력해주세요';
+                          return l10n.enterEmail;
                         }
                         if (!value.contains('@')) {
-                          return '올바른 이메일 형식을 입력해주세요';
+                          return l10n.invalidEmailFormat;
                         }
                         return null;
                       },
@@ -88,7 +90,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       controller: _passwordController,
                       obscureText: _obscurePassword,
                       decoration: InputDecoration(
-                        labelText: '비밀번호',
+                        labelText: l10n.passwordLabel,
                         prefixIcon: const Icon(Icons.lock_outlined),
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -103,10 +105,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return '비밀번호를 입력해주세요';
+                          return l10n.enterPasswordPlease;
                         }
                         if (value.length < 6) {
-                          return '비밀번호는 6자 이상이어야 합니다';
+                          return l10n.passwordTooShort;
                         }
                         return null;
                       },
@@ -128,7 +130,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   color: Colors.white,
                                 ),
                               )
-                            : Text(_isLogin ? '로그인' : '회원가입'),
+                            : Text(_isLogin ? l10n.loginAction : l10n.signUpAction),
                       ),
                     ),
                   ],
@@ -144,8 +146,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 },
                 child: Text(
                   _isLogin
-                      ? '계정이 없으신가요? 회원가입'
-                      : '이미 계정이 있으신가요? 로그인',
+                      ? l10n.noAccountSignUp
+                      : l10n.hasAccountLogin,
                 ),
               ),
 
@@ -158,7 +160,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
-                      '또는',
+                      l10n.orDivider,
                       style: AppTextStyles.caption.copyWith(
                         color: AppColors.textSecondaryLight,
                       ),
@@ -182,7 +184,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     height: 24,
                     errorBuilder: (_, __, ___) => const Icon(Icons.g_mobiledata),
                   ),
-                  label: const Text('Google로 계속하기'),
+                  label: Text(l10n.continueWithGoogle),
                 ),
               ),
 
@@ -192,7 +194,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               if (_isLogin)
                 TextButton(
                   onPressed: _showForgotPassword,
-                  child: const Text('비밀번호를 잊으셨나요?'),
+                  child: Text(l10n.forgotPassword),
                 ),
 
               // 에러 메시지
@@ -210,7 +212,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          _getErrorMessage(authState.error.toString()),
+                          _getErrorMessage(context, authState.error.toString()),
                           style: const TextStyle(color: AppColors.error),
                         ),
                       ),
@@ -225,21 +227,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  String _getErrorMessage(String error) {
+  String _getErrorMessage(BuildContext context, String error) {
+    final l10n = AppLocalizations.of(context)!;
     if (error.contains('email-already-in-use')) {
-      return '이미 사용 중인 이메일입니다';
+      return l10n.emailAlreadyInUse;
     } else if (error.contains('invalid-email')) {
-      return '올바르지 않은 이메일 형식입니다';
+      return l10n.invalidEmailError;
     } else if (error.contains('weak-password')) {
-      return '비밀번호가 너무 약합니다';
+      return l10n.weakPasswordError;
     } else if (error.contains('user-not-found')) {
-      return '등록되지 않은 이메일입니다';
+      return l10n.userNotFoundError;
     } else if (error.contains('wrong-password')) {
-      return '비밀번호가 올바르지 않습니다';
+      return l10n.wrongPasswordError;
     } else if (error.contains('internal-error')) {
-      return '인증 서비스를 사용할 수 없습니다. 잠시 후 다시 시도해주세요.';
+      return l10n.authServiceUnavailable;
     }
-    return '오류가 발생했습니다. 다시 시도해주세요.';
+    return l10n.genericAuthError;
   }
 
   void _submit() {
@@ -267,38 +270,39 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   void _showForgotPassword() {
     final emailController = TextEditingController();
+    final l10n = AppLocalizations.of(context)!;
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('비밀번호 재설정'),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.resetPasswordTitle),
         content: TextField(
           controller: emailController,
-          decoration: const InputDecoration(
-            labelText: '이메일',
-            hintText: '가입한 이메일을 입력하세요',
+          decoration: InputDecoration(
+            labelText: l10n.emailLabel,
+            hintText: l10n.enterRegisteredEmail,
           ),
           keyboardType: TextInputType.emailAddress,
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () {
               final email = emailController.text.trim();
               if (email.isNotEmpty) {
                 ref.read(authNotifierProvider.notifier).sendPasswordResetEmail(email);
-                Navigator.pop(context);
+                Navigator.pop(dialogContext);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('비밀번호 재설정 이메일을 보냈습니다'),
+                  SnackBar(
+                    content: Text(l10n.passwordResetEmailSent),
                   ),
                 );
               }
             },
-            child: const Text('보내기'),
+            child: Text(l10n.sendButton),
           ),
         ],
       ),

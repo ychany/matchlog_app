@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/services/api_football_service.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 
 // 모든 국가 목록 Provider
@@ -104,7 +105,7 @@ class _LeaguesByCountryScreenState extends ConsumerState<LeaguesByCountryScreen>
                 Expanded(
                   child: Text(
                     _selectedCountry == null
-                        ? '국가별 리그'
+                        ? AppLocalizations.of(context)!.leaguesByCountry
                         : _selectedCountry!.name,
                     style: const TextStyle(
                       fontSize: 16,
@@ -130,7 +131,7 @@ class _LeaguesByCountryScreenState extends ConsumerState<LeaguesByCountryScreen>
                   });
                 },
                 decoration: InputDecoration(
-                  hintText: '국가 검색...',
+                  hintText: AppLocalizations.of(context)!.searchCountry,
                   hintStyle: const TextStyle(color: _textSecondary),
                   prefixIcon: const Icon(Icons.search, color: _textSecondary),
                   filled: true,
@@ -186,11 +187,11 @@ class _LeaguesByCountryScreenState extends ConsumerState<LeaguesByCountryScreen>
           children: [
             // 주요 국가 섹션
             if (topCountryList.isNotEmpty && _searchQuery.isEmpty) ...[
-              const Padding(
-                padding: EdgeInsets.only(bottom: 12),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
                 child: Text(
-                  '주요 국가',
-                  style: TextStyle(
+                  AppLocalizations.of(context)!.mainCountries,
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: _textSecondary,
@@ -199,11 +200,11 @@ class _LeaguesByCountryScreenState extends ConsumerState<LeaguesByCountryScreen>
               ),
               _buildCountryGrid(topCountryList),
               const SizedBox(height: 24),
-              const Padding(
-                padding: EdgeInsets.only(bottom: 12),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
                 child: Text(
-                  '전체 국가',
-                  style: TextStyle(
+                  AppLocalizations.of(context)!.allCountries,
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: _textSecondary,
@@ -219,7 +220,7 @@ class _LeaguesByCountryScreenState extends ConsumerState<LeaguesByCountryScreen>
       },
       loading: () => const LoadingIndicator(),
       error: (e, _) => Center(
-        child: Text('오류: $e', style: const TextStyle(color: _textSecondary)),
+        child: Text('${AppLocalizations.of(context)!.errorPrefix}: $e', style: const TextStyle(color: _textSecondary)),
       ),
     );
   }
@@ -393,8 +394,8 @@ class _LeaguesByCountryScreenState extends ConsumerState<LeaguesByCountryScreen>
 
   Widget _buildLeagueList() {
     if (_selectedCountry?.code == null) {
-      return const Center(
-        child: Text('국가 코드가 없습니다'),
+      return Center(
+        child: Text(AppLocalizations.of(context)!.noCountryCode),
       );
     }
 
@@ -402,6 +403,7 @@ class _LeaguesByCountryScreenState extends ConsumerState<LeaguesByCountryScreen>
 
     return leaguesAsync.when(
       data: (leagues) {
+        final l10n = AppLocalizations.of(context)!;
         if (leagues.isEmpty) {
           return Center(
             child: Column(
@@ -410,7 +412,7 @@ class _LeaguesByCountryScreenState extends ConsumerState<LeaguesByCountryScreen>
                 Icon(Icons.sports_soccer, size: 64, color: _textSecondary),
                 const SizedBox(height: 16),
                 Text(
-                  '${_selectedCountry!.name}에 등록된 리그가 없습니다',
+                  l10n.noLeaguesInCountry(_selectedCountry!.name),
                   style: const TextStyle(color: _textSecondary, fontSize: 16),
                 ),
               ],
@@ -428,24 +430,24 @@ class _LeaguesByCountryScreenState extends ConsumerState<LeaguesByCountryScreen>
           children: [
             // 리그
             if (leagueType.isNotEmpty) ...[
-              _buildLeagueSection('리그', leagueType),
+              _buildLeagueSection(l10n.leagueSection, leagueType),
               const SizedBox(height: 16),
             ],
             // 컵 대회
             if (cupType.isNotEmpty) ...[
-              _buildLeagueSection('컵 대회', cupType),
+              _buildLeagueSection(l10n.cupSection, cupType),
               const SizedBox(height: 16),
             ],
             // 기타
             if (otherType.isNotEmpty) ...[
-              _buildLeagueSection('기타', otherType),
+              _buildLeagueSection(l10n.otherSection, otherType),
             ],
           ],
         );
       },
       loading: () => const LoadingIndicator(),
       error: (e, _) => Center(
-        child: Text('오류: $e', style: const TextStyle(color: _textSecondary)),
+        child: Text('${AppLocalizations.of(context)!.errorPrefix}: $e', style: const TextStyle(color: _textSecondary)),
       ),
     );
   }

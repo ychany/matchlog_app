@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/widgets.dart';
+import '../../../l10n/app_localizations.dart';
 
 enum MatchResult { win, draw, loss, unknown }
 
@@ -36,6 +38,19 @@ extension MatchMoodExtension on MatchMood {
       case MatchMood.disappointed: return '아쉬움';
       case MatchMood.sad: return '슬픔';
       case MatchMood.angry: return '분노';
+    }
+  }
+
+  String getLocalizedLabel(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    switch (this) {
+      case MatchMood.excited: return l10n.moodExcited;
+      case MatchMood.happy: return l10n.moodHappy;
+      case MatchMood.satisfied: return l10n.moodSatisfied;
+      case MatchMood.neutral: return l10n.moodNeutral;
+      case MatchMood.disappointed: return l10n.moodDisappointed;
+      case MatchMood.sad: return l10n.moodSad;
+      case MatchMood.angry: return l10n.moodAngry;
     }
   }
 }

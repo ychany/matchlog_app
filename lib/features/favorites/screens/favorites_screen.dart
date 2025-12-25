@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/team_model.dart';
 import '../../../shared/models/player_model.dart';
 import '../../../shared/widgets/empty_state.dart';
@@ -15,7 +16,7 @@ import '../providers/favorites_provider.dart';
 class FavoritesScreen extends ConsumerWidget {
   const FavoritesScreen({super.key});
 
-  static const _primary = Color(0xFF2563EB);
+  static const _primaryColor = Color(0xFF2563EB);
   static const _primaryLight = Color(0xFFDBEAFE);
   static const _textPrimary = Color(0xFF111827);
   static const _background = Color(0xFFF9FAFB);
@@ -34,68 +35,47 @@ class FavoritesScreen extends ConsumerWidget {
           child: Column(
             children: [
               // 헤더
-              Container(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      '즐겨찾기',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w700,
-                        color: _textPrimary,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => _showAddDialog(context, ref, selectedTab),
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: _primaryLight,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(Icons.add, color: _primary, size: 22),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              _buildHeader(context, ref, selectedTab),
               // 본문
               Expanded(
                 child: Column(
                   children: [
                     // Tab Bar
-                    Container(
-                      margin: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade200,
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: _TabButton(
-                              label: '팀',
-                              isSelected: selectedTab == FavoritesTab.teams,
-                              onTap: () {
-                                ref.read(selectedFavoritesTabProvider.notifier).state =
-                                    FavoritesTab.teams;
-                              },
-                            ),
+                    Builder(
+                      builder: (context) {
+                        final l10n = AppLocalizations.of(context)!;
+                        return Container(
+                          margin: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade200,
+                            borderRadius: BorderRadius.circular(AppRadius.md),
                           ),
-                          Expanded(
-                            child: _TabButton(
-                              label: '선수',
-                              isSelected: selectedTab == FavoritesTab.players,
-                              onTap: () {
-                                ref.read(selectedFavoritesTabProvider.notifier).state =
-                                    FavoritesTab.players;
-                              },
-                            ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: _TabButton(
+                                  label: l10n.teams,
+                                  isSelected: selectedTab == FavoritesTab.teams,
+                                  onTap: () {
+                                    ref.read(selectedFavoritesTabProvider.notifier).state =
+                                        FavoritesTab.teams;
+                                  },
+                                ),
+                              ),
+                              Expanded(
+                                child: _TabButton(
+                                  label: l10n.players,
+                                  isSelected: selectedTab == FavoritesTab.players,
+                                  onTap: () {
+                                    ref.read(selectedFavoritesTabProvider.notifier).state =
+                                        FavoritesTab.players;
+                                  },
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        );
+                      },
                     ),
 
                     // Content
@@ -110,6 +90,37 @@ class FavoritesScreen extends ConsumerWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context, WidgetRef ref, FavoritesTab selectedTab) {
+    final l10n = AppLocalizations.of(context)!;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            l10n.favorites,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: _textPrimary,
+            ),
+          ),
+          GestureDetector(
+            onTap: () => _showAddDialog(context, ref, selectedTab),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: _primaryLight,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(Icons.add, color: _primaryColor, size: 20),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -276,22 +287,23 @@ class _TeamCard extends StatelessWidget {
   }
 
   void _confirmUnfollow(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('팀 팔로우 해제'),
-        content: Text('${team.nameKr}을(를) 즐겨찾기에서 제거하시겠습니까?'),
+        title: Text(l10n.unfollowTeam),
+        content: Text(l10n.unfollowTeamConfirm(team.nameKr)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               onUnfollow();
             },
-            child: const Text('해제', style: TextStyle(color: AppColors.error)),
+            child: Text(l10n.unfollow, style: const TextStyle(color: AppColors.error)),
           ),
         ],
       ),
@@ -362,22 +374,23 @@ class _PlayerCard extends StatelessWidget {
   }
 
   void _confirmUnfollow(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('선수 팔로우 해제'),
-        content: Text('${player.nameKr}을(를) 즐겨찾기에서 제거하시겠습니까?'),
+        title: Text(l10n.unfollowPlayer),
+        content: Text(l10n.unfollowPlayerConfirm(player.nameKr)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               onUnfollow();
             },
-            child: const Text('해제', style: TextStyle(color: AppColors.error)),
+            child: Text(l10n.unfollow, style: const TextStyle(color: AppColors.error)),
           ),
         ],
       ),
@@ -422,15 +435,15 @@ class _AddTeamSheetState extends ConsumerState<_AddTeamSheet> {
               ),
             ),
           ),
-          Text('팀 추가', style: AppTextStyles.headline3),
+          Text(AppLocalizations.of(context)!.addTeam, style: AppTextStyles.headline3),
           const SizedBox(height: 16),
 
           // Search
           TextField(
             controller: searchController,
-            decoration: const InputDecoration(
-              hintText: '팀 검색...',
-              prefixIcon: Icon(Icons.search),
+            decoration: InputDecoration(
+              hintText: AppLocalizations.of(context)!.searchTeam,
+              prefixIcon: const Icon(Icons.search),
             ),
             onChanged: (value) {
               ref.read(teamSearchQueryProvider.notifier).state = value;
@@ -445,7 +458,7 @@ class _AddTeamSheetState extends ConsumerState<_AddTeamSheet> {
               scrollDirection: Axis.horizontal,
               children: [
                 _LeagueFilterChip(
-                  label: '전체',
+                  label: AppLocalizations.of(context)!.all,
                   isSelected: selectedLeague == null,
                   onTap: () => setState(() => selectedLeague = null),
                 ),
@@ -489,14 +502,14 @@ class _AddTeamSheetState extends ConsumerState<_AddTeamSheet> {
       );
     }
 
-    return const Center(
-      child: Text('리그를 선택하거나 팀을 검색하세요'),
+    return Center(
+      child: Text(AppLocalizations.of(context)!.selectLeagueOrSearch),
     );
   }
 
   Widget _buildTeamList(List<Team> teams) {
     if (teams.isEmpty) {
-      return const Center(child: Text('팀을 찾을 수 없습니다'));
+      return Center(child: Text(AppLocalizations.of(context)!.teamNotFound));
     }
 
     // StreamProvider를 사용하여 실시간으로 즐겨찾기 상태 확인
@@ -596,7 +609,7 @@ class _AddTeamSheetState extends ConsumerState<_AddTeamSheet> {
 
   String _getLeagueDisplayName(String league) {
     if (league == 'International Friendlies' || league == 'FIFA World Cup') {
-      return '국가';
+      return AppLocalizations.of(context)!.national;
     }
     return AppConstants.leagueDisplayNames[league] ?? league;
   }
@@ -638,15 +651,15 @@ class _AddPlayerSheetState extends ConsumerState<_AddPlayerSheet> {
               ),
             ),
           ),
-          Text('선수 추가', style: AppTextStyles.headline3),
+          Text(AppLocalizations.of(context)!.addPlayer, style: AppTextStyles.headline3),
           const SizedBox(height: 16),
 
           // Search
           TextField(
             controller: searchController,
-            decoration: const InputDecoration(
-              hintText: '선수 검색...',
-              prefixIcon: Icon(Icons.search),
+            decoration: InputDecoration(
+              hintText: AppLocalizations.of(context)!.searchPlayer,
+              prefixIcon: const Icon(Icons.search),
             ),
             onChanged: (value) {
               ref.read(playerSearchQueryProvider.notifier).state = value;
@@ -676,7 +689,7 @@ class _AddPlayerSheetState extends ConsumerState<_AddPlayerSheet> {
     return searchResults.when(
       data: (players) {
         if (players.isEmpty) {
-          return const Center(child: Text('선수를 찾을 수 없습니다'));
+          return Center(child: Text(AppLocalizations.of(context)!.playerNotFound));
         }
         return ListView.builder(
           controller: widget.scrollController,

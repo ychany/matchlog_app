@@ -7,6 +7,7 @@ import '../models/post_model.dart';
 import '../providers/community_provider.dart';
 import '../../../core/services/api_football_service.dart';
 import '../../../core/constants/api_football_ids.dart';
+import '../../../l10n/app_localizations.dart';
 
 class CommunityScreen extends ConsumerStatefulWidget {
   const CommunityScreen({super.key});
@@ -140,9 +141,9 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      '커뮤니티',
-                      style: TextStyle(
+                    Text(
+                      AppLocalizations.of(context)!.communityTitle,
+                      style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w700,
                         color: _textPrimary,
@@ -171,7 +172,7 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
                         },
                         style: const TextStyle(fontSize: 14),
                         decoration: InputDecoration(
-                          hintText: '제목, 내용, 작성자 검색',
+                          hintText: AppLocalizations.of(context)!.searchTitleContentAuthor,
                           hintStyle: TextStyle(color: _textSecondary, fontSize: 14),
                           prefixIcon: Icon(Icons.search, color: _textSecondary, size: 20),
                           suffixIcon: _searchQuery.isNotEmpty
@@ -233,7 +234,7 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
                     scrollDirection: Axis.horizontal,
                     child: Row(
                       children: [
-                        if (_onlyWithMatch) _buildFilterChip('직관 기록 있음', () {
+                        if (_onlyWithMatch) _buildFilterChip(AppLocalizations.of(context)!.hasMatchRecord, () {
                           setState(() => _onlyWithMatch = false);
                         }),
                         if (_selectedMatchFilter != null) _buildFilterChip(
@@ -244,7 +245,7 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
                         GestureDetector(
                           onTap: _clearAllFilters,
                           child: Text(
-                            '전체 해제',
+                            AppLocalizations.of(context)!.clearAll,
                             style: TextStyle(
                               fontSize: 12,
                               color: _primary,
@@ -338,11 +339,11 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
                       children: [
                         const Icon(Icons.error_outline, size: 48, color: Colors.grey),
                         const SizedBox(height: 16),
-                        Text('오류가 발생했습니다\n$e', textAlign: TextAlign.center),
+                        Text('${AppLocalizations.of(context)!.errorOccurred}\n$e', textAlign: TextAlign.center),
                         const SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: () => ref.read(postsNotifierProvider.notifier).refresh(),
-                          child: const Text('다시 시도'),
+                          child: Text(AppLocalizations.of(context)!.retry),
                         ),
                       ],
                     ),
@@ -379,18 +380,18 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
             ),
           ),
           const SizedBox(height: 20),
-          const Text(
-            '아직 게시글이 없습니다',
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context)!.noPostsYet,
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
               color: _textPrimary,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            '첫 번째 게시글을 작성해보세요!',
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context)!.writeFirstPost,
+            style: const TextStyle(
               fontSize: 14,
               color: _textSecondary,
             ),
@@ -399,7 +400,7 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
           ElevatedButton.icon(
             onPressed: () => context.push('/community/write'),
             icon: const Icon(Icons.edit),
-            label: const Text('글쓰기'),
+            label: Text(AppLocalizations.of(context)!.writePost),
             style: ElevatedButton.styleFrom(
               backgroundColor: _primary,
               foregroundColor: Colors.white,
@@ -432,9 +433,9 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
             ),
           ),
           const SizedBox(height: 20),
-          const Text(
-            '검색 결과가 없습니다',
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context)!.noSearchResultsForQuery,
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
               color: _textPrimary,
@@ -442,7 +443,7 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            '"$_searchQuery"에 대한 결과를 찾을 수 없습니다',
+            AppLocalizations.of(context)!.emptySearchSubtitle(_searchQuery),
             style: const TextStyle(
               fontSize: 14,
               color: _textSecondary,
@@ -457,7 +458,7 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
                 _searchQuery = '';
               });
             },
-            child: const Text('검색어 지우기'),
+            child: Text(AppLocalizations.of(context)!.clearSearchQuery),
           ),
         ],
       ),
@@ -525,7 +526,7 @@ class _PostCard extends ConsumerWidget {
                             ),
                           ),
                           Text(
-                            _formatTime(post.createdAt),
+                            _formatTime(context, post.createdAt),
                             style: const TextStyle(
                               fontSize: 12,
                               color: _textSecondary,
@@ -657,7 +658,7 @@ class _PostCard extends ConsumerWidget {
                       const Icon(Icons.bar_chart_rounded, size: 14, color: Color(0xFF10B981)),
                       const SizedBox(width: 8),
                       Text(
-                        '${post.statsTotalMatches ?? 0}경기',
+                        AppLocalizations.of(context)!.nMatchesUnit(post.statsTotalMatches ?? 0),
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -790,18 +791,19 @@ class _PostCard extends ConsumerWidget {
     );
   }
 
-  String _formatTime(DateTime dateTime) {
+  String _formatTime(BuildContext context, DateTime dateTime) {
+    final l10n = AppLocalizations.of(context)!;
     final now = DateTime.now();
     final diff = now.difference(dateTime);
 
     if (diff.inMinutes < 1) {
-      return '방금 전';
+      return l10n.justNow;
     } else if (diff.inMinutes < 60) {
-      return '${diff.inMinutes}분 전';
+      return l10n.minutesAgo(diff.inMinutes);
     } else if (diff.inHours < 24) {
-      return '${diff.inHours}시간 전';
+      return l10n.hoursAgo(diff.inHours);
     } else if (diff.inDays < 7) {
-      return '${diff.inDays}일 전';
+      return l10n.daysAgo(diff.inDays);
     } else {
       return '${dateTime.month}/${dateTime.day}';
     }
@@ -876,10 +878,11 @@ class _MatchFilterModalState extends State<_MatchFilterModal> {
     }
   }
 
-  String _formatDate(DateTime date) {
-    const weekdays = ['월', '화', '수', '목', '금', '토', '일'];
+  String _formatDate(BuildContext context, DateTime date) {
+    final l10n = AppLocalizations.of(context)!;
+    final weekdays = [l10n.mon, l10n.tue, l10n.wed, l10n.thu, l10n.fri, l10n.sat, l10n.sun];
     final weekday = weekdays[date.weekday - 1];
-    return '${date.year}년 ${date.month}월 ${date.day}일 ($weekday)';
+    return l10n.dateWithWeekday(date.month, date.day, weekday);
   }
 
   Future<void> _selectDate() async {
@@ -943,9 +946,9 @@ class _MatchFilterModalState extends State<_MatchFilterModal> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  '경기 검색',
-                  style: TextStyle(
+                Text(
+                  AppLocalizations.of(context)!.matchSearch,
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
                     color: _textPrimary,
@@ -960,9 +963,9 @@ class _MatchFilterModalState extends State<_MatchFilterModal> {
                       _hasSearched = false;
                     });
                   },
-                  child: const Text(
-                    '초기화',
-                    style: TextStyle(
+                  child: Text(
+                    AppLocalizations.of(context)!.reset,
+                    style: const TextStyle(
                       fontSize: 14,
                       color: _textSecondary,
                     ),
@@ -1000,7 +1003,7 @@ class _MatchFilterModalState extends State<_MatchFilterModal> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              '직관 기록이 있는 게시글만 보기',
+                              AppLocalizations.of(context)!.showOnlyWithMatchRecord,
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
@@ -1021,9 +1024,9 @@ class _MatchFilterModalState extends State<_MatchFilterModal> {
                   const SizedBox(height: 20),
 
                   // 날짜 선택
-                  const Text(
-                    '경기 날짜',
-                    style: TextStyle(
+                  Text(
+                    AppLocalizations.of(context)!.matchDate,
+                    style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: _textSecondary,
@@ -1044,7 +1047,7 @@ class _MatchFilterModalState extends State<_MatchFilterModal> {
                           const Icon(Icons.calendar_today, color: _primary, size: 20),
                           const SizedBox(width: 12),
                           Text(
-                            _formatDate(_selectedDate),
+                            _formatDate(context, _selectedDate),
                             style: const TextStyle(
                               fontSize: 14,
                               color: _textPrimary,
@@ -1060,9 +1063,9 @@ class _MatchFilterModalState extends State<_MatchFilterModal> {
                   const SizedBox(height: 16),
 
                   // 리그 선택
-                  const Text(
-                    '리그 선택',
-                    style: TextStyle(
+                  Text(
+                    AppLocalizations.of(context)!.selectLeagueFilter,
+                    style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: _textSecondary,
@@ -1073,7 +1076,7 @@ class _MatchFilterModalState extends State<_MatchFilterModal> {
                     scrollDirection: Axis.horizontal,
                     child: Row(
                       children: [
-                        _buildLeagueChip('전체', null),
+                        _buildLeagueChip(AppLocalizations.of(context)!.allLeagues, null),
                         const SizedBox(width: 8),
                         ...LeagueIds.supportedLeagues.map((league) => Padding(
                               padding: const EdgeInsets.only(right: 8),
@@ -1109,7 +1112,7 @@ class _MatchFilterModalState extends State<_MatchFilterModal> {
                         ),
                       ),
                       label: Text(
-                        _isSearching ? '검색 중...' : '경기 검색',
+                        _isSearching ? AppLocalizations.of(context)!.searching : AppLocalizations.of(context)!.searchMatch,
                         style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
                     ),
@@ -1120,7 +1123,7 @@ class _MatchFilterModalState extends State<_MatchFilterModal> {
                   // 검색 결과
                   if (_hasSearched) ...[
                     Text(
-                      '검색 결과 (${_searchResults.length})',
+                      AppLocalizations.of(context)!.searchResultsCount(_searchResults.length),
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -1136,9 +1139,9 @@ class _MatchFilterModalState extends State<_MatchFilterModal> {
                           children: [
                             Icon(Icons.sports_soccer_outlined, size: 40, color: Colors.grey.shade400),
                             const SizedBox(height: 8),
-                            const Text(
-                              '해당 날짜에 경기가 없습니다',
-                              style: TextStyle(color: _textSecondary),
+                            Text(
+                              AppLocalizations.of(context)!.noMatchesOnDate,
+                              style: const TextStyle(color: _textSecondary),
                             ),
                           ],
                         ),
@@ -1150,7 +1153,7 @@ class _MatchFilterModalState extends State<_MatchFilterModal> {
                       Padding(
                         padding: const EdgeInsets.only(top: 8),
                         child: Text(
-                          '외 ${_searchResults.length - 10}개 더 있음',
+                          AppLocalizations.of(context)!.moreMatchesCount(_searchResults.length - 10),
                           style: const TextStyle(
                             fontSize: 12,
                             color: _textSecondary,
@@ -1189,8 +1192,8 @@ class _MatchFilterModalState extends State<_MatchFilterModal> {
                 ),
                 child: Text(
                   _selectedEvent != null
-                      ? '선택한 경기로 필터 적용'
-                      : '적용하기',
+                      ? AppLocalizations.of(context)!.applySelectedMatch
+                      : AppLocalizations.of(context)!.apply,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -1338,14 +1341,14 @@ class _MatchFilterModalState extends State<_MatchFilterModal> {
                   color: _primary,
                   borderRadius: BorderRadius.circular(4),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.check, size: 14, color: Colors.white),
-                    SizedBox(width: 4),
+                    const Icon(Icons.check, size: 14, color: Colors.white),
+                    const SizedBox(width: 4),
                     Text(
-                      '선택됨',
-                      style: TextStyle(
+                      AppLocalizations.of(context)!.selected,
+                      style: const TextStyle(
                         fontSize: 11,
                         color: Colors.white,
                         fontWeight: FontWeight.w600,

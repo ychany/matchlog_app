@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/match_model.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
@@ -85,17 +86,21 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
   }
 
   Widget _buildHeader() {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
-            '경기 일정',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-              color: _textPrimary,
+          Flexible(
+            child: Text(
+              l10n.matchSchedule,
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w700,
+                color: _textPrimary,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
           Row(
@@ -155,7 +160,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                       Icon(Icons.today, size: 18, color: _primary),
                       const SizedBox(width: 6),
                       Text(
-                        '오늘',
+                        l10n.today,
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -200,7 +205,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
         border: Border.all(color: _border),
       ),
       child: TableCalendar(
-        locale: 'ko_KR',
+        locale: Localizations.localeOf(context).toString(),
         firstDay: DateTime(2020, 1, 1),
         lastDay: DateTime(2030, 12, 31),
         focusedDay: _focusedDay,
@@ -254,10 +259,10 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
           rightChevronIcon:
               const Icon(Icons.chevron_right, color: _textSecondary),
         ),
-        availableCalendarFormats: const {
-          CalendarFormat.month: '월간',
-          CalendarFormat.twoWeeks: '2주',
-          CalendarFormat.week: '주간',
+        availableCalendarFormats: {
+          CalendarFormat.month: AppLocalizations.of(context)!.monthly,
+          CalendarFormat.twoWeeks: AppLocalizations.of(context)!.twoWeeks,
+          CalendarFormat.week: AppLocalizations.of(context)!.weekly,
         },
         daysOfWeekStyle: const DaysOfWeekStyle(
           weekdayStyle: TextStyle(
@@ -276,6 +281,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
   }
 
   Widget _buildLeagueFilter(String? selectedLeague) {
+    final l10n = AppLocalizations.of(context)!;
     return SizedBox(
       height: 40,
       child: ListView(
@@ -284,7 +290,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
         children: [
           // 주요 (5대 리그 + 대륙컵 + 국제대회)
           _LeagueChip(
-            label: '주요',
+            label: l10n.major,
             isSelected: selectedLeague == 'major',
             onTap: () {
               ref.read(selectedLeagueProvider.notifier).state = 'major';
@@ -292,7 +298,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
           ),
           // 전체 (주요 다음)
           _LeagueChip(
-            label: '전체',
+            label: l10n.all,
             isSelected: selectedLeague == null,
             onTap: () {
               ref.read(selectedLeagueProvider.notifier).state = null;
@@ -436,7 +442,7 @@ class _LeagueMatchGroup extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '${matches.length}경기',
+                    AppLocalizations.of(context)!.nMatches(matches.length),
                     style: TextStyle(
                       fontSize: 11,
                       color: _textSecondary,
@@ -669,9 +675,9 @@ class _ScheduleMatchCard extends ConsumerWidget {
                           color: _textSecondary.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(6),
                         ),
-                        child: const Text(
-                          '종료',
-                          style: TextStyle(
+                        child: Text(
+                          AppLocalizations.of(context)!.finished,
+                          style: const TextStyle(
                             color: _textSecondary,
                             fontWeight: FontWeight.w600,
                             fontSize: 11,
@@ -820,7 +826,7 @@ class _ScheduleMatchCard extends ConsumerWidget {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            '직관 완료',
+                            AppLocalizations.of(context)!.attendanceComplete,
                             style: TextStyle(
                               color: _success,
                               fontWeight: FontWeight.w600,
@@ -921,9 +927,9 @@ class _ScheduleMatchCard extends ConsumerWidget {
                   ),
                   child: const Icon(Icons.visibility, color: _primary),
                 ),
-                title: const Text(
-                  '직관 기록하기',
-                  style: TextStyle(fontWeight: FontWeight.w500),
+                title: Text(
+                  AppLocalizations.of(context)!.recordAttendance,
+                  style: const TextStyle(fontWeight: FontWeight.w500),
                 ),
                 onTap: () {
                   Navigator.pop(context);
@@ -939,9 +945,9 @@ class _ScheduleMatchCard extends ConsumerWidget {
                   ),
                   child: const Icon(Icons.notifications, color: Colors.orange),
                 ),
-                title: const Text(
-                  '알림 설정',
-                  style: TextStyle(fontWeight: FontWeight.w500),
+                title: Text(
+                  AppLocalizations.of(context)!.notificationSettings,
+                  style: const TextStyle(fontWeight: FontWeight.w500),
                 ),
                 onTap: () {
                   Navigator.pop(context);
@@ -1009,9 +1015,9 @@ class _NotificationSettingsDialogState extends ConsumerState<_NotificationSettin
             child: Icon(Icons.notifications_active, color: _primary, size: 28),
           ),
           const SizedBox(height: 12),
-          const Text(
-            '경기 알림 설정',
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context)!.matchNotification,
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,
               color: _textPrimary,
@@ -1041,14 +1047,15 @@ class _NotificationSettingsDialogState extends ConsumerState<_NotificationSettin
             }
           }
 
+          final l10n = AppLocalizations.of(context)!;
           return Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildNotificationTile(
                 icon: Icons.sports_soccer,
                 iconColor: Colors.green,
-                title: '경기 시작 알림',
-                subtitle: '킥오프 30분 전에 알림',
+                title: l10n.kickoffNotification,
+                subtitle: l10n.kickoffNotificationDesc,
                 value: _notifyKickoff,
                 onChanged: (value) {
                   setState(() => _notifyKickoff = value);
@@ -1058,8 +1065,8 @@ class _NotificationSettingsDialogState extends ConsumerState<_NotificationSettin
               _buildNotificationTile(
                 icon: Icons.people_outline,
                 iconColor: Colors.blue,
-                title: '라인업 발표',
-                subtitle: '선발 명단 공개 시 알림',
+                title: l10n.lineupNotification,
+                subtitle: l10n.lineupNotificationDesc,
                 value: _notifyLineup,
                 onChanged: (value) {
                   setState(() => _notifyLineup = value);
@@ -1069,8 +1076,8 @@ class _NotificationSettingsDialogState extends ConsumerState<_NotificationSettin
               _buildNotificationTile(
                 icon: Icons.emoji_events_outlined,
                 iconColor: Colors.amber,
-                title: '경기 결과',
-                subtitle: '경기 종료 후 결과 알림',
+                title: l10n.resultNotification,
+                subtitle: l10n.resultNotificationDesc,
                 value: _notifyResult,
                 onChanged: (value) {
                   setState(() => _notifyResult = value);
@@ -1086,7 +1093,10 @@ class _NotificationSettingsDialogState extends ConsumerState<_NotificationSettin
         error: (e, _) => SizedBox(
           height: 100,
           child: Center(
-            child: Text('오류: $e', style: TextStyle(color: _textSecondary)),
+            child: Text(
+              AppLocalizations.of(context)!.errorWithMessage(e.toString()),
+              style: TextStyle(color: _textSecondary),
+            ),
           ),
         ),
       ),
@@ -1097,21 +1107,21 @@ class _NotificationSettingsDialogState extends ConsumerState<_NotificationSettin
               ref.read(scheduleNotifierProvider.notifier).removeNotification(widget.match.id);
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('알림이 해제되었습니다'),
-                  duration: Duration(seconds: 2),
+                SnackBar(
+                  content: Text(AppLocalizations.of(context)!.notificationRemoved),
+                  duration: const Duration(seconds: 2),
                 ),
               );
             },
             child: Text(
-              '알림 해제',
+              AppLocalizations.of(context)!.notificationOff,
               style: TextStyle(color: Colors.red.shade400),
             ),
           ),
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: Text(
-            '취소',
+            AppLocalizations.of(context)!.cancel,
             style: TextStyle(color: _textSecondary),
           ),
         ),
@@ -1120,9 +1130,9 @@ class _NotificationSettingsDialogState extends ConsumerState<_NotificationSettin
           style: TextButton.styleFrom(
             foregroundColor: _primary,
           ),
-          child: const Text(
-            '저장',
-            style: TextStyle(fontWeight: FontWeight.w600),
+          child: Text(
+            AppLocalizations.of(context)!.save,
+            style: const TextStyle(fontWeight: FontWeight.w600),
           ),
         ),
       ],
@@ -1183,6 +1193,7 @@ class _NotificationSettingsDialogState extends ConsumerState<_NotificationSettin
   }
 
   void _saveNotification() {
+    final l10n = AppLocalizations.of(context)!;
     // 알림이 하나라도 켜져 있으면 저장, 아니면 삭제
     if (_notifyKickoff || _notifyLineup || _notifyResult) {
       ref.read(scheduleNotifierProvider.notifier).setNotification(
@@ -1193,9 +1204,9 @@ class _NotificationSettingsDialogState extends ConsumerState<_NotificationSettin
       );
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('알림이 설정되었습니다'),
-          duration: Duration(seconds: 2),
+        SnackBar(
+          content: Text(l10n.notificationSet),
+          duration: const Duration(seconds: 2),
         ),
       );
     } else {
@@ -1205,9 +1216,9 @@ class _NotificationSettingsDialogState extends ConsumerState<_NotificationSettin
       }
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('알림이 해제되었습니다'),
-          duration: Duration(seconds: 2),
+        SnackBar(
+          content: Text(l10n.notificationRemoved),
+          duration: const Duration(seconds: 2),
         ),
       );
     }
@@ -1252,8 +1263,13 @@ class _DatePickerBottomSheetState extends State<_DatePickerBottomSheet> {
     return DateTime(year, month + 1, 0).day;
   }
 
-  String _getMonthName(int month) {
-    const months = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
+  String _getMonthName(BuildContext context, int month) {
+    final l10n = AppLocalizations.of(context)!;
+    final months = [
+      l10n.monthJan, l10n.monthFeb, l10n.monthMar, l10n.monthApr,
+      l10n.monthMay, l10n.monthJun, l10n.monthJul, l10n.monthAug,
+      l10n.monthSep, l10n.monthOct, l10n.monthNov, l10n.monthDec,
+    ];
     return months[month - 1];
   }
 
@@ -1290,11 +1306,7 @@ class _DatePickerBottomSheetState extends State<_DatePickerBottomSheet> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      _mode == _PickerMode.year
-                          ? '$_selectedYear년 $_selectedMonth월'
-                          : _mode == _PickerMode.month
-                              ? '$_selectedYear년 $_selectedMonth월'
-                              : '$_selectedYear년 $_selectedMonth월',
+                      AppLocalizations.of(context)!.yearMonthFormat(_selectedYear, _selectedMonth),
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
@@ -1333,9 +1345,9 @@ class _DatePickerBottomSheetState extends State<_DatePickerBottomSheet> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
-                        '취소',
-                        style: TextStyle(
+                      child: Text(
+                        AppLocalizations.of(context)!.cancel,
+                        style: const TextStyle(
                           color: _textSecondary,
                           fontWeight: FontWeight.w600,
                         ),
@@ -1353,9 +1365,9 @@ class _DatePickerBottomSheetState extends State<_DatePickerBottomSheet> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
-                        '선택',
-                        style: TextStyle(
+                      child: Text(
+                        AppLocalizations.of(context)!.select,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w600,
                         ),
@@ -1453,7 +1465,7 @@ class _DatePickerBottomSheetState extends State<_DatePickerBottomSheet> {
             ),
             alignment: Alignment.center,
             child: Text(
-              _getMonthName(month),
+              _getMonthName(context, month),
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,

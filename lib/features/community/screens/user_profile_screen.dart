@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../attendance/models/attendance_record.dart';
 import '../services/user_profile_service.dart';
+import '../../../l10n/app_localizations.dart';
 
 class UserProfileScreen extends StatefulWidget {
   final String userId;
@@ -42,13 +43,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     _loadData();
   }
 
-  // 표시할 이름 결정 (프로필 이름이 '익명'이 아니면 사용, 아니면 URL에서 전달된 이름 사용)
-  String _getDisplayName() {
+  // 표시할 이름 결정 (프로필 이름이 'Anonymous'가 아니면 사용, 아니면 URL에서 전달된 이름 사용)
+  String _getDisplayName(BuildContext context) {
     final profileName = _profile?.displayName;
-    if (profileName != null && profileName != '익명' && profileName.isNotEmpty) {
+    final l10n = AppLocalizations.of(context)!;
+    if (profileName != null && profileName != 'Anonymous' && profileName.isNotEmpty) {
       return profileName;
     }
-    return widget.userName ?? '프로필';
+    return widget.userName ?? l10n.profile;
   }
 
   Future<void> _loadData() async {
@@ -105,7 +107,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             onPressed: () => context.pop(),
           ),
           title: Text(
-            _getDisplayName(),
+            _getDisplayName(context),
             style: const TextStyle(
               color: _textPrimary,
               fontWeight: FontWeight.w600,
@@ -116,24 +118,25 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : _error != null
-                ? _buildErrorState()
+                ? _buildErrorState(context)
                 : _buildContent(),
       ),
     );
   }
 
-  Widget _buildErrorState() {
+  Widget _buildErrorState(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Icon(Icons.error_outline, size: 48, color: Colors.grey),
           const SizedBox(height: 16),
-          Text('오류가 발생했습니다\n$_error', textAlign: TextAlign.center),
+          Text('${l10n.errorOccurred}\n$_error', textAlign: TextAlign.center),
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: _loadData,
-            child: const Text('다시 시도'),
+            child: Text(l10n.retry),
           ),
         ],
       ),
@@ -180,7 +183,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
           // 이름
           Text(
-            _getDisplayName(),
+            _getDisplayName(context),
             style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w700,
@@ -231,18 +234,23 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           const SizedBox(height: 20),
 
           // 게시글/직관 수
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildCountItem('직관', _stats?.totalMatches ?? 0),
-              Container(
-                width: 1,
-                height: 30,
-                color: _border,
-                margin: const EdgeInsets.symmetric(horizontal: 32),
-              ),
-              _buildCountItem('게시글', _postCount),
-            ],
+          Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context)!;
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildCountItem(l10n.attendanceLabel, _stats?.totalMatches ?? 0),
+                  Container(
+                    width: 1,
+                    height: 30,
+                    color: _border,
+                    margin: const EdgeInsets.symmetric(horizontal: 32),
+                  ),
+                  _buildCountItem(l10n.postsLabel, _postCount),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -277,123 +285,128 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       return const SizedBox.shrink();
     }
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            '직관 통계',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: _textPrimary,
-            ),
+    return Builder(
+      builder: (context) {
+        final l10n = AppLocalizations.of(context)!;
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: _border),
           ),
-          const SizedBox(height: 16),
-
-          // 승/무/패
-          Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: _buildStatCard(
-                  '승',
-                  _stats!.wins,
-                  const Color(0xFF10B981),
+              Text(
+                l10n.attendanceStats,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: _textPrimary,
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildStatCard(
-                  '무',
-                  _stats!.draws,
-                  const Color(0xFF6B7280),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildStatCard(
-                  '패',
-                  _stats!.losses,
-                  const Color(0xFFEF4444),
-                ),
-              ),
-            ],
-          ),
+              const SizedBox(height: 16),
 
-          // 승률
-          if (_stats!.wins + _stats!.draws + _stats!.losses > 0) ...[
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: _primaryLight,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              // 승/무/패
+              Row(
                 children: [
-                  const Icon(Icons.trending_up, size: 18, color: _primary),
-                  const SizedBox(width: 8),
-                  Text(
-                    '승률 ${_stats!.winRate.toStringAsFixed(1)}%',
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: _primary,
+                  Expanded(
+                    child: _buildStatCard(
+                      l10n.winShort,
+                      _stats!.wins,
+                      const Color(0xFF10B981),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildStatCard(
+                      l10n.drawShort,
+                      _stats!.draws,
+                      const Color(0xFF6B7280),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildStatCard(
+                      l10n.lossShort,
+                      _stats!.losses,
+                      const Color(0xFFEF4444),
                     ),
                   ),
                 ],
               ),
-            ),
-          ],
 
-          // 자주 가는 구장
-          if (_stats!.stadiumVisits.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            const Text(
-              '자주 가는 구장',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: _textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: (_stats!.stadiumVisits.entries.toList()
-                    ..sort((a, b) => b.value.compareTo(a.value)))
-                  .take(5)
-                  .map((entry) => Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
+              // 승률
+              if (_stats!.wins + _stats!.draws + _stats!.losses > 0) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: _primaryLight,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.trending_up, size: 18, color: _primary),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${l10n.winRate} ${_stats!.winRate.toStringAsFixed(1)}%',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: _primary,
                         ),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[100],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          '${entry.key} (${entry.value})',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: _textSecondary,
-                          ),
-                        ),
-                      ))
-                  .toList(),
-            ),
-          ],
-        ],
-      ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
+              // 자주 가는 구장
+              if (_stats!.stadiumVisits.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Text(
+                  l10n.frequentStadiums,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: _textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: (_stats!.stadiumVisits.entries.toList()
+                        ..sort((a, b) => b.value.compareTo(a.value)))
+                      .take(5)
+                      .map((entry) => Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '${entry.key} (${entry.value})',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: _textSecondary,
+                              ),
+                            ),
+                          ))
+                      .toList(),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -429,76 +442,82 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   }
 
   Widget _buildRecentRecordsSection() {
-    if (_records.isEmpty) {
-      return Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16),
-        padding: const EdgeInsets.all(32),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: _border),
-        ),
-        child: Column(
-          children: [
-            Icon(Icons.sports_soccer, size: 48, color: Colors.grey[300]),
-            const SizedBox(height: 12),
-            const Text(
-              '아직 직관 기록이 없습니다',
-              style: TextStyle(
-                fontSize: 14,
-                color: _textSecondary,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
+    return Builder(
+      builder: (context) {
+        final l10n = AppLocalizations.of(context)!;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        if (_records.isEmpty) {
+          return Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: _border),
+            ),
+            child: Column(
               children: [
-                const Text(
-                  '최근 직관 기록',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: _textPrimary,
-                  ),
-                ),
+                Icon(Icons.sports_soccer, size: 48, color: Colors.grey[300]),
+                const SizedBox(height: 12),
                 Text(
-                  '총 ${_records.length}개',
+                  l10n.noAttendanceRecordsYet,
                   style: const TextStyle(
-                    fontSize: 13,
+                    fontSize: 14,
                     color: _textSecondary,
                   ),
                 ),
               ],
             ),
+          );
+        }
+
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: _border),
           ),
-          const Divider(height: 1),
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _records.length > 10 ? 10 : _records.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              return _buildRecordItem(_records[index]);
-            },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      l10n.recentMatchRecords,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: _textPrimary,
+                      ),
+                    ),
+                    Text(
+                      l10n.totalCount(_records.length),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: _textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _records.length > 10 ? 10 : _records.length,
+                separatorBuilder: (_, __) => const Divider(height: 1),
+                itemBuilder: (context, index) {
+                  return _buildRecordItem(_records[index]);
+                },
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/notification_settings_provider.dart';
 import '../services/notification_settings_service.dart';
+import '../../../l10n/app_localizations.dart';
 
 class NotificationSettingsScreen extends ConsumerWidget {
   const NotificationSettingsScreen({super.key});
@@ -15,6 +16,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settingsAsync = ref.watch(notificationSettingsProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark.copyWith(
@@ -29,9 +31,9 @@ class NotificationSettingsScreen extends ConsumerWidget {
             icon: const Icon(Icons.arrow_back, color: _textPrimary),
             onPressed: () => Navigator.pop(context),
           ),
-          title: const Text(
-            '알림 설정',
-            style: TextStyle(
+          title: Text(
+            l10n.notificationSettings,
+            style: const TextStyle(
               color: _textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -42,7 +44,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
         body: settingsAsync.when(
           data: (settings) => _buildContent(context, ref, settings),
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('오류 발생: $e')),
+          error: (e, _) => Center(child: Text(l10n.errorWithMsg(e.toString()))),
         ),
       ),
     );
@@ -50,6 +52,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
 
   Widget _buildContent(BuildContext context, WidgetRef ref, NotificationSettings settings) {
     final notifier = ref.read(notificationSettingsNotifierProvider.notifier);
+    final l10n = AppLocalizations.of(context)!;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -60,14 +63,14 @@ class NotificationSettingsScreen extends ConsumerWidget {
           _buildSectionHeader(
             icon: Icons.notifications_active_rounded,
             iconColor: const Color(0xFFEC4899),
-            title: '푸시 알림',
+            title: l10n.pushNotifications,
           ),
           const SizedBox(height: 12),
           _SettingsCard(
             children: [
               _SettingsToggle(
-                title: '푸시 알림 받기',
-                subtitle: '모든 알림의 마스터 스위치',
+                title: l10n.receivePushNotifications,
+                subtitle: l10n.masterSwitch,
                 value: settings.pushNotifications,
                 onChanged: (value) => notifier.updatePushNotifications(value),
               ),
@@ -80,11 +83,11 @@ class NotificationSettingsScreen extends ConsumerWidget {
           _buildSectionHeader(
             icon: Icons.sports_soccer_rounded,
             iconColor: const Color(0xFF10B981),
-            title: '즐겨찾기 팀 경기 알림',
+            title: l10n.favoriteTeamMatchNotifications,
           ),
           const SizedBox(height: 8),
           Text(
-            '즐겨찾기한 팀의 경기에 대한 알림을 설정합니다',
+            l10n.favoriteTeamMatchNotificationsDesc,
             style: TextStyle(
               color: Colors.grey.shade600,
               fontSize: 13,
@@ -94,26 +97,26 @@ class NotificationSettingsScreen extends ConsumerWidget {
           _SettingsCard(
             children: [
               _SettingsToggle(
-                title: '경기 시작 알림',
-                subtitle: '즐겨찾기 팀 경기 시작 전 미리 알림',
+                title: l10n.matchStartNotification,
+                subtitle: l10n.matchStartNotificationDesc,
                 value: settings.matchReminder,
                 enabled: settings.pushNotifications,
                 onChanged: (value) => notifier.updateMatchReminder(value),
               ),
               const _Divider(),
               _SettingsDropdown(
-                title: '알림 시간',
-                subtitle: '즐겨찾기 팀 경기 시작 전 알림 시간',
+                title: l10n.notificationTime,
+                subtitle: l10n.notificationTimeDesc,
                 value: settings.matchReminderMinutes,
                 enabled: settings.pushNotifications && settings.matchReminder,
                 options: const [15, 30, 60, 120],
-                optionLabels: const ['15분 전', '30분 전', '1시간 전', '2시간 전'],
+                optionLabels: [l10n.minutes15Before, l10n.minutes30Before, l10n.hour1Before, l10n.hours2Before],
                 onChanged: (value) => notifier.updateMatchReminderMinutes(value),
               ),
               const _Divider(),
               _SettingsToggle(
-                title: '새 경기 일정 알림',
-                subtitle: '즐겨찾기 팀의 새로운 경기 일정 등록 알림',
+                title: l10n.newMatchScheduleNotification,
+                subtitle: l10n.newMatchScheduleNotificationDesc,
                 value: settings.favoriteTeamMatches,
                 enabled: settings.pushNotifications,
                 onChanged: (value) => notifier.updateFavoriteTeamMatches(value),
@@ -127,11 +130,11 @@ class NotificationSettingsScreen extends ConsumerWidget {
           _buildSectionHeader(
             icon: Icons.bolt_rounded,
             iconColor: const Color(0xFFF59E0B),
-            title: '즐겨찾기 팀 실시간 알림',
+            title: l10n.favoriteTeamLiveNotifications,
           ),
           const SizedBox(height: 8),
           Text(
-            '즐겨찾기한 팀의 경기 중 실시간 알림을 설정합니다',
+            l10n.favoriteTeamLiveNotificationsDesc,
             style: TextStyle(
               color: Colors.grey.shade600,
               fontSize: 13,
@@ -141,8 +144,8 @@ class NotificationSettingsScreen extends ConsumerWidget {
           _SettingsCard(
             children: [
               _SettingsToggle(
-                title: '라이브 스코어 업데이트',
-                subtitle: '경기 중 골/이벤트 실시간 알림',
+                title: l10n.liveScoreUpdates,
+                subtitle: l10n.liveScoreUpdatesDesc,
                 value: settings.liveScoreUpdates,
                 enabled: settings.pushNotifications,
                 onChanged: (value) => notifier.updateLiveScoreUpdates(value),
@@ -169,7 +172,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '알림 권한 안내',
+                        l10n.notificationPermissionGuide,
                         style: TextStyle(
                           color: _primary,
                           fontSize: 14,
@@ -178,7 +181,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '알림을 받으려면 기기 설정에서 MatchLog 앱의 알림 권한을 허용해주세요.',
+                        l10n.notificationPermissionDesc,
                         style: TextStyle(
                           color: _primary.withValues(alpha: 0.8),
                           fontSize: 13,
