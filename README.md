@@ -69,6 +69,13 @@
 - Flutter 스플래시 (로고 애니메이션 + 데이터 로딩)
 - 최소 1초 표시, 데이터 로딩과 병렬 실행
 
+### 다국어 지원 (i18n)
+- 한국어/영어 완벽 지원
+- 설정에서 언어 변경 가능
+- 시스템 언어 자동 감지
+- 에러 메시지 로컬라이제이션
+- 리그명, UI 텍스트 전체 번역
+
 ## 기술 스택
 
 - **Frontend**: Flutter 3.x
@@ -78,6 +85,7 @@
 - **API**: API-Football (Pro)
 - **차트**: fl_chart
 - **로컬 저장**: SharedPreferences
+- **다국어**: flutter_localizations, intl
 
 ## 지원 리그
 
@@ -93,7 +101,11 @@
 lib/
 ├── core/
 │   ├── constants/         # 상수 및 ID 매핑
-│   └── services/          # API 서비스 (API-Football)
+│   ├── errors/            # 에러 코드 및 예외
+│   ├── providers/         # 전역 Provider (언어 설정 등)
+│   ├── services/          # API 서비스 (API-Football)
+│   └── utils/             # 헬퍼 (ErrorHelper 등)
+├── l10n/                  # 다국어 리소스 (ARB 파일)
 ├── features/
 │   ├── attendance/        # 직관 일기
 │   ├── auth/              # 인증
