@@ -700,7 +700,7 @@ final favoriteTeamNextEventsProvider =
           if (apiTeamId == null) continue;
 
           final team = await service.getTeamById(apiTeamId);
-          final fixtures = await service.getTeamNextFixtures(apiTeamId, count: 2);
+          final fixtures = await service.getTeamNextFixtures(apiTeamId, count: 6);
           if (team != null && fixtures.isNotEmpty) {
             results.add(_TeamNextEvent(team: team, fixtures: fixtures));
           }
@@ -768,24 +768,30 @@ class _FavoriteScheduleSection extends ConsumerWidget {
                 );
               }
 
+              // 모든 경기를 하나의 리스트로 모으기
               final allMatches = <_MatchWithTeam>[];
               for (final te in teamEvents) {
                 for (final fixture in te.fixtures) {
                   allMatches.add(_MatchWithTeam(team: te.team, fixture: fixture));
                 }
               }
+
+              // 날짜순 정렬 (빠른 날짜가 먼저)
               allMatches.sort((a, b) {
                 return a.fixture.date.compareTo(b.fixture.date);
               });
+
+              // 최대 6개까지만 표시
+              final displayMatches = allMatches.take(6).toList();
 
               return SizedBox(
                 height: 150,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
-                  itemCount: allMatches.length,
+                  itemCount: displayMatches.length,
                   separatorBuilder: (_, __) => const SizedBox(width: 12),
                   itemBuilder: (context, index) {
-                    return _ScheduleCard(match: allMatches[index]);
+                    return _ScheduleCard(match: displayMatches[index]);
                   },
                 ),
               );
@@ -843,7 +849,7 @@ class _ScheduleCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 날짜
+            // 날짜 + D-day
             Row(
               children: [
                 Container(
@@ -862,15 +868,30 @@ class _ScheduleCard extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                if (daysUntil >= 0 && daysUntil <= 7)
-                  Text(
+                // 모든 경기에 D-day 표시
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: daysUntil == 0
+                        ? const Color(0xFFEF4444).withValues(alpha: 0.1)
+                        : daysUntil <= 3
+                            ? const Color(0xFFF59E0B).withValues(alpha: 0.1)
+                            : const Color(0xFF10B981).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
                     daysUntil == 0 ? 'TODAY' : 'D-$daysUntil',
-                    style: const TextStyle(
-                      color: Color(0xFF10B981),
+                    style: TextStyle(
+                      color: daysUntil == 0
+                          ? const Color(0xFFEF4444)
+                          : daysUntil <= 3
+                              ? const Color(0xFFF59E0B)
+                              : const Color(0xFF10B981),
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
+                ),
               ],
             ),
             const SizedBox(height: 12),
