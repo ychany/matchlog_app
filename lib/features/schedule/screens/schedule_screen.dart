@@ -309,7 +309,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
           ...AppConstants.supportedLeagues.map(
             (league) => _LeagueChip(
               label: league,
-              displayLabel: AppConstants.getLeagueDisplayName(league),
+              displayLabel: AppConstants.getLocalizedLeagueName(context, league),
               isSelected: selectedLeague == league,
               onTap: () {
                 ref.read(selectedLeagueProvider.notifier).state = league;
@@ -434,7 +434,7 @@ class _LeagueMatchGroup extends StatelessWidget {
                     _buildLeagueLogo(matches.first),
                   Expanded(
                     child: Text(
-                      _getLeagueDisplayName(leagueName),
+                      AppConstants.getLocalizedLeagueName(context, leagueName),
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -491,9 +491,6 @@ class _LeagueMatchGroup extends StatelessWidget {
     return const SizedBox.shrink();
   }
 
-  String _getLeagueDisplayName(String league) {
-    return AppConstants.getLeagueDisplayName(league);
-  }
 }
 
 class _LeagueChip extends StatelessWidget {
@@ -597,7 +594,7 @@ class _ScheduleMatchCard extends ConsumerWidget {
                           // A매치는 원래 리그명 그대로, 그 외는 축약 표시
                           match.league == 'International Friendlies'
                               ? match.league
-                              : AppConstants.getLeagueDisplayName(match.league),
+                              : AppConstants.getLocalizedLeagueName(context, match.league),
                           style: const TextStyle(
                             color: _textSecondary,
                             fontSize: 11,

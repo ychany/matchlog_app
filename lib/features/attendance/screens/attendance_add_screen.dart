@@ -2794,7 +2794,7 @@ class _TeamSearchSheetState extends State<_TeamSearchSheet> {
                   children: AppConstants.supportedLeagues.map((league) => Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: _LeagueFilterChip(
-                          label: AppConstants.getLeagueDisplayName(league),
+                          label: AppConstants.getLocalizedLeagueName(context, league),
                           isSelected: _selectedLeague == league,
                           onTap: () {
                             setState(() {
@@ -2884,7 +2884,7 @@ class _TeamSearchSheetState extends State<_TeamSearchSheet> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '${AppConstants.getLeagueDisplayName(_selectedLeague!)} 팀 목록',
+            AppLocalizations.of(context)!.leagueTeamList(AppConstants.getLocalizedLeagueName(context, _selectedLeague!)),
             style: TextStyle(fontSize: 12, color: _primary, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),

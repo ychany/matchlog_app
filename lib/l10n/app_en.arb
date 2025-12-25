@@ -1637,6 +1637,16 @@
   "leagueUEL": "UEL",
   "leagueInternational": "International",
 
+  "leagueTeamList": "{league} Teams",
+  "@leagueTeamList": {
+    "description": "League team list title",
+    "placeholders": {
+      "league": {
+        "type": "String"
+      }
+    }
+  },
+
   "countryKorea": "South Korea",
   "countryEngland": "England",
   "countrySpain": "Spain",

@@ -7,6 +7,7 @@ import '../models/post_model.dart';
 import '../providers/community_provider.dart';
 import '../../../core/services/api_football_service.dart';
 import '../../../core/constants/api_football_ids.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../core/utils/error_helper.dart';
 
@@ -1082,7 +1083,7 @@ class _MatchFilterModalState extends State<_MatchFilterModal> {
                         ...LeagueIds.supportedLeagues.map((league) => Padding(
                               padding: const EdgeInsets.only(right: 8),
                               child: _buildLeagueChip(
-                                league.name,
+                                AppConstants.getLocalizedLeagueNameById(context, league.id),
                                 league.id,
                               ),
                             )),

@@ -612,7 +612,7 @@ class _AddTeamSheetState extends ConsumerState<_AddTeamSheet> {
     if (league == 'International Friendlies' || league == 'FIFA World Cup') {
       return AppLocalizations.of(context)!.national;
     }
-    return AppConstants.leagueDisplayNames[league] ?? league;
+    return AppConstants.getLocalizedLeagueName(context, league);
   }
 }
 

@@ -6890,6 +6890,12 @@ abstract class AppLocalizations {
   /// **'A매치'**
   String get leagueInternational;
 
+  /// League team list title
+  ///
+  /// In ko, this message translates to:
+  /// **'{league} 팀 목록'**
+  String leagueTeamList(String league);
+
   /// No description provided for @worldCup2026.
   ///
   /// In ko, this message translates to:

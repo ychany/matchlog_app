@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/api_football_ids.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/services/api_football_service.dart';
 import '../../../core/utils/error_helper.dart';
 import '../../../shared/widgets/loading_indicator.dart';
@@ -123,7 +124,7 @@ class StandingsScreen extends ConsumerWidget {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
-                                  league.name,
+                                  AppConstants.getLocalizedLeagueNameById(context, league.id),
                                   style: TextStyle(
                                     color: isSelected ? Colors.white : _textSecondary,
                                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
@@ -257,7 +258,7 @@ class StandingsScreen extends ConsumerWidget {
                   Icon(Icons.emoji_events_outlined, size: 64, color: Colors.amber.shade700),
                   const SizedBox(height: 16),
                   Text(
-                    LeagueIds.getLeagueInfo(selectedLeague)?.name ?? l10n.competition,
+                    AppConstants.getLocalizedLeagueNameById(context, selectedLeague),
                     style: AppTextStyles.subtitle1,
                   ),
                   const SizedBox(height: 8),

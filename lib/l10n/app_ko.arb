@@ -3025,6 +3025,16 @@
   "leagueUEL": "UEL",
   "leagueInternational": "A매치",
 
+  "leagueTeamList": "{league} 팀 목록",
+  "@leagueTeamList": {
+    "description": "League team list title",
+    "placeholders": {
+      "league": {
+        "type": "String"
+      }
+    }
+  },
+
   "countryKorea": "대한민국",
   "countryEngland": "잉글랜드",
   "countrySpain": "스페인",

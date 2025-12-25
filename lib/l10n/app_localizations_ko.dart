@@ -3599,6 +3599,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get leagueInternational => 'A매치';
 
   @override
+  String leagueTeamList(String league) {
+    return '$league 팀 목록';
+  }
+
+  @override
   String get worldCup2026 => '2026 FIFA 월드컵';
 
   @override

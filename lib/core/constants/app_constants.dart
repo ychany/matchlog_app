@@ -98,6 +98,15 @@ class AppConstants {
     return null;
   }
 
+  // 리그 ID로 로컬라이즈된 이름 가져오기
+  static String getLocalizedLeagueNameById(BuildContext context, int leagueId) {
+    final leagueName = getLeagueNameById(leagueId);
+    if (leagueName != null) {
+      return getLocalizedLeagueName(context, leagueName);
+    }
+    return leagueId.toString();
+  }
+
   // 필터 이름으로 리그 ID 가져오기
   static int? getLeagueIdByName(String leagueName) {
     return leagueNameToId[leagueName];
