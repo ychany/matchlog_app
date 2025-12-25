@@ -764,7 +764,7 @@ class _StandingsContent extends ConsumerWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       child: Row(
                         children: [
-                          SizedBox(width: 28, child: Text(l10n.rank, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
+                          SizedBox(width: 36, child: Text(l10n.rank, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
                           const SizedBox(width: 8),
                           Expanded(child: Text(l10n.team, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
                           _buildHeaderCell(l10n.matches),
@@ -1038,7 +1038,7 @@ class _TopScorersContent extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
                   children: [
-                    SizedBox(width: 28, child: Text(l10n.rank, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
+                    SizedBox(width: 36, child: Text(l10n.rank, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
                     const SizedBox(width: 8),
                     Expanded(child: Text(l10n.player, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
                     SizedBox(
@@ -1107,7 +1107,7 @@ class _TopAssistsContent extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
                   children: [
-                    SizedBox(width: 28, child: Text(l10n.rank, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
+                    SizedBox(width: 36, child: Text(l10n.rank, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
                     const SizedBox(width: 8),
                     Expanded(child: Text(l10n.player, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
                     SizedBox(

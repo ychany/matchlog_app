@@ -629,7 +629,7 @@ class _TopScorersTable extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
-                SizedBox(width: 28, child: Text(l10n.rankHeader, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
+                SizedBox(width: 36, child: Text(l10n.rankHeader, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
                 const SizedBox(width: 8),
                 Expanded(child: Text(l10n.playerHeader, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
                 SizedBox(
@@ -868,7 +868,7 @@ class _StandingsTable extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
-                SizedBox(width: 28, child: Text(l10n.rankHeader, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
+                SizedBox(width: 36, child: Text(l10n.rankHeader, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
                 const SizedBox(width: 8),
                 Expanded(child: Text(l10n.teamHeader, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
                 _HeaderCell(l10n.matchesHeader),

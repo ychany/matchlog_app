@@ -4744,11 +4744,14 @@ class _TimelineItem extends StatelessWidget {
               children: [
                 Icon(Icons.arrow_upward, size: 10, color: Colors.green),
                 const SizedBox(width: 2),
-                Text(
-                  event.assistName!,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.green.shade700,
+                Flexible(
+                  child: Text(
+                    event.assistName!,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.green.shade700,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
