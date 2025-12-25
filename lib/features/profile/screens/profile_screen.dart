@@ -51,8 +51,8 @@ class ProfileScreen extends ConsumerWidget {
                 // 메뉴 섹션
                 _MenuSection(),
 
-                // 로그아웃 버튼
-                _LogoutButton(ref: ref),
+                // 로그인/로그아웃 버튼
+                const _AuthButton(),
 
                 // 앱 정보
                 _AppInfo(),
@@ -888,37 +888,45 @@ class _MenuItem extends StatelessWidget {
 }
 
 // ============================================================================
-// 로그아웃 버튼
+// 로그인/로그아웃 버튼
 // ============================================================================
-class _LogoutButton extends StatelessWidget {
-  final WidgetRef ref;
-
-  const _LogoutButton({required this.ref});
+class _AuthButton extends ConsumerWidget {
+  const _AuthButton();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+    final isLoggedIn = ref.watch(isLoggedInProvider);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: GestureDetector(
-        onTap: () => _showLogoutDialog(context),
+        onTap: () => isLoggedIn ? _showLogoutDialog(context, ref) : context.push('/login'),
         child: Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.3)),
+            border: Border.all(
+              color: isLoggedIn
+                  ? const Color(0xFFEF4444).withValues(alpha: 0.3)
+                  : const Color(0xFF2563EB).withValues(alpha: 0.3),
+            ),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.logout_rounded, color: Color(0xFFEF4444), size: 18),
+              Icon(
+                isLoggedIn ? Icons.logout_rounded : Icons.login_rounded,
+                color: isLoggedIn ? const Color(0xFFEF4444) : const Color(0xFF2563EB),
+                size: 18,
+              ),
               const SizedBox(width: 8),
               Text(
-                l10n.logout,
-                style: const TextStyle(
-                  color: Color(0xFFEF4444),
+                isLoggedIn ? l10n.logout : l10n.loginAction,
+                style: TextStyle(
+                  color: isLoggedIn ? const Color(0xFFEF4444) : const Color(0xFF2563EB),
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
                 ),
@@ -930,7 +938,7 @@ class _LogoutButton extends StatelessWidget {
     );
   }
 
-  void _showLogoutDialog(BuildContext context) {
+  void _showLogoutDialog(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,

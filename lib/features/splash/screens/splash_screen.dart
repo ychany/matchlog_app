@@ -5,7 +5,6 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../features/national_team/providers/selected_national_team_provider.dart';
-import '../../../features/auth/providers/auth_provider.dart';
 import '../../../features/favorites/providers/favorites_provider.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/team_model.dart';
@@ -65,15 +64,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     if (!mounted) return;
 
-    // 인증 상태 확인
-    final authState = ref.read(authStateProvider);
-    final isLoggedIn = authState.value != null;
-
-    if (!isLoggedIn) {
-      context.go('/login');
-      return;
-    }
-
+    // 로그인 상태와 관계없이 홈으로 이동
     context.go('/home');
   }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../l10n/app_localizations.dart';
@@ -31,6 +32,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final authState = ref.watch(authNotifierProvider);
     final isLoading = authState.isLoading;
     final l10n = AppLocalizations.of(context)!;
+
+    // 로그인 상태 변화 감지 - 로그인 성공 시 홈으로 이동
+    ref.listen<AsyncValue<void>>(authNotifierProvider, (previous, next) {
+      if (previous?.isLoading == true && next.hasValue && !next.isLoading) {
+        // 로그인 성공
+        final user = ref.read(currentUserProvider);
+        if (user != null) {
+          context.go('/home');
+        }
+      }
+    });
 
     return Scaffold(
       body: SafeArea(

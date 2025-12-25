@@ -10,6 +10,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../core/services/api_football_service.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/error_helper.dart';
+import '../../../core/utils/auth_utils.dart';
 import '../../../shared/services/storage_service.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../models/attendance_record.dart';
@@ -1908,9 +1909,7 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
   Future<void> _saveRecord() async {
     final userId = ref.read(currentUserIdProvider);
     if (userId == null) {
-      final l10n = AppLocalizations.of(context)!;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l10n.loginRequired)));
+      showLoginRequiredDialog(context);
       return;
     }
 

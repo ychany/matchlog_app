@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
 import '../../../core/utils/error_helper.dart';
+import '../../../core/utils/auth_utils.dart';
+import '../../../core/errors/app_exception.dart';
 import '../providers/community_provider.dart';
 import '../models/post_model.dart';
 import '../../attendance/models/attendance_record.dart';
@@ -194,9 +196,14 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(ErrorHelper.getLocalizedErrorMessage(context, e))),
-        );
+        // 로그인 필요 에러인 경우 다이얼로그 표시
+        if (e is AppException && e.code == AppErrorCode.loginRequired) {
+          showLoginRequiredDialog(context);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(ErrorHelper.getLocalizedErrorMessage(context, e))),
+          );
+        }
       }
     } finally {
       if (mounted) {

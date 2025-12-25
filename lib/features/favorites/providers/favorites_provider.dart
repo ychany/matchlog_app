@@ -119,7 +119,9 @@ class FavoritesNotifier extends StateNotifier<AsyncValue<void>> {
 
   Future<bool> toggleTeamFollow(String teamId) async {
     final userId = _ref.read(currentUserIdProvider);
-    if (userId == null) return false;
+    if (userId == null) {
+      throw Exception('LOGIN_REQUIRED');
+    }
 
     state = const AsyncValue.loading();
     try {
@@ -167,7 +169,9 @@ class FavoritesNotifier extends StateNotifier<AsyncValue<void>> {
 
   Future<bool> togglePlayerFollow(String playerId) async {
     final userId = _ref.read(currentUserIdProvider);
-    if (userId == null) return false;
+    if (userId == null) {
+      throw Exception('LOGIN_REQUIRED');
+    }
 
     state = const AsyncValue.loading();
     try {

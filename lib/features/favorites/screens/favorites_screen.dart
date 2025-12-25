@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/error_helper.dart';
+import '../../../core/utils/auth_utils.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/models/team_model.dart';
 import '../../../shared/models/player_model.dart';
@@ -548,10 +549,16 @@ class _AddTeamSheetState extends ConsumerState<_AddTeamSheet> {
                   isFollowed ? Icons.favorite : Icons.favorite_border,
                   color: isFollowed ? AppColors.error : Colors.grey,
                 ),
-                onPressed: () {
-                  ref
-                      .read(favoritesNotifierProvider.notifier)
-                      .toggleTeamFollow(team.id);
+                onPressed: () async {
+                  try {
+                    await ref
+                        .read(favoritesNotifierProvider.notifier)
+                        .toggleTeamFollow(team.id);
+                  } catch (e) {
+                    if (e.toString().contains('LOGIN_REQUIRED') && context.mounted) {
+                      showLoginRequiredDialog(context);
+                    }
+                  }
                 },
               ),
             );
@@ -596,10 +603,16 @@ class _AddTeamSheetState extends ConsumerState<_AddTeamSheet> {
             ),
             trailing: IconButton(
               icon: const Icon(Icons.favorite_border, color: Colors.grey),
-              onPressed: () {
-                ref
-                    .read(favoritesNotifierProvider.notifier)
-                    .toggleTeamFollow(team.id);
+              onPressed: () async {
+                try {
+                  await ref
+                      .read(favoritesNotifierProvider.notifier)
+                      .toggleTeamFollow(team.id);
+                } catch (e) {
+                  if (e.toString().contains('LOGIN_REQUIRED') && context.mounted) {
+                    showLoginRequiredDialog(context);
+                  }
+                }
               },
             ),
           ),
@@ -730,10 +743,16 @@ class _AddPlayerSheetState extends ConsumerState<_AddPlayerSheet> {
                       isFollowed ? Icons.favorite : Icons.favorite_border,
                       color: isFollowed ? AppColors.error : Colors.grey,
                     ),
-                    onPressed: () {
-                      ref
-                          .read(favoritesNotifierProvider.notifier)
-                          .togglePlayerFollow(player.id);
+                    onPressed: () async {
+                      try {
+                        await ref
+                            .read(favoritesNotifierProvider.notifier)
+                            .togglePlayerFollow(player.id);
+                      } catch (e) {
+                        if (e.toString().contains('LOGIN_REQUIRED') && context.mounted) {
+                          showLoginRequiredDialog(context);
+                        }
+                      }
                     },
                   ),
                 );
@@ -786,10 +805,16 @@ class _AddPlayerSheetState extends ConsumerState<_AddPlayerSheet> {
                 ),
                 trailing: IconButton(
                   icon: const Icon(Icons.favorite_border, color: Colors.grey),
-                  onPressed: () {
-                    ref
-                        .read(favoritesNotifierProvider.notifier)
-                        .togglePlayerFollow(player.id);
+                  onPressed: () async {
+                    try {
+                      await ref
+                          .read(favoritesNotifierProvider.notifier)
+                          .togglePlayerFollow(player.id);
+                    } catch (e) {
+                      if (e.toString().contains('LOGIN_REQUIRED') && context.mounted) {
+                        showLoginRequiredDialog(context);
+                      }
+                    }
                   },
                 ),
               ),
