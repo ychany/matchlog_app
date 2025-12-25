@@ -231,6 +231,16 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
           }),
           actions: [
             TextButton(
+              onPressed: _isSaving ? null : _showDeleteConfirmDialog,
+              child: Text(
+                AppLocalizations.of(context)!.delete,
+                style: const TextStyle(
+                  color: _error,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            TextButton(
               onPressed: _isSaving ? null : _saveRecord,
               child: _isSaving
                   ? const SizedBox(
@@ -1530,6 +1540,60 @@ class _AttendanceEditScreenState extends ConsumerState<AttendanceEditScreen> {
     final image = await picker.pickImage(source: source);
     if (image != null) {
       setState(() => _newPhotos.add(File(image.path)));
+    }
+  }
+
+  void _showDeleteConfirmDialog() {
+    final l10n = AppLocalizations.of(context)!;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(l10n.deleteRecord),
+        content: Text(l10n.deleteRecordConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.cancel, style: TextStyle(color: _textSecondary)),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _deleteRecord();
+            },
+            child: Text(l10n.delete, style: const TextStyle(color: _error)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteRecord() async {
+    if (_originalRecord == null) return;
+
+    setState(() => _isSaving = true);
+
+    try {
+      await ref
+          .read(attendanceNotifierProvider.notifier)
+          .deleteAttendance(_originalRecord!.id);
+
+      if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(l10n.recordDeleted)));
+        context.go('/attendance');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(ErrorHelper.getLocalizedErrorMessage(context, e))),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
     }
   }
 

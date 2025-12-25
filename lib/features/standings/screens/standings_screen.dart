@@ -52,18 +52,15 @@ class StandingsScreen extends ConsumerWidget {
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
                 child: Row(
                   children: [
-                    Flexible(
-                      child: Text(
-                        l10n.leagueStandings,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
-                          color: _textPrimary,
-                        ),
-                        overflow: TextOverflow.ellipsis,
+                    Text(
+                      l10n.leagueStandings,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                        color: _textPrimary,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const Spacer(),
                     // 국가별 리그 버튼
                     GestureDetector(
                       onTap: () => context.push('/leagues-by-country'),

@@ -366,6 +366,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Are you sure you want to delete this record?';
 
   @override
+  String get recordDeleted => 'Record deleted';
+
+  @override
   String noRecordOnDate(String date) {
     return 'No records on $date';
   }

@@ -365,6 +365,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get deleteRecordConfirm => '이 기록을 삭제하시겠습니까?';
 
   @override
+  String get recordDeleted => '기록이 삭제되었습니다';
+
+  @override
   String noRecordOnDate(String date) {
     return '$date에 기록이 없습니다';
   }

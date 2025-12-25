@@ -34,6 +34,7 @@ class _AttendanceListScreenState extends ConsumerState<AttendanceListScreen>
   late TabController _tabController;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
+  CalendarFormat _calendarFormat = CalendarFormat.twoWeeks;
   bool _isFabExtended = true;
 
   @override
@@ -268,6 +269,7 @@ class _AttendanceListScreenState extends ConsumerState<AttendanceListScreen>
                 firstDay: DateTime(2000),
                 lastDay: DateTime.now().add(const Duration(days: 365)),
                 focusedDay: _focusedDay,
+                calendarFormat: _calendarFormat,
                 selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
                 eventLoader: (day) {
                   final normalizedDay = DateTime(day.year, day.month, day.day);
@@ -278,6 +280,9 @@ class _AttendanceListScreenState extends ConsumerState<AttendanceListScreen>
                     _selectedDay = selectedDay;
                     _focusedDay = focusedDay;
                   });
+                },
+                onFormatChanged: (format) {
+                  setState(() => _calendarFormat = format);
                 },
                 onPageChanged: (focusedDay) {
                   _focusedDay = focusedDay;
@@ -307,18 +312,31 @@ class _AttendanceListScreenState extends ConsumerState<AttendanceListScreen>
                       TextStyle(color: _textSecondary.withValues(alpha: 0.5)),
                 ),
                 headerStyle: HeaderStyle(
-                  formatButtonVisible: false,
+                  formatButtonVisible: true,
                   titleCentered: true,
                   titleTextStyle: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                     color: _textPrimary,
                   ),
+                  formatButtonDecoration: BoxDecoration(
+                    border: Border.all(color: _border),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  formatButtonTextStyle: const TextStyle(
+                    color: _textSecondary,
+                    fontSize: 12,
+                  ),
                   leftChevronIcon:
                       const Icon(Icons.chevron_left, color: _textSecondary),
                   rightChevronIcon:
                       const Icon(Icons.chevron_right, color: _textSecondary),
                 ),
+                availableCalendarFormats: {
+                  CalendarFormat.month: AppLocalizations.of(context)!.monthly,
+                  CalendarFormat.twoWeeks: AppLocalizations.of(context)!.twoWeeks,
+                  CalendarFormat.week: AppLocalizations.of(context)!.weekly,
+                },
                 daysOfWeekStyle: const DaysOfWeekStyle(
                   weekdayStyle: TextStyle(
                     color: _textSecondary,
@@ -759,7 +777,7 @@ class _AttendanceCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 날짜 & 리그 & 평점
+            // 날짜 & 리그
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -779,61 +797,25 @@ class _AttendanceCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      if (record.mood != null) ...[
-                        const SizedBox(width: 8),
-                        Text(record.mood!.emoji,
-                            style: const TextStyle(fontSize: 14)),
-                      ],
                     ],
                   ),
                 ),
                 const SizedBox(width: 8),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (record.rating != null) ...[
-                      Container(
-                        padding:
-                            const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: _warning.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.star, size: 12, color: _warning),
-                            const SizedBox(width: 2),
-                            Text(
-                              record.rating!.toStringAsFixed(1),
-                              style: const TextStyle(
-                                color: _warning,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                    ],
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: _primaryLight,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        record.league,
-                        style: const TextStyle(
-                          color: _primary,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _primaryLight,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    record.league,
+                    style: const TextStyle(
+                      color: _primary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
                     ),
-                  ],
+                  ),
                 ),
               ],
             ),
@@ -936,14 +918,16 @@ class _AttendanceCard extends StatelessWidget {
 
             const SizedBox(height: 12),
 
-            // 경기장 & 기타 정보
+            // 경기장 & 좌석 & 기타 정보
             Row(
               children: [
                 const Icon(Icons.stadium_outlined, size: 14, color: _textSecondary),
                 const SizedBox(width: 4),
-                Expanded(
+                Flexible(
                   child: Text(
-                    record.stadium,
+                    record.seatInfo != null
+                        ? '${record.stadium} · ${record.seatInfo}'
+                        : record.stadium,
                     style: const TextStyle(
                       color: _textSecondary,
                       fontSize: 12,
@@ -976,48 +960,73 @@ class _AttendanceCard extends StatelessWidget {
               ],
             ),
 
-            // 태그 미리보기
-            if (record.tags.isNotEmpty) ...[
+            // 평점 & 표정 & 태그
+            if (record.rating != null || record.mood != null || record.tags.isNotEmpty) ...[
               const SizedBox(height: 10),
               Wrap(
                 spacing: 6,
                 runSpacing: 4,
-                children: record.tags
-                    .take(4)
-                    .map((tag) => Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: _success.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            '#$tag',
+                children: [
+                  // 평점
+                  if (record.rating != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: _warning.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.star, size: 12, color: _warning),
+                          const SizedBox(width: 2),
+                          Text(
+                            record.rating!.toStringAsFixed(1),
                             style: const TextStyle(
-                              color: _success,
+                              color: _warning,
+                              fontWeight: FontWeight.w600,
                               fontSize: 11,
-                              fontWeight: FontWeight.w500,
                             ),
                           ),
-                        ))
-                    .toList(),
-              ),
-            ],
-
-            // 좌석 정보
-            if (record.seatInfo != null) ...[
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(Icons.chair_outlined, size: 14, color: _textSecondary),
-                  const SizedBox(width: 4),
-                  Text(
-                    record.seatInfo!,
-                    style: const TextStyle(
-                      color: _textSecondary,
-                      fontSize: 12,
+                        ],
+                      ),
                     ),
-                  ),
+                  // 표정
+                  if (record.mood != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: _primaryLight,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        '${record.mood!.emoji} ${record.mood!.getLocalizedLabel(context)}',
+                        style: const TextStyle(
+                          color: _primary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  // 태그
+                  ...record.tags.take(3).map((tag) => Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: _success.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          '#$tag',
+                          style: const TextStyle(
+                            color: _success,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      )),
                 ],
               ),
             ],

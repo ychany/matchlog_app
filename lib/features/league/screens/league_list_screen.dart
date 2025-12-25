@@ -316,20 +316,12 @@ class _LeagueCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Row(
                       children: [
-                        if (league.countryFlag != null) ...[
-                          CachedNetworkImage(
-                            imageUrl: league.countryFlag!,
-                            width: 14,
-                            height: 10,
-                            errorWidget: (_, __, ___) => const SizedBox.shrink(),
-                          ),
-                          const SizedBox(width: 4),
-                        ],
                         Text(
                           league.countryName!,
                           style: TextStyle(
                             fontSize: 12,
                             color: _textSecondary,
+                            letterSpacing: 0,
                           ),
                         ),
                       ],

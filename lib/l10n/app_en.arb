@@ -136,6 +136,7 @@
 
   "deleteRecord": "Delete Record",
   "deleteRecordConfirm": "Are you sure you want to delete this record?",
+  "recordDeleted": "Record deleted",
   "noRecordOnDate": "No records on {date}",
   "selectDate": "Select a date",
   "noRecordsYet": "No records yet",

@@ -508,6 +508,10 @@
   "@deleteRecordConfirm": {
     "description": "Delete record confirmation"
   },
+  "recordDeleted": "기록이 삭제되었습니다",
+  "@recordDeleted": {
+    "description": "Record deleted message"
+  },
   "noRecordOnDate": "{date}에 기록이 없습니다",
   "@noRecordOnDate": {
     "description": "No record on date",

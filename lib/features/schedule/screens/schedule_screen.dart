@@ -55,27 +55,37 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
               Expanded(
                 child: RefreshIndicator(
                   color: _primary,
+                  displacement: 20,
                   onRefresh: () async {
                     ref.invalidate(filteredSchedulesProvider);
                   },
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    child: Column(
-                      children: [
-                        // 캘린더
-                        _buildCalendar(selectedDate),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight: constraints.maxHeight,
+                          ),
+                          child: Column(
+                            children: [
+                              // 캘린더
+                              _buildCalendar(selectedDate),
 
-                        const SizedBox(height: 12),
+                              const SizedBox(height: 12),
 
-                        // 리그 필터
-                        _buildLeagueFilter(selectedLeague),
+                              // 리그 필터
+                              _buildLeagueFilter(selectedLeague),
 
-                        const SizedBox(height: 16),
+                              const SizedBox(height: 16),
 
-                        // 경기 목록
-                        _buildMatchList(schedulesAsync),
-                      ],
-                    ),
+                              // 경기 목록
+                              _buildMatchList(schedulesAsync),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),

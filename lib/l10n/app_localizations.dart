@@ -794,6 +794,12 @@ abstract class AppLocalizations {
   /// **'이 기록을 삭제하시겠습니까?'**
   String get deleteRecordConfirm;
 
+  /// Record deleted message
+  ///
+  /// In ko, this message translates to:
+  /// **'기록이 삭제되었습니다'**
+  String get recordDeleted;
+
   /// No record on date
   ///
   /// In ko, this message translates to:

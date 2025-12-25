@@ -149,7 +149,6 @@ class _DetailContentState extends ConsumerState<_DetailContent>
   static const _textPrimary = Color(0xFF111827);
   static const _textSecondary = Color(0xFF6B7280);
   static const _border = Color(0xFFE5E7EB);
-  static const _warning = Color(0xFFF59E0B);
   static const _error = Color(0xFFEF4444);
 
   @override
@@ -357,65 +356,6 @@ class _DetailContentState extends ConsumerState<_DetailContent>
               ),
             ),
             const SizedBox(height: 16),
-
-            // Rating & Mood indicator
-            if (record.rating != null || record.mood != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (record.rating != null) ...[
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: _warning.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                              color: _warning.withValues(alpha: 0.3)),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.star, color: _warning, size: 16),
-                            const SizedBox(width: 4),
-                            Text(
-                              record.rating!.toStringAsFixed(1),
-                              style: const TextStyle(
-                                color: _warning,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                    if (record.rating != null && record.mood != null)
-                      const SizedBox(width: 8),
-                    if (record.mood != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: _primaryLight,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                              color: _primary.withValues(alpha: 0.3)),
-                        ),
-                        child: Text(
-                          '${record.mood!.emoji} ${record.mood!.getLocalizedLabel(context)}',
-                          style: const TextStyle(
-                            color: _primary,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
           ],
         ),
       ),
@@ -556,33 +496,81 @@ class _DiaryTab extends ConsumerWidget {
             const SizedBox(height: 20),
           ],
 
-          // Tags
-          if (record.tags.isNotEmpty) ...[
+          // Rating & Mood indicator + Tags (같은 Wrap으로)
+          if (record.rating != null || record.mood != null || record.tags.isNotEmpty) ...[
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: record.tags
-                    .map((tag) => Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: _success.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                                color: _success.withValues(alpha: 0.3)),
-                          ),
-                          child: Text(
-                            '#$tag',
+                children: [
+                  // Rating
+                  if (record.rating != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: _warning.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                            color: _warning.withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.star, color: _warning, size: 16),
+                          const SizedBox(width: 4),
+                          Text(
+                            record.rating!.toStringAsFixed(1),
                             style: const TextStyle(
-                              color: _success,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
+                              color: _warning,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
                             ),
                           ),
-                        ))
-                    .toList(),
+                        ],
+                      ),
+                    ),
+                  // Mood
+                  if (record.mood != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: _primaryLight,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                            color: _primary.withValues(alpha: 0.3)),
+                      ),
+                      child: Text(
+                        '${record.mood!.emoji} ${record.mood!.getLocalizedLabel(context)}',
+                        style: const TextStyle(
+                          color: _primary,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  // Tags
+                  ...record.tags.map((tag) => Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: _success.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                              color: _success.withValues(alpha: 0.3)),
+                        ),
+                        child: Text(
+                          '#$tag',
+                          style: const TextStyle(
+                            color: _success,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      )),
+                ],
               ),
             ),
             const SizedBox(height: 20),
