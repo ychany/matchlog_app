@@ -26,8 +26,6 @@ class _NationalTeamScreenState extends ConsumerState<NationalTeamScreen>
 
   // 월드컵 트로피 테마 - 황금색 그라데이션
   static const _gradientStart = Color(0xFFE6B422);  // 밝은 골드
-  static const _gradientMid = Color(0xFFD4A537);    // 골드
-  static const _gradientEnd = Color(0xFFC9922E);    // 약간 어두운 골드
 
   @override
   void initState() {
@@ -53,173 +51,24 @@ class _NationalTeamScreenState extends ConsumerState<NationalTeamScreen>
 
     return Scaffold(
       backgroundColor: _background,
-      body: CustomScrollView(
-        slivers: [
-          // 앱바
-          SliverAppBar(
-            expandedHeight: 200,
-            pinned: true,
-            backgroundColor: _gradientStart,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
-              onPressed: () => context.pop(),
-            ),
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      _gradientStart,
-                      _gradientMid,
-                      _gradientEnd,
-                    ],
-                    stops: const [0.0, 0.4, 1.0],
-                  ),
-                ),
-                child: SafeArea(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 40),
-                      // 팀 엠블럼
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.2),
-                              blurRadius: 10,
-                            ),
-                          ],
-                        ),
-                        padding: const EdgeInsets.all(8),
-                        child: ClipOval(
-                          child: selectedTeam.teamLogo != null
-                              ? Image.network(
-                                  selectedTeam.teamLogo!,
-                                  fit: BoxFit.contain,
-                                  errorBuilder: (_, __, ___) => const Icon(
-                                    Icons.flag,
-                                    size: 40,
-                                    color: Colors.grey,
-                                  ),
-                                )
-                              : const Icon(
-                                  Icons.flag,
-                                  size: 40,
-                                  color: Colors.grey,
-                                ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        selectedTeam.teamName,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'National Team',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.8),
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // 월드컵 카운트다운 배너
-          SliverToBoxAdapter(
-            child: Container(
-              margin: const EdgeInsets.all(16),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    const Color(0xFFFFD700),
-                    const Color(0xFFFFA500),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFFFD700).withValues(alpha: 0.3),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  const Text('🏆', style: TextStyle(fontSize: 40)),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          countdown.tournamentName,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: _textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Builder(
-                          builder: (context) => Text(
-                            AppLocalizations.of(context)!.untilOpening,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: _textSecondary,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      'D-${countdown.daysRemaining}',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        color: _gradientStart,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // 탭바
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: _SliverAppBarDelegate(
-              TabBar(
+      body: SafeArea(
+        child: Column(
+          children: [
+            // 고정 헤더
+            _buildHeader(context, selectedTeam, countdown),
+            // 고정 탭바
+            Container(
+              color: Colors.white,
+              child: TabBar(
                 controller: _tabController,
                 labelColor: const Color(0xFF2563EB),
                 unselectedLabelColor: _textSecondary,
                 indicatorColor: const Color(0xFF2563EB),
                 indicatorWeight: 3,
+                labelStyle: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
                 tabs: [
                   Tab(text: AppLocalizations.of(context)!.scheduleTab),
                   Tab(text: AppLocalizations.of(context)!.infoTab),
@@ -227,19 +76,181 @@ class _NationalTeamScreenState extends ConsumerState<NationalTeamScreen>
                 ],
               ),
             ),
-          ),
+            // 스크롤되는 탭 내용
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _ScheduleTab(),
+                  _InfoTab(),
+                  _SquadTab(),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-          // 탭 내용
-          SliverFillRemaining(
-            child: TabBarView(
-              controller: _tabController,
+  Widget _buildHeader(BuildContext context, SelectedNationalTeam selectedTeam, WorldCupCountdown countdown) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            _gradientStart,
+            _gradientStart.withValues(alpha: 0.9),
+          ],
+        ),
+      ),
+      child: Column(
+        children: [
+          // 상단 앱바
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            child: Row(
               children: [
-                _ScheduleTab(),
-                _InfoTab(),
-                _SquadTab(),
+                IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  onPressed: () => context.pop(),
+                ),
+                const Expanded(
+                  child: Text(
+                    'National Team',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(width: 48),
               ],
             ),
           ),
+          // 팀 정보
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                // 팀 엠블럼
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.2),
+                        blurRadius: 8,
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(6),
+                  child: ClipOval(
+                    child: selectedTeam.teamLogo != null
+                        ? Image.network(
+                            selectedTeam.teamLogo!,
+                            fit: BoxFit.contain,
+                            errorBuilder: (_, __, ___) => const Icon(
+                              Icons.flag,
+                              size: 30,
+                              color: Colors.grey,
+                            ),
+                          )
+                        : const Icon(
+                            Icons.flag,
+                            size: 30,
+                            color: Colors.grey,
+                          ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // 팀명
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        selectedTeam.teamName,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'National Team',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.8),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          // 월드컵 카운트다운 배너
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                const Text('🏆', style: TextStyle(fontSize: 28)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        countdown.tournamentName,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        AppLocalizations.of(context)!.untilOpening,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.white.withValues(alpha: 0.8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Text(
+                    'D-${countdown.daysRemaining}',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: _gradientStart,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
         ],
       ),
     );
@@ -382,33 +393,6 @@ class _NationalTeamScreenState extends ConsumerState<NationalTeamScreen>
         ],
       ),
     );
-  }
-}
-
-// 탭바 델리게이트
-class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
-  final TabBar tabBar;
-
-  _SliverAppBarDelegate(this.tabBar);
-
-  @override
-  Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Container(
-      color: Colors.white,
-      child: tabBar,
-    );
-  }
-
-  @override
-  double get maxExtent => tabBar.preferredSize.height;
-
-  @override
-  double get minExtent => tabBar.preferredSize.height;
-
-  @override
-  bool shouldRebuild(covariant _SliverAppBarDelegate oldDelegate) {
-    return false;
   }
 }
 
