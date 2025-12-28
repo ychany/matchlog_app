@@ -132,7 +132,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     const SizedBox(height: 24),
                     // 앱 이름
                     Text(
-                      'MatchLog',
+                      'FootHub',
                       style: TextStyle(
                         fontSize: 36,
                         fontWeight: FontWeight.bold,

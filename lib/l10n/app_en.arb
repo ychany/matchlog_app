@@ -2,7 +2,7 @@
   "@@locale": "en",
   "@@last_modified": "2025-12-25",
 
-  "appName": "MatchLog",
+  "appName": "FootHub",
   "appTagline": "Football Match Diary App",
 
   "home": "Home",
@@ -167,7 +167,7 @@
   "english": "English",
   "systemDefault": "System Default",
 
-  "appVersion": "MatchLog v{version}",
+  "appVersion": "FootHub v{version}",
 
   "liveMatches": "Live Matches",
   "updatedSecondsAgo": "Updated {seconds}s ago",
@@ -1109,7 +1109,7 @@
   "liveScoreUpdates": "Live Score Updates",
   "liveScoreUpdatesDesc": "Real-time goal/event notifications during matches",
   "notificationPermissionGuide": "Notification Permission",
-  "notificationPermissionDesc": "To receive notifications, please enable notification permissions for MatchLog in your device settings.",
+  "notificationPermissionDesc": "To receive notifications, please enable notification permissions for FootHub in your device settings.",
   "errorWithMsg": "Error: {error}",
   "@errorWithMsg": {
     "placeholders": {
@@ -1416,7 +1416,7 @@
   "noDeletePermission": "No delete permission",
   "commentNotFoundError": "Comment not found",
 
-  "matchLog": "MatchLog",
+  "matchLog": "FootHub",
   "myFootballRecord": "My Football Attendance Record",
   "emailLabel": "Email",
   "passwordLabel": "Password",

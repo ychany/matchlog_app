@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appName => 'MatchLog';
+  String get appName => 'FootHub';
 
   @override
   String get appTagline => 'Football Match Diary App';
@@ -2639,7 +2639,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationPermissionDesc =>
-      'To receive notifications, please enable notification permissions for MatchLog in your device settings.';
+      'To receive notifications, please enable notification permissions for FootHub in your device settings.';
 
   @override
   String errorWithMsg(String error) {
@@ -3195,7 +3195,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commentNotFoundError => 'Comment not found';
 
   @override
-  String get matchLog => 'MatchLog';
+  String get matchLog => 'FootHub';
 
   @override
   String get myFootballRecord => 'My Football Attendance Record';

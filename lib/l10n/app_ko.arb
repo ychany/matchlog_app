@@ -2,7 +2,7 @@
   "@@locale": "ko",
   "@@last_modified": "2025-12-25",
 
-  "appName": "MatchLog",
+  "appName": "FootHub",
   "@appName": {
     "description": "App name"
   },
@@ -620,7 +620,7 @@
     "description": "System default"
   },
 
-  "appVersion": "MatchLog v{version}",
+  "appVersion": "FootHub v{version}",
   "@appVersion": {
     "description": "App version",
     "placeholders": {
@@ -2500,7 +2500,7 @@
   "liveScoreUpdates": "라이브 스코어 업데이트",
   "liveScoreUpdatesDesc": "경기 중 골/이벤트 실시간 알림",
   "notificationPermissionGuide": "알림 권한 안내",
-  "notificationPermissionDesc": "알림을 받으려면 기기 설정에서 MatchLog 앱의 알림 권한을 허용해주세요.",
+  "notificationPermissionDesc": "알림을 받으려면 기기 설정에서 FootHub 앱의 알림 권한을 허용해주세요.",
   "errorWithMsg": "오류 발생: {error}",
   "@errorWithMsg": {
     "placeholders": {

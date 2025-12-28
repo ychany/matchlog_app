@@ -9,7 +9,7 @@ class AppLocalizationsKo extends AppLocalizations {
   AppLocalizationsKo([String locale = 'ko']) : super(locale);
 
   @override
-  String get appName => 'MatchLog';
+  String get appName => 'FootHub';
 
   @override
   String get appTagline => '축구 직관 기록 앱';
@@ -2623,7 +2623,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get notificationPermissionDesc =>
-      '알림을 받으려면 기기 설정에서 MatchLog 앱의 알림 권한을 허용해주세요.';
+      '알림을 받으려면 기기 설정에서 FootHub 앱의 알림 권한을 허용해주세요.';
 
   @override
   String errorWithMsg(String error) {

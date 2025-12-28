@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// App name
   ///
   /// In ko, this message translates to:
-  /// **'MatchLog'**
+  /// **'FootHub'**
   String get appName;
 
   /// App tagline
@@ -5075,7 +5075,7 @@ abstract class AppLocalizations {
   /// No description provided for @notificationPermissionDesc.
   ///
   /// In ko, this message translates to:
-  /// **'알림을 받으려면 기기 설정에서 MatchLog 앱의 알림 권한을 허용해주세요.'**
+  /// **'알림을 받으려면 기기 설정에서 FootHub 앱의 알림 권한을 허용해주세요.'**
   String get notificationPermissionDesc;
 
   /// No description provided for @errorWithMsg.
