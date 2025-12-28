@@ -275,25 +275,12 @@ class _LeagueDetailScreenState extends ConsumerState<LeagueDetailScreen> with Si
                             ),
                             if (league?.countryName != null) ...[
                               const SizedBox(height: 2),
-                              Row(
-                                children: [
-                                  if (league?.countryFlag != null) ...[
-                                    CachedNetworkImage(
-                                      imageUrl: league!.countryFlag!,
-                                      width: 14,
-                                      height: 10,
-                                      errorWidget: (_, __, ___) => const SizedBox.shrink(),
-                                    ),
-                                    const SizedBox(width: 4),
-                                  ],
-                                  Text(
-                                    league!.countryName!,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: _textSecondary,
-                                    ),
-                                  ),
-                                ],
+                              Text(
+                                league!.countryName!,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: _textSecondary,
+                                ),
                               ),
                             ],
                           ],
