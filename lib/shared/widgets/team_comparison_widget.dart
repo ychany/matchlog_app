@@ -520,24 +520,27 @@ class TeamComparisonTab extends ConsumerWidget {
   Widget _buildFormRow(BuildContext context, String teamName,
       List<ApiFootballFixture> fixtures, int teamId) {
     final l10n = AppLocalizations.of(context)!;
-    final results = <String>[];
+    final formData = <_FormData>[];
     int wins = 0, draws = 0, losses = 0;
 
     for (final f in fixtures.take(5)) {
       final isHome = f.homeTeam.id == teamId;
       final teamGoals = isHome ? (f.homeGoals ?? 0) : (f.awayGoals ?? 0);
       final oppGoals = isHome ? (f.awayGoals ?? 0) : (f.homeGoals ?? 0);
+      final oppLogo = isHome ? f.awayTeam.logo : f.homeTeam.logo;
 
+      String result;
       if (teamGoals > oppGoals) {
-        results.add('W');
+        result = 'W';
         wins++;
       } else if (teamGoals < oppGoals) {
-        results.add('L');
+        result = 'L';
         losses++;
       } else {
-        results.add('D');
+        result = 'D';
         draws++;
       }
+      formData.add(_FormData(result: result, opponentLogo: oppLogo));
     }
 
     return Column(
@@ -565,17 +568,17 @@ class TeamComparisonTab extends ConsumerWidget {
         ),
         const SizedBox(height: 8),
         Row(
-          children: results.map((r) => _buildFormBadge(r)).toList(),
+          children: formData.map((data) => _buildFormBadge(data)).toList(),
         ),
       ],
     );
   }
 
-  Widget _buildFormBadge(String result) {
+  Widget _buildFormBadge(_FormData data) {
     Color bgColor;
     Color textColor = Colors.white;
 
-    switch (result) {
+    switch (data.result) {
       case 'W':
         bgColor = _success;
         break;
@@ -588,21 +591,43 @@ class TeamComparisonTab extends ConsumerWidget {
 
     return Container(
       margin: const EdgeInsets.only(right: 6),
-      width: 28,
-      height: 28,
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Center(
-        child: Text(
-          result,
-          style: TextStyle(
-            color: textColor,
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
+      child: Column(
+        children: [
+          // 상대팀 로고
+          if (data.opponentLogo != null)
+            ClipOval(
+              child: CachedNetworkImage(
+                imageUrl: data.opponentLogo!,
+                width: 16,
+                height: 16,
+                fit: BoxFit.cover,
+                placeholder: (_, __) => const SizedBox(width: 16, height: 16),
+                errorWidget: (_, __, ___) => const SizedBox(width: 16, height: 16),
+              ),
+            )
+          else
+            const SizedBox(height: 16),
+          const SizedBox(height: 4),
+          // W/D/L 배지
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Center(
+              child: Text(
+                data.result,
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -1424,3 +1449,11 @@ final headToHeadProvider = FutureProvider.family<
   final service = ApiFootballService();
   return service.getHeadToHead(params.homeTeamId, params.awayTeamId);
 });
+
+// 최근 폼 데이터 (상대팀 로고 포함)
+class _FormData {
+  final String result;
+  final String? opponentLogo;
+
+  _FormData({required this.result, this.opponentLogo});
+}
