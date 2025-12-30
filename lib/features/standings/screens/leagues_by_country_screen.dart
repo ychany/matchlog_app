@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/services/api_football_service.dart';
 import '../../../l10n/app_localizations.dart';
@@ -152,10 +153,10 @@ class _LeaguesByCountryScreenState extends ConsumerState<LeaguesByCountryScreen>
   Widget _buildCountryList(AsyncValue<List<ApiFootballCountry>> countriesAsync) {
     return countriesAsync.when(
       data: (countries) {
-        // 검색 필터링
-        var filteredCountries = countries;
+        // World 제외 및 검색 필터링
+        var filteredCountries = countries.where((c) => c.name != 'World').toList();
         if (_searchQuery.isNotEmpty) {
-          filteredCountries = countries
+          filteredCountries = filteredCountries
               .where((c) => c.name.toLowerCase().contains(_searchQuery.toLowerCase()))
               .toList();
         }
@@ -261,37 +262,7 @@ class _LeaguesByCountryScreenState extends ConsumerState<LeaguesByCountryScreen>
           child: Row(
             children: [
               // 국기
-              if (country.flag != null)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: CachedNetworkImage(
-                    imageUrl: country.flag!,
-                    width: 32,
-                    height: 22,
-                    fit: BoxFit.cover,
-                    placeholder: (_, __) => Container(
-                      width: 32,
-                      height: 22,
-                      color: Colors.grey.shade200,
-                    ),
-                    errorWidget: (_, __, ___) => Container(
-                      width: 32,
-                      height: 22,
-                      color: Colors.grey.shade200,
-                      child: const Icon(Icons.flag, size: 16),
-                    ),
-                  ),
-                )
-              else
-                Container(
-                  width: 32,
-                  height: 22,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade200,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: const Icon(Icons.flag, size: 16, color: _textSecondary),
-                ),
+              _buildFlagWidget(country.flag, 32, 22),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -332,37 +303,7 @@ class _LeaguesByCountryScreenState extends ConsumerState<LeaguesByCountryScreen>
             child: Row(
               children: [
                 // 국기
-                if (country.flag != null)
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: CachedNetworkImage(
-                      imageUrl: country.flag!,
-                      width: 36,
-                      height: 24,
-                      fit: BoxFit.cover,
-                      placeholder: (_, __) => Container(
-                        width: 36,
-                        height: 24,
-                        color: Colors.grey.shade200,
-                      ),
-                      errorWidget: (_, __, ___) => Container(
-                        width: 36,
-                        height: 24,
-                        color: Colors.grey.shade200,
-                        child: const Icon(Icons.flag, size: 16),
-                      ),
-                    ),
-                  )
-                else
-                  Container(
-                    width: 36,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: const Icon(Icons.flag, size: 16, color: _textSecondary),
-                  ),
+                _buildFlagWidget(country.flag, 36, 24),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -387,6 +328,71 @@ class _LeaguesByCountryScreenState extends ConsumerState<LeaguesByCountryScreen>
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  // SVG 국기 위젯
+  Widget _buildFlagWidget(String? flagUrl, double width, double height) {
+    // SizedBox로 감싸서 로딩 중에도 크기 고정
+    return SizedBox(
+      width: width,
+      height: height,
+      child: _buildFlagContent(flagUrl, width, height),
+    );
+  }
+
+  Widget _buildFlagContent(String? flagUrl, double width, double height) {
+    if (flagUrl == null) {
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.grey.shade200,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: const Icon(Icons.flag, size: 16, color: _textSecondary),
+      );
+    }
+
+    // SVG 파일인 경우
+    if (flagUrl.toLowerCase().endsWith('.svg')) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(4),
+        child: SvgPicture.network(
+          flagUrl,
+          width: width,
+          height: height,
+          fit: BoxFit.cover,
+          placeholderBuilder: (_) => Container(
+            decoration: BoxDecoration(
+              color: Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // 일반 이미지인 경우
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(4),
+      child: CachedNetworkImage(
+        imageUrl: flagUrl,
+        width: width,
+        height: height,
+        fit: BoxFit.cover,
+        placeholder: (_, __) => Container(
+          decoration: BoxDecoration(
+            color: Colors.grey.shade200,
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+        errorWidget: (_, __, ___) => Container(
+          decoration: BoxDecoration(
+            color: Colors.grey.shade200,
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: const Icon(Icons.flag, size: 16),
         ),
       ),
     );
