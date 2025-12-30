@@ -15,9 +15,28 @@ class PostsNotifier extends StateNotifier<AsyncValue<List<Post>>> {
   final CommunityService _service;
   bool _hasMore = true;
   bool _isLoading = false;
+  List<String> _blockedUserIds = [];
 
   PostsNotifier(this._service) : super(const AsyncValue.loading()) {
-    loadPosts();
+    _init();
+  }
+
+  Future<void> _init() async {
+    await _loadBlockedUsers();
+    await loadPosts();
+  }
+
+  Future<void> _loadBlockedUsers() async {
+    try {
+      _blockedUserIds = await _service.getBlockedUserIds();
+    } catch (_) {
+      _blockedUserIds = [];
+    }
+  }
+
+  List<Post> _filterBlockedPosts(List<Post> posts) {
+    if (_blockedUserIds.isEmpty) return posts;
+    return posts.where((post) => !_blockedUserIds.contains(post.authorId)).toList();
   }
 
   Future<void> loadPosts() async {
@@ -26,8 +45,9 @@ class PostsNotifier extends StateNotifier<AsyncValue<List<Post>>> {
 
     try {
       final posts = await _service.getPosts();
+      final filteredPosts = _filterBlockedPosts(posts);
       _hasMore = posts.length >= 20;
-      state = AsyncValue.data(posts);
+      state = AsyncValue.data(filteredPosts);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     } finally {
@@ -38,6 +58,7 @@ class PostsNotifier extends StateNotifier<AsyncValue<List<Post>>> {
   Future<void> refresh() async {
     state = const AsyncValue.loading();
     _hasMore = true;
+    await _loadBlockedUsers();
     await loadPosts();
   }
 
@@ -53,8 +74,9 @@ class PostsNotifier extends StateNotifier<AsyncValue<List<Post>>> {
       // 실제 구현시 lastDocument를 전달해야 함
       // 여기서는 간단히 처리
       final morePosts = await _service.getPosts(limit: 20);
+      final filteredPosts = _filterBlockedPosts(morePosts);
       _hasMore = morePosts.length >= 20;
-      state = AsyncValue.data([...currentPosts, ...morePosts]);
+      state = AsyncValue.data([...currentPosts, ...filteredPosts]);
     } catch (e) {
       // 에러 발생해도 기존 데이터 유지
     } finally {
@@ -133,4 +155,65 @@ final likedPostsProvider = StateNotifierProvider<LikedPostsNotifier, Map<String,
 final myPostsProvider = FutureProvider<List<Post>>((ref) async {
   final service = ref.read(communityServiceProvider);
   return service.getMyPosts();
+});
+
+// 차단된 사용자 ID 목록 Provider
+final blockedUserIdsProvider = FutureProvider<List<String>>((ref) async {
+  final service = ref.read(communityServiceProvider);
+  return service.getBlockedUserIds();
+});
+
+// 차단된 사용자 정보
+class BlockedUser {
+  final String userId;
+  final String userName;
+
+  BlockedUser({required this.userId, required this.userName});
+}
+
+// 차단된 사용자 목록 Notifier (실시간 업데이트용)
+class BlockedUsersNotifier extends StateNotifier<AsyncValue<List<BlockedUser>>> {
+  final CommunityService _service;
+
+  BlockedUsersNotifier(this._service) : super(const AsyncValue.loading()) {
+    load();
+  }
+
+  Future<void> load() async {
+    try {
+      final blockedUsers = await _service.getBlockedUsers();
+      state = AsyncValue.data(
+        blockedUsers.map((u) => BlockedUser(
+          userId: u['userId']!,
+          userName: u['userName']!,
+        )).toList(),
+      );
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  Future<void> unblock(String userId) async {
+    await _service.unblockUser(userId);
+    final currentList = state.valueOrNull ?? [];
+    state = AsyncValue.data(currentList.where((u) => u.userId != userId).toList());
+  }
+
+  Future<void> block(String userId, String userName) async {
+    await _service.blockUser(userId, targetUserName: userName);
+    final currentList = state.valueOrNull ?? [];
+    if (!currentList.any((u) => u.userId == userId)) {
+      state = AsyncValue.data([...currentList, BlockedUser(userId: userId, userName: userName)]);
+    }
+  }
+
+  bool isBlocked(String userId) {
+    return state.valueOrNull?.any((u) => u.userId == userId) ?? false;
+  }
+}
+
+final blockedUsersNotifierProvider =
+    StateNotifierProvider<BlockedUsersNotifier, AsyncValue<List<BlockedUser>>>((ref) {
+  final service = ref.read(communityServiceProvider);
+  return BlockedUsersNotifier(service);
 });

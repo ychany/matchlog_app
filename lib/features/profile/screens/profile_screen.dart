@@ -866,6 +866,14 @@ class _MenuSection extends StatelessWidget {
           ),
           Container(height: 1, margin: const EdgeInsets.only(left: 72), color: const Color(0xFFE5E7EB)),
           _MenuItem(
+            icon: Icons.block_rounded,
+            iconColor: const Color(0xFFEF4444),
+            title: l10n.blockedUsersManagement,
+            subtitle: l10n.blockUserDesc,
+            onTap: () => context.push('/profile/blocked-users'),
+          ),
+          Container(height: 1, margin: const EdgeInsets.only(left: 72), color: const Color(0xFFE5E7EB)),
+          _MenuItem(
             icon: Icons.schedule_rounded,
             iconColor: const Color(0xFF0EA5E9),
             title: l10n.timezoneSettings,

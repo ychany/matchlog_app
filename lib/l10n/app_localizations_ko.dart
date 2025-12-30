@@ -3906,4 +3906,93 @@ class AppLocalizationsKo extends AppLocalizations {
   String accountDeleteFailed(String error) {
     return '회원 탈퇴 실패: $error';
   }
+
+  @override
+  String get report => '신고';
+
+  @override
+  String get reportPost => '게시글 신고';
+
+  @override
+  String get reportComment => '댓글 신고';
+
+  @override
+  String get reportUser => '사용자 신고';
+
+  @override
+  String get reportReason => '신고 사유';
+
+  @override
+  String get reportReasonSpam => '스팸/광고';
+
+  @override
+  String get reportReasonHarassment => '욕설/비방';
+
+  @override
+  String get reportReasonInappropriate => '부적절한 콘텐츠';
+
+  @override
+  String get reportReasonFalseInfo => '허위 정보';
+
+  @override
+  String get reportReasonOther => '기타';
+
+  @override
+  String get reportAdditionalInfo => '추가 설명 (선택)';
+
+  @override
+  String get reportAdditionalInfoHint => '신고 사유를 자세히 입력해주세요';
+
+  @override
+  String get reportSubmit => '신고하기';
+
+  @override
+  String get reportSubmitted => '신고가 접수되었습니다';
+
+  @override
+  String reportFailed(String error) {
+    return '신고 접수 실패: $error';
+  }
+
+  @override
+  String get reportAlreadySubmitted => '이미 신고한 콘텐츠입니다';
+
+  @override
+  String get reportConfirmTitle => '신고하시겠습니까?';
+
+  @override
+  String get reportConfirmMessage => '허위 신고는 제재를 받을 수 있습니다.';
+
+  @override
+  String get blockUser => '사용자 차단';
+
+  @override
+  String get blockUserConfirm => '이 사용자를 차단하시겠습니까?';
+
+  @override
+  String get blockUserDesc => '차단한 사용자 관리';
+
+  @override
+  String get userBlocked => '사용자가 차단되었습니다';
+
+  @override
+  String get blockedUsersManagement => '차단 사용자 관리';
+
+  @override
+  String get noBlockedUsers => '차단한 사용자가 없습니다';
+
+  @override
+  String get blockedUser => '차단된 사용자';
+
+  @override
+  String get unblock => '차단 해제';
+
+  @override
+  String get unblockUser => '차단 해제';
+
+  @override
+  String get unblockUserConfirm => '이 사용자의 차단을 해제하시겠습니까?';
+
+  @override
+  String get userUnblocked => '차단이 해제되었습니다';
 }

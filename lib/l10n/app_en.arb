@@ -1828,5 +1828,40 @@
     "placeholders": {
       "error": {"type": "String"}
     }
-  }
+  },
+
+  "report": "Report",
+  "reportPost": "Report Post",
+  "reportComment": "Report Comment",
+  "reportUser": "Report User",
+  "reportReason": "Reason for Report",
+  "reportReasonSpam": "Spam/Advertising",
+  "reportReasonHarassment": "Harassment/Abuse",
+  "reportReasonInappropriate": "Inappropriate Content",
+  "reportReasonFalseInfo": "False Information",
+  "reportReasonOther": "Other",
+  "reportAdditionalInfo": "Additional Details (Optional)",
+  "reportAdditionalInfoHint": "Please provide more details about the report",
+  "reportSubmit": "Submit Report",
+  "reportSubmitted": "Report has been submitted",
+  "reportFailed": "Report failed: {error}",
+  "@reportFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "reportAlreadySubmitted": "You have already reported this content",
+  "reportConfirmTitle": "Submit Report?",
+  "reportConfirmMessage": "False reports may result in penalties.",
+  "blockUser": "Block User",
+  "blockUserConfirm": "Block this user?",
+  "blockUserDesc": "Manage blocked users",
+  "userBlocked": "User has been blocked",
+  "blockedUsersManagement": "Blocked Users",
+  "noBlockedUsers": "No blocked users",
+  "blockedUser": "Blocked User",
+  "unblock": "Unblock",
+  "unblockUser": "Unblock User",
+  "unblockUserConfirm": "Unblock this user?",
+  "userUnblocked": "User has been unblocked"
 }

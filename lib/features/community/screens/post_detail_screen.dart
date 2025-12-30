@@ -176,32 +176,64 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
           actions: [
             postAsync.whenOrNull(
               data: (post) {
-                if (post != null && currentUser?.uid == post.authorId) {
-                  return PopupMenuButton<String>(
-                    icon: const Icon(Icons.more_vert, color: _textPrimary),
-                    onSelected: (value) async {
-                      if (value == 'edit') {
-                        final result = await context.push('/community/write', extra: post);
-                        if (result == true) {
-                          ref.invalidate(postProvider(widget.postId));
-                        }
-                      } else if (value == 'delete') {
-                        _deletePost(post);
+                if (post == null) return const SizedBox.shrink();
+
+                final isOwner = currentUser?.uid == post.authorId;
+                return PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert, color: _textPrimary),
+                  onSelected: (value) async {
+                    if (value == 'edit') {
+                      final result = await context.push('/community/write', extra: post);
+                      if (result == true) {
+                        ref.invalidate(postProvider(widget.postId));
                       }
-                    },
-                    itemBuilder: (context) => [
-                      PopupMenuItem(
-                        value: 'edit',
-                        child: Text(AppLocalizations.of(context)!.edit),
-                      ),
-                      PopupMenuItem(
-                        value: 'delete',
-                        child: Text(AppLocalizations.of(context)!.delete, style: const TextStyle(color: Colors.red)),
-                      ),
-                    ],
-                  );
-                }
-                return const SizedBox.shrink();
+                    } else if (value == 'delete') {
+                      _deletePost(post);
+                    } else if (value == 'report') {
+                      _showReportDialog(post);
+                    } else if (value == 'block') {
+                      _blockUser(post.authorId, post.authorName);
+                    }
+                  },
+                  itemBuilder: (context) {
+                    final l10n = AppLocalizations.of(context)!;
+                    if (isOwner) {
+                      return [
+                        PopupMenuItem(
+                          value: 'edit',
+                          child: Text(l10n.edit),
+                        ),
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
+                        ),
+                      ];
+                    } else {
+                      return [
+                        PopupMenuItem(
+                          value: 'report',
+                          child: Row(
+                            children: [
+                              const Icon(Icons.report_outlined, size: 20, color: Colors.red),
+                              const SizedBox(width: 8),
+                              Text(l10n.reportPost),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'block',
+                          child: Row(
+                            children: [
+                              const Icon(Icons.block, size: 20, color: Colors.red),
+                              const SizedBox(width: 8),
+                              Text(l10n.blockUser, style: const TextStyle(color: Colors.red)),
+                            ],
+                          ),
+                        ),
+                      ];
+                    }
+                  },
+                );
               },
             ) ?? const SizedBox.shrink(),
           ],
@@ -439,6 +471,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                                     children: comments.map((comment) => _CommentItem(
                                       comment: comment,
                                       onDelete: () => _deleteComment(comment),
+                                      onReport: () => _showCommentReportDialog(comment),
                                       isOwner: currentUser?.uid == comment.authorId,
                                     )).toList(),
                                   );
@@ -553,6 +586,282 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
 
   String _formatDateTime(DateTime dateTime) {
     return '${dateTime.year}.${dateTime.month.toString().padLeft(2, '0')}.${dateTime.day.toString().padLeft(2, '0')} ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+  }
+
+  void _showReportDialog(Post post) {
+    final l10n = AppLocalizations.of(context)!;
+    String? selectedReason;
+    final additionalController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.report_outlined, color: Colors.red),
+                  const SizedBox(width: 8),
+                  Text(
+                    l10n.reportPost,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Text(
+                l10n.reportReason,
+                style: const TextStyle(fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 12),
+              ...[
+                ('spam', l10n.reportReasonSpam),
+                ('harassment', l10n.reportReasonHarassment),
+                ('inappropriate', l10n.reportReasonInappropriate),
+                ('false_info', l10n.reportReasonFalseInfo),
+                ('other', l10n.reportReasonOther),
+              ].map((item) => RadioListTile<String>(
+                value: item.$1,
+                groupValue: selectedReason,
+                onChanged: (value) => setModalState(() => selectedReason = value),
+                title: Text(item.$2),
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+              )),
+              const SizedBox(height: 12),
+              TextField(
+                controller: additionalController,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  labelText: l10n.reportAdditionalInfo,
+                  hintText: l10n.reportAdditionalInfoHint,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: selectedReason == null
+                      ? null
+                      : () async {
+                          Navigator.pop(context);
+                          await _submitReport(
+                            contentType: 'post',
+                            contentId: post.id,
+                            reason: selectedReason!,
+                            additionalInfo: additionalController.text.trim(),
+                            reportedUserId: post.authorId,
+                          );
+                        },
+                  child: Text(l10n.reportSubmit),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _submitReport({
+    required String contentType,
+    required String contentId,
+    required String reason,
+    String? additionalInfo,
+    String? reportedUserId,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
+
+    try {
+      final service = ref.read(communityServiceProvider);
+      await service.reportContent(
+        contentType: contentType,
+        contentId: contentId,
+        reason: reason,
+        additionalInfo: additionalInfo,
+        reportedUserId: reportedUserId,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.reportSubmitted)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        final message = e.toString().contains('ALREADY_REPORTED')
+            ? l10n.reportAlreadySubmitted
+            : l10n.reportFailed(e.toString());
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  void _showCommentReportDialog(Comment comment) {
+    final l10n = AppLocalizations.of(context)!;
+    String? selectedReason;
+    final additionalController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.report_outlined, color: Colors.red),
+                  const SizedBox(width: 8),
+                  Text(
+                    l10n.reportComment,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Text(
+                l10n.reportReason,
+                style: const TextStyle(fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 12),
+              ...[
+                ('spam', l10n.reportReasonSpam),
+                ('harassment', l10n.reportReasonHarassment),
+                ('inappropriate', l10n.reportReasonInappropriate),
+                ('false_info', l10n.reportReasonFalseInfo),
+                ('other', l10n.reportReasonOther),
+              ].map((item) => RadioListTile<String>(
+                value: item.$1,
+                groupValue: selectedReason,
+                onChanged: (value) => setModalState(() => selectedReason = value),
+                title: Text(item.$2),
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+              )),
+              const SizedBox(height: 12),
+              TextField(
+                controller: additionalController,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  labelText: l10n.reportAdditionalInfo,
+                  hintText: l10n.reportAdditionalInfoHint,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: selectedReason == null
+                      ? null
+                      : () async {
+                          Navigator.pop(context);
+                          await _submitReport(
+                            contentType: 'comment',
+                            contentId: comment.id,
+                            reason: selectedReason!,
+                            additionalInfo: additionalController.text.trim(),
+                            reportedUserId: comment.authorId,
+                          );
+                        },
+                  child: Text(l10n.reportSubmit),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _blockUser(String userId, String userName) async {
+    final l10n = AppLocalizations.of(context)!;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.blockUser),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l10n.blockUserConfirm),
+            const SizedBox(height: 8),
+            Text(
+              l10n.blockUserDesc,
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.blockUser),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        final service = ref.read(communityServiceProvider);
+        await service.blockUser(userId, targetUserName: userName);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.userBlocked)),
+          );
+          // 커뮤니티 목록 새로고침 후 돌아가기
+          ref.read(postsNotifierProvider.notifier).refresh();
+          context.pop();
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
   }
 
   Widget _buildStatsCard(Post post) {
@@ -837,11 +1146,13 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
 class _CommentItem extends StatelessWidget {
   final Comment comment;
   final VoidCallback onDelete;
+  final VoidCallback onReport;
   final bool isOwner;
 
   const _CommentItem({
     required this.comment,
     required this.onDelete,
+    required this.onReport,
     required this.isOwner,
   });
 
@@ -912,13 +1223,42 @@ class _CommentItem extends StatelessWidget {
               ],
             ),
           ),
-          if (isOwner)
-            IconButton(
-              icon: const Icon(Icons.close, size: 16, color: _textSecondary),
-              onPressed: onDelete,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-            ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert, size: 16, color: _textSecondary),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+            onSelected: (value) {
+              if (value == 'delete') {
+                onDelete();
+              } else if (value == 'report') {
+                onReport();
+              }
+            },
+            itemBuilder: (context) {
+              final l10n = AppLocalizations.of(context)!;
+              if (isOwner) {
+                return [
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
+                  ),
+                ];
+              } else {
+                return [
+                  PopupMenuItem(
+                    value: 'report',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.report_outlined, size: 18, color: Colors.red),
+                        const SizedBox(width: 8),
+                        Text(l10n.report),
+                      ],
+                    ),
+                  ),
+                ];
+              }
+            },
+          ),
         ],
       ),
     );

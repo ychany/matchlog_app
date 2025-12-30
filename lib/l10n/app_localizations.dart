@@ -7471,6 +7471,180 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'회원 탈퇴 실패: {error}'**
   String accountDeleteFailed(String error);
+
+  /// No description provided for @report.
+  ///
+  /// In ko, this message translates to:
+  /// **'신고'**
+  String get report;
+
+  /// No description provided for @reportPost.
+  ///
+  /// In ko, this message translates to:
+  /// **'게시글 신고'**
+  String get reportPost;
+
+  /// No description provided for @reportComment.
+  ///
+  /// In ko, this message translates to:
+  /// **'댓글 신고'**
+  String get reportComment;
+
+  /// No description provided for @reportUser.
+  ///
+  /// In ko, this message translates to:
+  /// **'사용자 신고'**
+  String get reportUser;
+
+  /// No description provided for @reportReason.
+  ///
+  /// In ko, this message translates to:
+  /// **'신고 사유'**
+  String get reportReason;
+
+  /// No description provided for @reportReasonSpam.
+  ///
+  /// In ko, this message translates to:
+  /// **'스팸/광고'**
+  String get reportReasonSpam;
+
+  /// No description provided for @reportReasonHarassment.
+  ///
+  /// In ko, this message translates to:
+  /// **'욕설/비방'**
+  String get reportReasonHarassment;
+
+  /// No description provided for @reportReasonInappropriate.
+  ///
+  /// In ko, this message translates to:
+  /// **'부적절한 콘텐츠'**
+  String get reportReasonInappropriate;
+
+  /// No description provided for @reportReasonFalseInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'허위 정보'**
+  String get reportReasonFalseInfo;
+
+  /// No description provided for @reportReasonOther.
+  ///
+  /// In ko, this message translates to:
+  /// **'기타'**
+  String get reportReasonOther;
+
+  /// No description provided for @reportAdditionalInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'추가 설명 (선택)'**
+  String get reportAdditionalInfo;
+
+  /// No description provided for @reportAdditionalInfoHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'신고 사유를 자세히 입력해주세요'**
+  String get reportAdditionalInfoHint;
+
+  /// No description provided for @reportSubmit.
+  ///
+  /// In ko, this message translates to:
+  /// **'신고하기'**
+  String get reportSubmit;
+
+  /// No description provided for @reportSubmitted.
+  ///
+  /// In ko, this message translates to:
+  /// **'신고가 접수되었습니다'**
+  String get reportSubmitted;
+
+  /// No description provided for @reportFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'신고 접수 실패: {error}'**
+  String reportFailed(String error);
+
+  /// No description provided for @reportAlreadySubmitted.
+  ///
+  /// In ko, this message translates to:
+  /// **'이미 신고한 콘텐츠입니다'**
+  String get reportAlreadySubmitted;
+
+  /// No description provided for @reportConfirmTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'신고하시겠습니까?'**
+  String get reportConfirmTitle;
+
+  /// No description provided for @reportConfirmMessage.
+  ///
+  /// In ko, this message translates to:
+  /// **'허위 신고는 제재를 받을 수 있습니다.'**
+  String get reportConfirmMessage;
+
+  /// No description provided for @blockUser.
+  ///
+  /// In ko, this message translates to:
+  /// **'사용자 차단'**
+  String get blockUser;
+
+  /// No description provided for @blockUserConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 사용자를 차단하시겠습니까?'**
+  String get blockUserConfirm;
+
+  /// No description provided for @blockUserDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'차단한 사용자 관리'**
+  String get blockUserDesc;
+
+  /// No description provided for @userBlocked.
+  ///
+  /// In ko, this message translates to:
+  /// **'사용자가 차단되었습니다'**
+  String get userBlocked;
+
+  /// No description provided for @blockedUsersManagement.
+  ///
+  /// In ko, this message translates to:
+  /// **'차단 사용자 관리'**
+  String get blockedUsersManagement;
+
+  /// No description provided for @noBlockedUsers.
+  ///
+  /// In ko, this message translates to:
+  /// **'차단한 사용자가 없습니다'**
+  String get noBlockedUsers;
+
+  /// No description provided for @blockedUser.
+  ///
+  /// In ko, this message translates to:
+  /// **'차단된 사용자'**
+  String get blockedUser;
+
+  /// No description provided for @unblock.
+  ///
+  /// In ko, this message translates to:
+  /// **'차단 해제'**
+  String get unblock;
+
+  /// No description provided for @unblockUser.
+  ///
+  /// In ko, this message translates to:
+  /// **'차단 해제'**
+  String get unblockUser;
+
+  /// No description provided for @unblockUserConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 사용자의 차단을 해제하시겠습니까?'**
+  String get unblockUserConfirm;
+
+  /// No description provided for @userUnblocked.
+  ///
+  /// In ko, this message translates to:
+  /// **'차단이 해제되었습니다'**
+  String get userUnblocked;
 }
 
 class _AppLocalizationsDelegate

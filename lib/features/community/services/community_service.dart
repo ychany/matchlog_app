@@ -10,6 +10,8 @@ class CommunityService {
   CollectionReference get _postsCollection => _firestore.collection('posts');
   CollectionReference get _commentsCollection => _firestore.collection('comments');
   CollectionReference get _likesCollection => _firestore.collection('likes');
+  CollectionReference get _reportsCollection => _firestore.collection('reports');
+  CollectionReference get _blockedUsersCollection => _firestore.collection('blocked_users');
 
   // 게시글 목록 조회 (페이지네이션)
   Future<List<Post>> getPosts({
@@ -339,5 +341,105 @@ class CommunityService {
         .orderBy('createdAt', descending: true)
         .get();
     return snapshot.docs.map((doc) => Post.fromFirestore(doc)).toList();
+  }
+
+  // 신고하기
+  Future<void> reportContent({
+    required String contentType, // 'post', 'comment', 'user'
+    required String contentId,
+    required String reason,
+    String? additionalInfo,
+    String? reportedUserId,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) throw AppException(AppErrorCode.loginRequired);
+
+    // 중복 신고 확인
+    final existingReport = await _reportsCollection
+        .where('reporterId', isEqualTo: user.uid)
+        .where('contentType', isEqualTo: contentType)
+        .where('contentId', isEqualTo: contentId)
+        .get();
+
+    if (existingReport.docs.isNotEmpty) {
+      throw Exception('ALREADY_REPORTED');
+    }
+
+    await _reportsCollection.add({
+      'reporterId': user.uid,
+      'reporterName': user.displayName ?? 'Unknown',
+      'contentType': contentType,
+      'contentId': contentId,
+      'reportedUserId': reportedUserId,
+      'reason': reason,
+      'additionalInfo': additionalInfo,
+      'status': 'pending', // pending, reviewed, resolved
+      'createdAt': Timestamp.now(),
+    });
+  }
+
+  // 사용자 차단
+  Future<void> blockUser(String targetUserId, {String? targetUserName}) async {
+    final user = _auth.currentUser;
+    if (user == null) throw AppException(AppErrorCode.loginRequired);
+
+    final blockId = '${user.uid}_$targetUserId';
+    await _blockedUsersCollection.doc(blockId).set({
+      'blockerId': user.uid,
+      'blockedUserId': targetUserId,
+      'blockedUserName': targetUserName ?? 'Unknown',
+      'createdAt': Timestamp.now(),
+    });
+  }
+
+  // 차단 해제
+  Future<void> unblockUser(String targetUserId) async {
+    final user = _auth.currentUser;
+    if (user == null) throw AppException(AppErrorCode.loginRequired);
+
+    final blockId = '${user.uid}_$targetUserId';
+    await _blockedUsersCollection.doc(blockId).delete();
+  }
+
+  // 차단 여부 확인
+  Future<bool> isUserBlocked(String targetUserId) async {
+    final user = _auth.currentUser;
+    if (user == null) return false;
+
+    final blockId = '${user.uid}_$targetUserId';
+    final doc = await _blockedUsersCollection.doc(blockId).get();
+    return doc.exists;
+  }
+
+  // 차단된 사용자 목록 (ID만)
+  Future<List<String>> getBlockedUserIds() async {
+    final user = _auth.currentUser;
+    if (user == null) return [];
+
+    final snapshot = await _blockedUsersCollection
+        .where('blockerId', isEqualTo: user.uid)
+        .get();
+
+    return snapshot.docs
+        .map((doc) => doc['blockedUserId'] as String)
+        .toList();
+  }
+
+  // 차단된 사용자 목록 (ID와 이름 포함)
+  Future<List<Map<String, String>>> getBlockedUsers() async {
+    final user = _auth.currentUser;
+    if (user == null) return [];
+
+    final snapshot = await _blockedUsersCollection
+        .where('blockerId', isEqualTo: user.uid)
+        .get();
+
+    return snapshot.docs.map((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      return {
+        'userId': data['blockedUserId'] as String,
+        'userName': data['blockedUserName'] as String? ?? 'Unknown',
+      };
+    }).toList();
   }
 }

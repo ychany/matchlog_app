@@ -3931,4 +3931,94 @@ class AppLocalizationsEn extends AppLocalizations {
   String accountDeleteFailed(String error) {
     return 'Account withdrawal failed: $error';
   }
+
+  @override
+  String get report => 'Report';
+
+  @override
+  String get reportPost => 'Report Post';
+
+  @override
+  String get reportComment => 'Report Comment';
+
+  @override
+  String get reportUser => 'Report User';
+
+  @override
+  String get reportReason => 'Reason for Report';
+
+  @override
+  String get reportReasonSpam => 'Spam/Advertising';
+
+  @override
+  String get reportReasonHarassment => 'Harassment/Abuse';
+
+  @override
+  String get reportReasonInappropriate => 'Inappropriate Content';
+
+  @override
+  String get reportReasonFalseInfo => 'False Information';
+
+  @override
+  String get reportReasonOther => 'Other';
+
+  @override
+  String get reportAdditionalInfo => 'Additional Details (Optional)';
+
+  @override
+  String get reportAdditionalInfoHint =>
+      'Please provide more details about the report';
+
+  @override
+  String get reportSubmit => 'Submit Report';
+
+  @override
+  String get reportSubmitted => 'Report has been submitted';
+
+  @override
+  String reportFailed(String error) {
+    return 'Report failed: $error';
+  }
+
+  @override
+  String get reportAlreadySubmitted => 'You have already reported this content';
+
+  @override
+  String get reportConfirmTitle => 'Submit Report?';
+
+  @override
+  String get reportConfirmMessage => 'False reports may result in penalties.';
+
+  @override
+  String get blockUser => 'Block User';
+
+  @override
+  String get blockUserConfirm => 'Block this user?';
+
+  @override
+  String get blockUserDesc => 'Manage blocked users';
+
+  @override
+  String get userBlocked => 'User has been blocked';
+
+  @override
+  String get blockedUsersManagement => 'Blocked Users';
+
+  @override
+  String get noBlockedUsers => 'No blocked users';
+
+  @override
+  String get blockedUser => 'Blocked User';
+
+  @override
+  String get unblock => 'Unblock';
+
+  @override
+  String get unblockUser => 'Unblock User';
+
+  @override
+  String get unblockUserConfirm => 'Unblock this user?';
+
+  @override
+  String get userUnblocked => 'User has been unblocked';
 }

@@ -29,6 +29,7 @@ import 'features/community/screens/post_write_screen.dart';
 import 'features/community/screens/post_detail_screen.dart';
 import 'features/community/screens/user_profile_screen.dart';
 import 'features/community/models/post_model.dart';
+import 'features/profile/screens/blocked_users_screen.dart';
 import 'features/national_team/screens/national_team_screen.dart';
 import 'features/live/screens/live_matches_screen.dart';
 import 'features/league/screens/league_list_screen.dart';
@@ -224,6 +225,10 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'language',
                 builder: (context, state) => const LanguageSettingsScreen(),
+              ),
+              GoRoute(
+                path: 'blocked-users',
+                builder: (context, state) => const BlockedUsersScreen(),
               ),
               GoRoute(
                 path: 'community',
