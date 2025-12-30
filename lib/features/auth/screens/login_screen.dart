@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -35,13 +36,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     // 로그인 상태 변화 감지 - 로그인 성공 시 홈으로 이동
-    ref.listen<AsyncValue<void>>(authNotifierProvider, (previous, next) {
-      if (previous?.isLoading == true && next.hasValue && !next.isLoading) {
-        // 로그인 성공
-        final user = ref.read(currentUserProvider);
-        if (user != null) {
-          context.go('/home');
-        }
+    ref.listen<AsyncValue<User?>>(authStateProvider, (previous, next) {
+      final previousUser = previous?.value;
+      final currentUser = next.value;
+      // 로그아웃 → 로그인 상태로 변경되면 홈으로 이동
+      if (previousUser == null && currentUser != null) {
+        context.go('/home');
       }
     });
 
@@ -52,15 +52,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 60),
+              const SizedBox(height: 32),
 
               // 로고 & 타이틀
               Icon(
                 Icons.sports_soccer,
-                size: 80,
+                size: 64,
                 color: AppColors.primary,
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               Text(
                 l10n.matchLog,
                 style: AppTextStyles.headline1,
@@ -74,7 +74,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 48),
+              const SizedBox(height: 32),
 
               // 폼
               Form(
@@ -150,7 +150,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
 
               // 로그인/회원가입 전환
               TextButton(
@@ -164,7 +164,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 8),
 
               // 구분선
               Row(
