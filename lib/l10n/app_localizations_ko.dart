@@ -3214,6 +3214,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get continueWithGoogle => 'Google로 계속하기';
 
   @override
+  String get continueWithApple => 'Apple로 계속하기';
+
+  @override
   String get forgotPassword => '비밀번호를 잊으셨나요?';
 
   @override

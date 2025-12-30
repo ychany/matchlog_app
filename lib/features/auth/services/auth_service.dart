@@ -1,6 +1,11 @@
+import 'dart:convert';
+import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:crypto/crypto.dart';
 import '../../../shared/models/user_model.dart';
 import '../../../core/constants/app_constants.dart';
 
@@ -42,6 +47,101 @@ class AuthService {
     } catch (e) {
       rethrow;
     }
+  }
+
+  // Sign in with Apple
+  Future<UserCredential?> signInWithApple() async {
+    try {
+      debugPrint('🍎 Apple Sign In: Starting...');
+
+      // Generate nonce for security
+      final rawNonce = _generateNonce();
+      final nonce = _sha256ofString(rawNonce);
+      debugPrint('🍎 Apple Sign In: Nonce generated');
+
+      // Request Apple credential
+      debugPrint('🍎 Apple Sign In: Requesting Apple credential...');
+      final appleCredential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+        nonce: nonce,
+      );
+      debugPrint('🍎 Apple Sign In: Got Apple credential');
+      debugPrint('🍎 Apple Sign In: identityToken = ${appleCredential.identityToken != null}');
+
+      // Decode JWT to check audience
+      if (appleCredential.identityToken != null) {
+        final parts = appleCredential.identityToken!.split('.');
+        if (parts.length == 3) {
+          final payload = parts[1];
+          final normalized = base64Url.normalize(payload);
+          final decoded = utf8.decode(base64Url.decode(normalized));
+          debugPrint('🍎 Apple Sign In: JWT payload = $decoded');
+        }
+        debugPrint('🍎 Apple Sign In: identityToken length = ${appleCredential.identityToken!.length}');
+      }
+
+      debugPrint('🍎 Apple Sign In: authorizationCode = ${appleCredential.authorizationCode != null}');
+      debugPrint('🍎 Apple Sign In: userIdentifier = ${appleCredential.userIdentifier}');
+      debugPrint('🍎 Apple Sign In: email = ${appleCredential.email}');
+      debugPrint('🍎 Apple Sign In: rawNonce length = ${rawNonce.length}');
+      debugPrint('🍎 Apple Sign In: hashed nonce = $nonce');
+
+      // Create OAuth credential
+      final oauthCredential = OAuthProvider('apple.com').credential(
+        idToken: appleCredential.identityToken,
+        rawNonce: rawNonce,
+        accessToken: appleCredential.authorizationCode,
+      );
+      debugPrint('🍎 Apple Sign In: OAuth credential created');
+      debugPrint('🍎 Apple Sign In: providerId = ${oauthCredential.providerId}');
+      debugPrint('🍎 Apple Sign In: signInMethod = ${oauthCredential.signInMethod}');
+
+      // Sign in with Firebase
+      debugPrint('🍎 Apple Sign In: Signing in with Firebase...');
+      debugPrint('🍎 Apple Sign In: Firebase project = ${_auth.app.name}');
+
+      final userCredential = await _auth.signInWithCredential(oauthCredential);
+      debugPrint('🍎 Apple Sign In: Firebase sign in success!');
+
+      // Apple only provides name on first sign in, update if available
+      if (appleCredential.givenName != null || appleCredential.familyName != null) {
+        final displayName = [
+          appleCredential.givenName,
+          appleCredential.familyName,
+        ].where((n) => n != null).join(' ');
+
+        if (displayName.isNotEmpty) {
+          await userCredential.user?.updateDisplayName(displayName);
+        }
+      }
+
+      // Create/update user document in Firestore
+      await _createOrUpdateUser(userCredential.user);
+      debugPrint('🍎 Apple Sign In: User document created/updated');
+
+      return userCredential;
+    } catch (e, st) {
+      debugPrint('🍎 Apple Sign In ERROR: $e');
+      debugPrint('🍎 Apple Sign In STACK: $st');
+      rethrow;
+    }
+  }
+
+  // Generate random nonce
+  String _generateNonce([int length = 32]) {
+    const charset = '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
+    final random = Random.secure();
+    return List.generate(length, (_) => charset[random.nextInt(charset.length)]).join();
+  }
+
+  // SHA256 hash
+  String _sha256ofString(String input) {
+    final bytes = utf8.encode(input);
+    final digest = sha256.convert(bytes);
+    return digest.toString();
   }
 
   // Sign in with email and password

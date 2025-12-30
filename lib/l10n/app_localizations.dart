@@ -6164,6 +6164,12 @@ abstract class AppLocalizations {
   /// **'Google로 계속하기'**
   String get continueWithGoogle;
 
+  /// No description provided for @continueWithApple.
+  ///
+  /// In ko, this message translates to:
+  /// **'Apple로 계속하기'**
+  String get continueWithApple;
+
   /// No description provided for @forgotPassword.
   ///
   /// In ko, this message translates to:

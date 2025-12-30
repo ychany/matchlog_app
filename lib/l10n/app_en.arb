@@ -1430,6 +1430,7 @@
   "hasAccountLogin": "Already have an account? Login",
   "orDivider": "or",
   "continueWithGoogle": "Continue with Google",
+  "continueWithApple": "Continue with Apple",
   "forgotPassword": "Forgot your password?",
   "emailAlreadyInUse": "This email is already in use",
   "invalidEmailError": "Invalid email format",

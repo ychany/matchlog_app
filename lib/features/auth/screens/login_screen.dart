@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -200,6 +201,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               ),
 
+              // Apple 로그인 (iOS만)
+              if (Platform.isIOS) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: OutlinedButton.icon(
+                    onPressed: isLoading ? null : _signInWithApple,
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: Colors.black),
+                    ),
+                    icon: const Icon(Icons.apple, size: 24),
+                    label: Text(l10n.continueWithApple),
+                  ),
+                ),
+              ],
+
               const SizedBox(height: 16),
 
               // 비밀번호 찾기
@@ -278,6 +298,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   void _signInWithGoogle() {
     ref.read(authNotifierProvider.notifier).signInWithGoogle();
+  }
+
+  void _signInWithApple() {
+    ref.read(authNotifierProvider.notifier).signInWithApple();
   }
 
   void _showForgotPassword() {
