@@ -141,6 +141,7 @@ class ScheduleService {
       awayScore: fixture.awayGoals,
       status: _convertStatus(fixture),
       elapsed: fixture.status.elapsed, // 라이브 경기 경과 시간
+      extra: fixture.status.extra, // 라이브 경기 추가 시간
     );
   }
 

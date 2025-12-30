@@ -507,7 +507,11 @@ class _MatchDetailContentState extends ConsumerState<_MatchDetailContent>
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    match.status.elapsed != null ? "${match.status.elapsed}'" : 'LIVE',
+                    match.status.elapsed != null
+                        ? (match.status.extra != null && match.status.extra! > 0
+                            ? "${match.status.elapsed}+${match.status.extra}'"
+                            : "${match.status.elapsed}'")
+                        : 'LIVE',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 13,

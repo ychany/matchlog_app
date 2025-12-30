@@ -660,7 +660,11 @@ class _ScheduleMatchCard extends ConsumerWidget {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              match.elapsed != null ? "${match.elapsed}'" : 'LIVE',
+                              match.elapsed != null
+                                  ? (match.extra != null && match.extra! > 0
+                                      ? "${match.elapsed}+${match.extra}'"
+                                      : "${match.elapsed}'")
+                                  : 'LIVE',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w700,

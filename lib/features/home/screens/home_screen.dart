@@ -675,7 +675,13 @@ class _LiveMatchCard extends StatelessWidget {
 
   String _getStatusDisplay() {
     final elapsed = fixture.status.elapsed;
-    if (elapsed != null) return "$elapsed'";
+    final extra = fixture.status.extra;
+    if (elapsed != null) {
+      if (extra != null && extra > 0) {
+        return "$elapsed+$extra'";
+      }
+      return "$elapsed'";
+    }
     return fixture.status.short;
   }
 }
