@@ -698,23 +698,33 @@ final favoriteTeamNextEventsProvider =
       if (teamIds.isEmpty) return [];
 
       final service = ApiFootballService();
-      final results = <_TeamNextEvent>[];
 
-      for (final teamId in teamIds) {
+      // 병렬로 모든 팀 데이터 요청
+      final futures = teamIds.map((teamId) async {
         try {
           final apiTeamId = int.tryParse(teamId);
-          if (apiTeamId == null) continue;
+          if (apiTeamId == null) return null;
 
-          final team = await service.getTeamById(apiTeamId);
-          final fixtures = await service.getTeamNextFixtures(apiTeamId, count: 6);
+          // 팀 정보와 일정을 병렬로 가져오기
+          final results = await Future.wait([
+            service.getTeamById(apiTeamId),
+            service.getTeamNextFixtures(apiTeamId, count: 6),
+          ]);
+
+          final team = results[0] as ApiFootballTeam?;
+          final fixtures = results[1] as List<ApiFootballFixture>;
+
           if (team != null && fixtures.isNotEmpty) {
-            results.add(_TeamNextEvent(team: team, fixtures: fixtures));
+            return _TeamNextEvent(team: team, fixtures: fixtures);
           }
         } catch (e) {
           // 개별 팀 오류는 무시
         }
-      }
-      return results;
+        return null;
+      }).toList();
+
+      final results = await Future.wait(futures);
+      return results.whereType<_TeamNextEvent>().toList();
     },
     loading: () => [],
     error: (_, __) => [],

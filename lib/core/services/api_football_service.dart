@@ -15,6 +15,11 @@ class ApiFootballService {
   factory ApiFootballService() => _instance;
   ApiFootballService._internal();
 
+  // 팀 다음 경기 캐시 (5분 유효)
+  final Map<int, _CachedData<List<ApiFootballFixture>>> _teamNextFixturesCache = {};
+  // 팀 정보 캐시 (30분 유효)
+  final Map<int, _CachedData<ApiFootballTeam>> _teamCache = {};
+
   // 저장된 타임존 가져오기
   Future<String> getSelectedTimezone() async {
     final prefs = await SharedPreferences.getInstance();
@@ -89,11 +94,22 @@ class ApiFootballService {
 
   /// 팀 ID로 조회
   Future<ApiFootballTeam?> getTeamById(int teamId) async {
+    // 캐시 확인 (30분 유효)
+    final cached = _teamCache[teamId];
+    if (cached != null && !cached.isExpired) {
+      return cached.data;
+    }
+
     final data = await _get('teams?id=$teamId');
     if (data == null || data['response'] == null || (data['response'] as List).isEmpty) {
       return null;
     }
-    return ApiFootballTeam.fromJson((data['response'] as List).first);
+    final team = ApiFootballTeam.fromJson((data['response'] as List).first);
+
+    // 캐시 저장
+    _teamCache[teamId] = _CachedData(team, const Duration(minutes: 30));
+
+    return team;
   }
 
   /// 리그별 팀 목록
@@ -352,13 +368,24 @@ class ApiFootballService {
 
   /// 팀의 다음 경기들
   Future<List<ApiFootballFixture>> getTeamNextFixtures(int teamId, {int count = 5}) async {
+    // 캐시 확인 (5분 유효)
+    final cached = _teamNextFixturesCache[teamId];
+    if (cached != null && !cached.isExpired) {
+      return cached.data;
+    }
+
     final timezone = await getSelectedTimezone();
     final data = await _get('fixtures?team=$teamId&next=$count&timezone=$timezone');
     if (data == null || data['response'] == null) return [];
 
-    return (data['response'] as List)
+    final fixtures = (data['response'] as List)
         .map((json) => ApiFootballFixture.fromJson(json))
         .toList();
+
+    // 캐시 저장
+    _teamNextFixturesCache[teamId] = _CachedData(fixtures, const Duration(minutes: 5));
+
+    return fixtures;
   }
 
   /// 팀의 지난 경기들
@@ -3228,4 +3255,15 @@ class ApiFootballSidelined {
       return date;
     }
   }
+}
+
+/// 캐시 데이터 래퍼
+class _CachedData<T> {
+  final T data;
+  final DateTime cachedAt;
+  final Duration ttl;
+
+  _CachedData(this.data, this.ttl) : cachedAt = DateTime.now();
+
+  bool get isExpired => DateTime.now().difference(cachedAt) > ttl;
 }
