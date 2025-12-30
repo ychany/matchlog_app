@@ -3360,6 +3360,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get friendlyMatch => '친선경기';
 
   @override
+  String get matchNameHint => '예: 친선경기, 프리시즌, FA컵';
+
+  @override
   String get leaguesByCountry => '국가별 리그';
 
   @override

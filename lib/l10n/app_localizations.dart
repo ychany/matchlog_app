@@ -6452,6 +6452,12 @@ abstract class AppLocalizations {
   /// **'친선경기'**
   String get friendlyMatch;
 
+  /// No description provided for @matchNameHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'예: 친선경기, 프리시즌, FA컵'**
+  String get matchNameHint;
+
   /// No description provided for @leaguesByCountry.
   ///
   /// In ko, this message translates to:

@@ -2889,6 +2889,7 @@
   "worldCupQualAfc": "월드컵 예선 (AFC)",
   "asianCup": "아시안컵",
   "friendlyMatch": "친선경기",
+  "matchNameHint": "예: 친선경기, 프리시즌, FA컵",
 
   "leaguesByCountry": "국가별 리그",
   "searchCountry": "국가 검색...",

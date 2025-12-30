@@ -560,7 +560,7 @@ class _AttendanceAddScreenState extends ConsumerState<AttendanceAddScreen> {
         _buildSectionTitle(AppLocalizations.of(context)!.matchName),
         const SizedBox(height: 4),
         Text(
-          'e.g. Friendly, Preseason, FA Cup',
+          AppLocalizations.of(context)!.matchNameHint,
           style: TextStyle(fontSize: 12, color: _textSecondary),
         ),
         const SizedBox(height: 8),

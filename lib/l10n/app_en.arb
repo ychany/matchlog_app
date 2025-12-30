@@ -1492,6 +1492,7 @@
   "worldCupQualAfc": "World Cup Qualifiers (AFC)",
   "asianCup": "Asian Cup",
   "friendlyMatch": "Friendly Match",
+  "matchNameHint": "e.g. Friendly, Preseason, FA Cup",
 
   "leaguesByCountry": "Leagues by Country",
   "searchCountry": "Search country...",

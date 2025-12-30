@@ -3383,6 +3383,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get friendlyMatch => 'Friendly Match';
 
   @override
+  String get matchNameHint => 'e.g. Friendly, Preseason, FA Cup';
+
+  @override
   String get leaguesByCountry => 'Leagues by Country';
 
   @override
