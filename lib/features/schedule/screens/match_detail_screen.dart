@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/services/api_football_service.dart';
 import '../../../core/utils/error_helper.dart';
 import '../../../shared/widgets/loading_indicator.dart';
@@ -15,6 +16,8 @@ import '../providers/schedule_provider.dart';
 import '../models/match_comment.dart';
 import '../services/match_comment_service.dart';
 import '../../profile/providers/timezone_provider.dart';
+import '../../community/services/community_service.dart';
+import '../../community/providers/community_provider.dart';
 
 // Provider for match detail (API-Football)
 final matchDetailProvider =
@@ -3484,16 +3487,16 @@ class _StandingsTab extends StatelessWidget {
 }
 
 // ============ Comments Tab ============
-class _CommentsTab extends StatefulWidget {
+class _CommentsTab extends ConsumerStatefulWidget {
   final String matchId;
 
   const _CommentsTab({required this.matchId});
 
   @override
-  State<_CommentsTab> createState() => _CommentsTabState();
+  ConsumerState<_CommentsTab> createState() => _CommentsTabState();
 }
 
-class _CommentsTabState extends State<_CommentsTab> {
+class _CommentsTabState extends ConsumerState<_CommentsTab> {
   static const _primary = Color(0xFF2563EB);
   static const _textPrimary = Color(0xFF111827);
   static const _textSecondary = Color(0xFF6B7280);
@@ -3503,6 +3506,29 @@ class _CommentsTabState extends State<_CommentsTab> {
   final TextEditingController _commentController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   bool _isSubmitting = false;
+  List<String> _blockedUserIds = [];
+
+  String? get _currentUserId => FirebaseAuth.instance.currentUser?.uid;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBlockedUsers();
+  }
+
+  Future<void> _loadBlockedUsers() async {
+    try {
+      final service = CommunityService();
+      final blockedIds = await service.getBlockedUserIds();
+      if (mounted) {
+        setState(() {
+          _blockedUserIds = blockedIds;
+        });
+      }
+    } catch (_) {
+      // 무시
+    }
+  }
 
   @override
   void dispose() {
@@ -3584,6 +3610,178 @@ class _CommentsTabState extends State<_CommentsTab> {
     }
   }
 
+  void _showReportDialog(MatchComment comment) {
+    final l10n = AppLocalizations.of(context)!;
+    String? selectedReason;
+    final additionalController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.report_outlined, color: Colors.red),
+                  const SizedBox(width: 8),
+                  Text(
+                    l10n.reportComment,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Text(
+                l10n.reportReason,
+                style: const TextStyle(fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 12),
+              ...[
+                ('spam', l10n.reportReasonSpam),
+                ('harassment', l10n.reportReasonHarassment),
+                ('inappropriate', l10n.reportReasonInappropriate),
+                ('false_info', l10n.reportReasonFalseInfo),
+                ('other', l10n.reportReasonOther),
+              ].map((item) => RadioListTile<String>(
+                value: item.$1,
+                groupValue: selectedReason,
+                onChanged: (value) => setModalState(() => selectedReason = value),
+                title: Text(item.$2),
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+              )),
+              const SizedBox(height: 12),
+              TextField(
+                controller: additionalController,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  labelText: l10n.reportAdditionalInfo,
+                  hintText: l10n.reportAdditionalInfoHint,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: selectedReason == null
+                      ? null
+                      : () async {
+                          Navigator.pop(context);
+                          await _submitReport(
+                            comment: comment,
+                            reason: selectedReason!,
+                            additionalInfo: additionalController.text.trim(),
+                          );
+                        },
+                  child: Text(l10n.reportSubmit),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _submitReport({
+    required MatchComment comment,
+    required String reason,
+    String? additionalInfo,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
+
+    try {
+      final service = CommunityService();
+      await service.reportContent(
+        contentType: 'match_comment',
+        contentId: comment.id,
+        reason: reason,
+        additionalInfo: additionalInfo,
+        reportedUserId: comment.authorId,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.reportSubmitted)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        final message = e.toString().contains('ALREADY_REPORTED')
+            ? l10n.reportAlreadySubmitted
+            : l10n.reportFailed(e.toString());
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Future<void> _blockUser(MatchComment comment) async {
+    final l10n = AppLocalizations.of(context)!;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.blockUser),
+        content: Text(l10n.blockUserConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.cancelLabel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.blockUser),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        // blockedUsersNotifierProvider를 통해 차단 (관리 페이지 및 커뮤니티와 연동)
+        await ref
+            .read(blockedUsersNotifierProvider.notifier)
+            .block(comment.authorId, comment.authorName);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.userBlocked)),
+          );
+          // 차단 목록 새로고침
+          await _loadBlockedUsers();
+          // 커뮤니티 게시글 목록도 새로고침
+          ref.read(postsNotifierProvider.notifier).refresh();
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -3654,7 +3852,10 @@ class _CommentsTabState extends State<_CommentsTab> {
                 );
               }
 
-              final comments = snapshot.data ?? [];
+              final allComments = snapshot.data ?? [];
+              final comments = allComments
+                  .where((c) => !_blockedUserIds.contains(c.authorId))
+                  .toList();
 
               if (comments.isEmpty) {
                 return Center(
@@ -3701,9 +3902,13 @@ class _CommentsTabState extends State<_CommentsTab> {
                 itemCount: comments.length,
                 itemBuilder: (context, index) {
                   final comment = comments[index];
+                  final isOwner = _currentUserId == comment.authorId;
                   return _CommentItem(
                     comment: comment,
                     onDelete: () => _deleteComment(comment),
+                    onReport: () => _showReportDialog(comment),
+                    onBlock: () => _blockUser(comment),
+                    isOwner: isOwner,
                   );
                 },
               );
@@ -3795,6 +4000,9 @@ class _CommentsTabState extends State<_CommentsTab> {
 class _CommentItem extends StatelessWidget {
   final MatchComment comment;
   final VoidCallback onDelete;
+  final VoidCallback onReport;
+  final VoidCallback onBlock;
+  final bool isOwner;
 
   static const _textPrimary = Color(0xFF111827);
   static const _textSecondary = Color(0xFF6B7280);
@@ -3802,6 +4010,9 @@ class _CommentItem extends StatelessWidget {
   const _CommentItem({
     required this.comment,
     required this.onDelete,
+    required this.onReport,
+    required this.onBlock,
+    required this.isOwner,
   });
 
   @override
@@ -3865,21 +4076,53 @@ class _CommentItem extends StatelessWidget {
           PopupMenuButton<String>(
             icon: Icon(Icons.more_vert, size: 16, color: _textSecondary),
             padding: EdgeInsets.zero,
-            itemBuilder: (menuContext) => [
-              PopupMenuItem(
-                value: 'delete',
-                child: Row(
-                  children: [
-                    const Icon(Icons.delete_outline, size: 18, color: Colors.red),
-                    const SizedBox(width: 8),
-                    Text(AppLocalizations.of(menuContext)!.deleteAction, style: const TextStyle(color: Colors.red)),
-                  ],
-                ),
-              ),
-            ],
+            itemBuilder: (menuContext) {
+              final l10n = AppLocalizations.of(menuContext)!;
+              if (isOwner) {
+                return [
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.delete_outline, size: 18, color: Colors.red),
+                        const SizedBox(width: 8),
+                        Text(l10n.deleteAction, style: const TextStyle(color: Colors.red)),
+                      ],
+                    ),
+                  ),
+                ];
+              } else {
+                return [
+                  PopupMenuItem(
+                    value: 'report',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.report_outlined, size: 18, color: Colors.red),
+                        const SizedBox(width: 8),
+                        Text(l10n.report),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'block',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.block, size: 18, color: Colors.red),
+                        const SizedBox(width: 8),
+                        Text(l10n.blockUser, style: const TextStyle(color: Colors.red)),
+                      ],
+                    ),
+                  ),
+                ];
+              }
+            },
             onSelected: (value) {
               if (value == 'delete') {
                 onDelete();
+              } else if (value == 'report') {
+                onReport();
+              } else if (value == 'block') {
+                onBlock();
               }
             },
           ),

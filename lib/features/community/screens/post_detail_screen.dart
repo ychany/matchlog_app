@@ -23,6 +23,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   final _commentController = TextEditingController();
   bool _isLiked = false;
   bool _isSubmitting = false;
+  List<String> _blockedUserIds = [];
 
   static const _primary = Color(0xFF2563EB);
   static const _primaryLight = Color(0xFFDBEAFE);
@@ -35,6 +36,19 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   void initState() {
     super.initState();
     _checkLikeStatus();
+    _loadBlockedUsers();
+  }
+
+  Future<void> _loadBlockedUsers() async {
+    try {
+      final service = ref.read(communityServiceProvider);
+      final blockedIds = await service.getBlockedUserIds();
+      if (mounted) {
+        setState(() => _blockedUserIds = blockedIds);
+      }
+    } catch (_) {
+      // 차단 목록 로드 실패 시 무시
+    }
   }
 
   @override
@@ -454,7 +468,11 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                               ),
                               const SizedBox(height: 16),
                               commentsAsync.when(
-                                data: (comments) {
+                                data: (allComments) {
+                                  // 차단된 사용자의 댓글 필터링
+                                  final comments = allComments
+                                      .where((c) => !_blockedUserIds.contains(c.authorId))
+                                      .toList();
                                   if (comments.isEmpty) {
                                     return Center(
                                       child: Padding(
@@ -472,6 +490,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                                       comment: comment,
                                       onDelete: () => _deleteComment(comment),
                                       onReport: () => _showCommentReportDialog(comment),
+                                      onBlock: () => _blockCommentAuthor(comment),
                                       isOwner: currentUser?.uid == comment.authorId,
                                     )).toList(),
                                   );
@@ -716,6 +735,64 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     }
   }
 
+  Future<void> _blockCommentAuthor(Comment comment) async {
+    final l10n = AppLocalizations.of(context)!;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.blockUser),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l10n.blockUserConfirm),
+            const SizedBox(height: 8),
+            Text(
+              l10n.blockUserDesc,
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.blockUser),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        // blockedUsersNotifierProvider를 통해 차단 (관리 페이지와 연동)
+        await ref
+            .read(blockedUsersNotifierProvider.notifier)
+            .block(comment.authorId, comment.authorName);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.userBlocked)),
+          );
+          // 차단 목록 새로고침 후 댓글 다시 로드
+          await _loadBlockedUsers();
+          ref.invalidate(commentsProvider(widget.postId));
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
+  }
+
   void _showCommentReportDialog(Comment comment) {
     final l10n = AppLocalizations.of(context)!;
     String? selectedReason;
@@ -843,8 +920,10 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
 
     if (confirmed == true) {
       try {
-        final service = ref.read(communityServiceProvider);
-        await service.blockUser(userId, targetUserName: userName);
+        // blockedUsersNotifierProvider를 통해 차단 (관리 페이지와 연동)
+        await ref
+            .read(blockedUsersNotifierProvider.notifier)
+            .block(userId, userName);
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -1147,12 +1226,14 @@ class _CommentItem extends StatelessWidget {
   final Comment comment;
   final VoidCallback onDelete;
   final VoidCallback onReport;
+  final VoidCallback onBlock;
   final bool isOwner;
 
   const _CommentItem({
     required this.comment,
     required this.onDelete,
     required this.onReport,
+    required this.onBlock,
     required this.isOwner,
   });
 
@@ -1232,6 +1313,8 @@ class _CommentItem extends StatelessWidget {
                 onDelete();
               } else if (value == 'report') {
                 onReport();
+              } else if (value == 'block') {
+                onBlock();
               }
             },
             itemBuilder: (context) {
@@ -1252,6 +1335,16 @@ class _CommentItem extends StatelessWidget {
                         const Icon(Icons.report_outlined, size: 18, color: Colors.red),
                         const SizedBox(width: 8),
                         Text(l10n.report),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'block',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.block, size: 18, color: Colors.red),
+                        const SizedBox(width: 8),
+                        Text(l10n.blockUser, style: const TextStyle(color: Colors.red)),
                       ],
                     ),
                   ),
