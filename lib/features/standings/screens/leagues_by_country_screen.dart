@@ -512,8 +512,8 @@ class _LeaguesByCountryScreenState extends ConsumerState<LeaguesByCountryScreen>
       padding: const EdgeInsets.only(bottom: 8),
       child: GestureDetector(
         onTap: () {
-          // 순위표 화면으로 이동 (외부 리그 상세 화면)
-          context.push('/league/${league.id}/standings');
+          // 리그 상세 화면으로 이동 (일정/순위 탭 포함)
+          context.push('/league/${league.id}');
         },
         child: Container(
           decoration: BoxDecoration(
