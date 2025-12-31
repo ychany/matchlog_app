@@ -154,6 +154,7 @@ class _LeagueListScreenState extends ConsumerState<LeagueListScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
+        scrolledUnderElevation: 0,
         title: Text(
           l10n.leagues,
           style: const TextStyle(
