@@ -1430,14 +1430,20 @@ class _FixturesTabState extends ConsumerState<_FixturesTab> {
           _fixtureKeys.putIfAbsent(closestFixture.id, () => GlobalKey());
         }
 
-        // 날짜별로 그룹화
-        final groupedByDate = <String, List<ApiFootballFixture>>{};
+        // 라운드별로 그룹화 (라운드가 없으면 날짜를 키로 사용)
+        final groupedByRound = <String, List<ApiFootballFixture>>{};
         for (final fixture in sortedFixtures) {
-          final dateKey = DateFormat('yyyy-MM-dd').format(fixture.date);
-          groupedByDate.putIfAbsent(dateKey, () => []).add(fixture);
+          final roundKey = fixture.league.round ?? DateFormat('yyyy-MM-dd').format(fixture.date);
+          groupedByRound.putIfAbsent(roundKey, () => []).add(fixture);
         }
 
-        final dateKeys = groupedByDate.keys.toList()..sort();
+        // 라운드 키를 첫 번째 경기 날짜 기준으로 정렬
+        final roundKeys = groupedByRound.keys.toList()
+          ..sort((a, b) {
+            final aDate = groupedByRound[a]!.first.date;
+            final bDate = groupedByRound[b]!.first.date;
+            return aDate.compareTo(bDate);
+          });
 
         // 스크롤 이동
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1451,60 +1457,91 @@ class _FixturesTabState extends ConsumerState<_FixturesTab> {
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: dateKeys.map((dateKey) {
-                final dateFixtures = groupedByDate[dateKey]!;
-                final date = DateTime.parse(dateKey);
-                final isToday = _isToday(date);
+              children: roundKeys.map((roundKey) {
+                final roundFixtures = groupedByRound[roundKey]!;
+
+                // 라운드 내 날짜별로 그룹화
+                final groupedByDate = <String, List<ApiFootballFixture>>{};
+                for (final fixture in roundFixtures) {
+                  final dateKey = DateFormat('yyyy-MM-dd').format(fixture.date);
+                  groupedByDate.putIfAbsent(dateKey, () => []).add(fixture);
+                }
+                final dateKeys = groupedByDate.keys.toList()..sort();
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 날짜 헤더
+                    // 라운드 헤더
                     Container(
-                      margin: const EdgeInsets.only(top: 8, bottom: 8),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      margin: const EdgeInsets.only(top: 12, bottom: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
-                        color: isToday ? const Color(0xFF2563EB).withValues(alpha: 0.1) : Colors.transparent,
+                        color: const Color(0xFF2563EB).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        _formatDateHeader(context, date),
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: isToday ? const Color(0xFF2563EB) : _textSecondary,
+                        roundKey,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF2563EB),
                         ),
                       ),
                     ),
-                    // 경기 카드들
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.04),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
+                    // 날짜별 경기들
+                    ...dateKeys.map((dateKey) {
+                      final dateFixtures = groupedByDate[dateKey]!;
+                      final date = DateTime.parse(dateKey);
+                      final isToday = _isToday(date);
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // 날짜 헤더
+                          Padding(
+                            padding: const EdgeInsets.only(left: 4, top: 4, bottom: 6),
+                            child: Text(
+                              _formatDateHeader(context, date),
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: isToday ? const Color(0xFF2563EB) : _textSecondary,
+                              ),
+                            ),
+                          ),
+                          // 경기 카드들
+                          Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.04),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              children: dateFixtures.asMap().entries.map((entry) {
+                                final i = entry.key;
+                                final fixture = entry.value;
+                                final hasKey = _fixtureKeys.containsKey(fixture.id);
+                                return Column(
+                                  key: hasKey ? _fixtureKeys[fixture.id] : null,
+                                  children: [
+                                    if (i > 0) Divider(height: 1, color: _border, indent: 14, endIndent: 14),
+                                    _FixtureCard(fixture: fixture),
+                                  ],
+                                );
+                              }).toList(),
+                            ),
                           ),
                         ],
-                      ),
-                      child: Column(
-                        children: dateFixtures.asMap().entries.map((entry) {
-                          final i = entry.key;
-                          final fixture = entry.value;
-                          final hasKey = _fixtureKeys.containsKey(fixture.id);
-                          return Column(
-                            key: hasKey ? _fixtureKeys[fixture.id] : null,
-                            children: [
-                              if (i > 0) Divider(height: 1, color: _border, indent: 14, endIndent: 14),
-                              _FixtureCard(fixture: fixture),
-                            ],
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
+                      );
+                    }),
+                    const SizedBox(height: 4),
                   ],
                 );
               }).toList(),
