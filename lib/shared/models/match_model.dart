@@ -30,6 +30,7 @@ class Match extends Equatable {
   final List<MatchEvent>? events;
   final int? elapsed; // 라이브 경기 경과 시간 (분)
   final int? extra; // 라이브 경기 추가 시간 (분)
+  final String? statusShort; // API 상태 코드 (1H, HT, 2H, FT 등)
 
   const Match({
     required this.id,
@@ -52,10 +53,12 @@ class Match extends Equatable {
     this.events,
     this.elapsed,
     this.extra,
+    this.statusShort,
   });
 
   bool get isFinished => status == MatchStatus.finished;
   bool get isLive => status == MatchStatus.live;
+  bool get isHalftime => statusShort == 'HT';
 
   String get scoreDisplay {
     if (homeScore == null || awayScore == null) return 'vs';
@@ -99,6 +102,7 @@ class Match extends Equatable {
           .toList(),
       elapsed: data['elapsed'] as int?,
       extra: data['extra'] as int?,
+      statusShort: data['statusShort'] as String?,
     );
   }
 
@@ -123,6 +127,7 @@ class Match extends Equatable {
       'events': events?.map((e) => e.toJson()).toList(),
       'elapsed': elapsed,
       'extra': extra,
+      'statusShort': statusShort,
     };
   }
 
@@ -147,6 +152,7 @@ class Match extends Equatable {
     List<MatchEvent>? events,
     int? elapsed,
     int? extra,
+    String? statusShort,
   }) {
     return Match(
       id: id ?? this.id,
@@ -169,6 +175,7 @@ class Match extends Equatable {
       events: events ?? this.events,
       elapsed: elapsed ?? this.elapsed,
       extra: extra ?? this.extra,
+      statusShort: statusShort ?? this.statusShort,
     );
   }
 
@@ -184,6 +191,7 @@ class Match extends Equatable {
         status,
         elapsed,
         extra,
+        statusShort,
       ];
 
   // Example dummy data

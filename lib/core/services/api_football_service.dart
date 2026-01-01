@@ -1229,6 +1229,18 @@ class ApiFootballFixture {
   bool get isLive => status.short == '1H' || status.short == 'HT' || status.short == '2H' ||
                      status.short == 'ET' || status.short == 'BT' || status.short == 'P';
 
+  /// 하프타임 여부
+  bool get isHalftime => status.short == 'HT';
+
+  /// 전반전 진행 중
+  bool get isFirstHalf => status.short == '1H';
+
+  /// 후반전 진행 중
+  bool get isSecondHalf => status.short == '2H';
+
+  /// 연장전 진행 중
+  bool get isExtraTime => status.short == 'ET';
+
   /// 경기 예정 여부
   bool get isScheduled => status.short == 'NS' || status.short == 'TBD';
 

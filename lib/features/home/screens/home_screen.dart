@@ -674,6 +674,10 @@ class _LiveMatchCard extends StatelessWidget {
   }
 
   String _getStatusDisplay() {
+    // 하프타임
+    if (fixture.isHalftime) {
+      return 'HT';
+    }
     final elapsed = fixture.status.elapsed;
     final extra = fixture.status.extra;
     if (elapsed != null) {

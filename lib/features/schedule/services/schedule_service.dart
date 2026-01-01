@@ -142,6 +142,7 @@ class ScheduleService {
       status: _convertStatus(fixture),
       elapsed: fixture.status.elapsed, // 라이브 경기 경과 시간
       extra: fixture.status.extra, // 라이브 경기 추가 시간
+      statusShort: fixture.status.short, // API 상태 코드 (1H, HT, 2H 등)
     );
   }
 
