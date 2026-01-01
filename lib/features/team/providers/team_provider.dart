@@ -61,8 +61,16 @@ final teamFullScheduleProvider = FutureProvider.family<List<ApiFootballFixture>,
   final apiTeamId = int.tryParse(teamId);
   if (apiTeamId == null) return [];
 
-  final season = LeagueIds.getCurrentSeason();
-  return service.getTeamSeasonFixtures(apiTeamId, season);
+  final currentYear = DateTime.now().year;
+  // 현재 연도와 이전 연도 둘 다 시도 - 데이터가 있는 시즌 사용
+  for (final season in [currentYear, currentYear - 1]) {
+    final fixtures = await service.getTeamSeasonFixtures(apiTeamId, season);
+    if (fixtures.isNotEmpty) {
+      return fixtures;
+    }
+  }
+
+  return [];
 });
 
 /// 팀 검색 Provider
@@ -98,8 +106,15 @@ final teamInjuriesProvider = FutureProvider.family<List<ApiFootballInjury>, Stri
   final apiTeamId = int.tryParse(teamId);
   if (apiTeamId == null) return [];
 
-  final season = LeagueIds.getCurrentSeason();
-  return service.getTeamInjuries(apiTeamId, season);
+  final currentYear = DateTime.now().year;
+  // 현재 연도와 이전 연도 둘 다 시도 - 데이터가 있는 시즌 사용
+  for (final season in [currentYear, currentYear - 1]) {
+    final injuries = await service.getTeamInjuries(apiTeamId, season);
+    if (injuries.isNotEmpty) {
+      return injuries;
+    }
+  }
+  return [];
 });
 
 /// 팀 시즌 통계 Provider (리그별)
@@ -109,7 +124,7 @@ final teamStatisticsProvider = FutureProvider.family<List<ApiFootballTeamSeasonS
   final apiTeamId = int.tryParse(teamId);
   if (apiTeamId == null) return [];
 
-  final season = LeagueIds.getCurrentSeason();
+  final currentYear = DateTime.now().year;
 
   // 지원하는 주요 리그들에서 통계 조회 시도
   final leagueIds = [
@@ -126,29 +141,19 @@ final teamStatisticsProvider = FutureProvider.family<List<ApiFootballTeamSeasonS
 
   final statsList = <ApiFootballTeamSeasonStats>[];
 
-  for (final leagueId in leagueIds) {
-    try {
-      final stats = await service.getTeamStatistics(apiTeamId, leagueId, season);
-      if (stats != null && stats.totalPlayed > 0) {
-        statsList.add(stats);
-      }
-    } catch (e) {
-      // 해당 리그에 참가하지 않으면 무시
-    }
-  }
-
-  // 이전 시즌도 시도 (현재 시즌에 데이터가 없는 경우)
-  if (statsList.isEmpty) {
+  // 현재 연도와 이전 연도 둘 다 시도 - 데이터가 있는 시즌 사용
+  for (final season in [currentYear, currentYear - 1]) {
     for (final leagueId in leagueIds) {
       try {
-        final stats = await service.getTeamStatistics(apiTeamId, leagueId, season - 1);
+        final stats = await service.getTeamStatistics(apiTeamId, leagueId, season);
         if (stats != null && stats.totalPlayed > 0) {
           statsList.add(stats);
         }
       } catch (e) {
-        // 무시
+        // 해당 리그에 참가하지 않으면 무시
       }
     }
+    if (statsList.isNotEmpty) break; // 데이터 찾으면 중단
   }
 
   return statsList;

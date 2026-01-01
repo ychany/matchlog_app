@@ -241,8 +241,13 @@ class ScheduleService {
         return _getMatchesByLeagueFromFirestore(league, startDate: startDate, endDate: endDate);
       }
 
-      final season = LeagueIds.getCurrentSeason();
-      final fixtures = await _apiService.getFixturesByLeague(leagueId, season);
+      final currentYear = DateTime.now().year;
+      // 현재 연도와 이전 연도 둘 다 시도 - 데이터가 있는 시즌 사용
+      List<ApiFootballFixture> fixtures = [];
+      for (final season in [currentYear, currentYear - 1]) {
+        fixtures = await _apiService.getFixturesByLeague(leagueId, season);
+        if (fixtures.isNotEmpty) break;
+      }
 
       var matches = fixtures.map((f) => _convertFixtureToMatch(f)).toList();
 
